@@ -1,0 +1,43 @@
+spring:
+  cloud:
+    loadbalancer:
+      ribbon:
+        enable: false
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:localhost;DB_CLOSE_ON_EXIT=FALSE
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:admin}
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+app:
+  country: ${COUNTRY:CO}
+  cellphone:
+    prefix: ${COUNTRY_CELLPHONE_PREFIX:+1}
+  addresses-ms:
+    url: http://localhost:8090
+feign:
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
+  circuitbreaker:
+    enabled: true
+
+server:
+  error:
+    include-stacktrace: always
+    include-message: always
+
+logging:
+  level:
+    osia:
+      com:
+        examples:
+          spring: TRACE
+    org:
+      springframework:
+        cache: TRACE

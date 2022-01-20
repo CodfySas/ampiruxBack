@@ -1,0 +1,152 @@
+image: gradle:6.6.1-jdk11
+
+clone:
+  depth: full
+
+definitions:
+  caches:
+    sonar: ~/.sonar/cache
+  steps:
+    - step: &Test
+        name: Test
+        size: 2x
+        caches:
+          - gradle
+          - sonar
+        script:
+          - gradle build jacocoTestReport sonarqube -x lintKotlin
+        artifacts:
+          - build/**
+
+pipelines:
+  branches:
+    develop:
+      - parallel:
+          - step:
+              name: Deploy develop
+              deployment: test
+              services:
+                - docker
+              caches:
+                - gradle
+              script:
+                - gradle build -x lintKotlin -x test
+                - REPO_SLUG="$(echo $BITBUCKET_REPO_SLUG | sed 's/_/-/g')"
+                - TAG="${BITBUCKET_COMMIT}"
+                - docker build -t $REPO_SLUG .
+                - pipe: atlassian/aws-ecr-push-image:1.3.0
+                  variables:
+                    AWS_ACCESS_KEY_ID: $AWS_ECR_KEY
+                    AWS_SECRET_ACCESS_KEY: $AWS_ECR_SECRET
+                    AWS_DEFAULT_REGION: $AWS_ECR_DEV_REGION
+                    IMAGE_NAME: $REPO_SLUG
+                    TAGS: $TAG
+                - echo "Deploy on api.co.dev.osianeed.com"
+                - NAME="dev-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_DEV_URL
+                    ARGOS_USER: $ARGOS_DEV_USER
+                    ARGOS_PASSWORD: $ARGOS_DEV_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+                - echo "Deploy on api.ec.dev.osianeed.com"
+                - NAME="dev-ec-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_DEV_URL
+                    ARGOS_USER: $ARGOS_DEV_USER
+                    ARGOS_PASSWORD: $ARGOS_DEV_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+                - echo "Deploy on api.mx.dev.osianeed.com"
+                - NAME="dev-mx-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_DEV_URL
+                    ARGOS_USER: $ARGOS_DEV_USER
+                    ARGOS_PASSWORD: $ARGOS_DEV_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+                - echo "Deploy on api.br.dev.osianeed.com"
+                - NAME="dev-br-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_DEV_URL
+                    ARGOS_USER: $ARGOS_DEV_USER
+                    ARGOS_PASSWORD: $ARGOS_DEV_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+          - step: *Test
+    master:
+      - parallel:
+          - step:
+              name: Deploy master
+              deployment: production
+              services:
+                - docker
+              caches:
+                - gradle
+              script:
+                - gradle build -x lintKotlin -x test
+                - REPO_SLUG="$(echo $BITBUCKET_REPO_SLUG | sed 's/_/-/g')"
+                - TAG="${BITBUCKET_COMMIT}"
+                - docker build -t $REPO_SLUG .
+                - pipe: atlassian/aws-ecr-push-image:1.3.0
+                  variables:
+                    AWS_ACCESS_KEY_ID: $AWS_ECR_KEY_PROD
+                    AWS_SECRET_ACCESS_KEY: $AWS_ECR_SECRET_PROD
+                    AWS_DEFAULT_REGION: $AWS_ECR_REGION_PROD
+                    IMAGE_NAME: $REPO_SLUG
+                    TAGS: $TAG
+                - echo "Deploy on api.co.osianeed.com"
+                - NAME="co-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_PROD_URL
+                    ARGOS_USER: $ARGOS_PROD_USER
+                    ARGOS_PASSWORD: $ARGOS_PROD_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+                - echo "Deploy on api.ec.osianeed.com"
+                - NAME="ec-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_PROD_URL
+                    ARGOS_USER: $ARGOS_PROD_USER
+                    ARGOS_PASSWORD: $ARGOS_PROD_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+                - echo "Deploy on api.mx.osianeed.com"
+                - NAME="mx-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_PROD_URL
+                    ARGOS_USER: $ARGOS_PROD_USER
+                    ARGOS_PASSWORD: $ARGOS_PROD_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+                - echo "Deploy on api.br.osianeed.com"
+                - NAME="br-${REPO_SLUG}"
+                - pipe: docker://osianeed/argos
+                  variables:
+                    ARGOS_URL: $ARGOS_PROD_URL
+                    ARGOS_USER: $ARGOS_PROD_USER
+                    ARGOS_PASSWORD: $ARGOS_PROD_PASSWORD
+                    ARGOS_NAME: $NAME
+                    ARGOS_TAG: $TAG
+          - step: *Test
+  default:
+    - parallel:
+        - step:
+            name: Lint
+            caches:
+              - gradle
+            script:
+              - gradle lintKotlin
+              - gradle compileKotlin
+        - step: *Test
+        - step:
+            name: Security scan
+            script:
+              - pipe: atlassian/git-secrets-scan:0.5.1

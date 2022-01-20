@@ -1,0 +1,58 @@
+app:
+  country: ${COUNTRY:CO}
+  description: ${app.name} is a Spring Boot application
+spring:
+  cloud:
+    loadbalancer:
+      ribbon:
+        enable: false
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${FAMILY_POSTGRES_HOST:localhost}:5432/${MS_NAME:need}
+    username: ${MS_NAME:postgres}
+    password: ${FAMILY_POSTGRES_PASSWORD:admin}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: ${TIME_ZONE:UTC}
+      org:
+        hibernate:
+          envers:
+            default_schema: public
+            store_data_at_delete: true
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+server:
+  error:
+    include-stacktrace: always
+    include-message: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    loggers:
+      enabled: true
+logging:
+  level:
+    osia:
+      com:
+        examples:
+          spring: TRACE
+    org:
+      springframework:
+        cache: TRACE
+
