@@ -1,6 +1,6 @@
-package com.osia.logistic.need.dto.user.v1
+package com.osia.logistic.need.dto.client.v1
 
-import com.osia.logistic.need.model.User
+import com.osia.logistic.need.model.Client
 import org.mapstruct.Mapper
 import org.mapstruct.MappingTarget
 import org.mapstruct.NullValueCheckStrategy
@@ -13,11 +13,11 @@ import org.mapstruct.ReportingPolicy
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS
 )
-interface UserMapper {
+interface ClientMapper {
 
-    fun toDto(user: User): UserDto
+    fun toDto(client: Client): ClientDto
 
-    fun toModel(userRequest: UserRequest): User
+    fun toModel(clientRequest: ClientRequest): Client
 
-    fun updateModel(userRequest: UserRequest, @MappingTarget user: User)
+    fun updateModel(clientRequest: ClientRequest, @MappingTarget client: Client)
 }

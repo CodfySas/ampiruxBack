@@ -7,5 +7,5 @@ open class PostRequest {
     var description: String = ""
     var comments: Int = 0
     @NotNull
-    var userUuid: UUID? = null
+    var clientUuid: UUID? = null
 }

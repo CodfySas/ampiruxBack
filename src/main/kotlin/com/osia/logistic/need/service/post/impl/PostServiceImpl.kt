@@ -5,8 +5,8 @@ import com.osia.logistic.need.dto.post.v1.PostMapper
 import com.osia.logistic.need.dto.post.v1.PostRequest
 import com.osia.logistic.need.model.Post
 import com.osia.logistic.need.repository.post.PostRepository
+import com.osia.logistic.need.service.client.ClientService
 import com.osia.logistic.need.service.post.PostService
-import com.osia.logistic.need.service.user.UserService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
@@ -19,7 +19,7 @@ import java.util.UUID
 @Service("post.crud_service")
 class PostServiceImpl(
     private val postRepository: PostRepository,
-    private val userService: UserService,
+    private val clientService: ClientService,
     private val postMapper: PostMapper,
 ) : PostService {
 
@@ -36,7 +36,7 @@ class PostServiceImpl(
     @Transactional
     override fun save(postRequest: PostRequest): PostDto {
         val post = postMapper.toModel(postRequest)
-        post.user = userService.getOne(postRequest.userUuid ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST))
+        post.client = clientService.getOne(postRequest.clientUuid ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST))
         return postMapper.toDto(postRepository.save(post))
     }
 
@@ -44,7 +44,7 @@ class PostServiceImpl(
     override fun update(uuid: UUID, postRequest: PostRequest): PostDto {
         val post = getOne(uuid)
         postMapper.updateModel(postRequest, post)
-        post.user = userService.getOne(postRequest.userUuid ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST))
+        post.client = clientService.getOne(postRequest.clientUuid ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST))
         return postMapper.toDto(postRepository.save(post))
     }
 

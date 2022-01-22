@@ -1,7 +1,7 @@
 package com.osia.logistic.need.model
 
 import com.osia.logistic.need.model.abstracts.BaseModel
-import com.osia.logistic.need.model.listener.user.UserListener
+import com.osia.logistic.need.model.listener.client.ClientListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.envers.Audited
 import javax.persistence.Entity
@@ -14,10 +14,10 @@ import javax.persistence.Table
 @Audited
 @EntityListeners(
     value = [
-        UserListener::class,
+        ClientListener::class,
     ]
 )
-data class User(
+data class Client(
     var name: String = "",
     var email: String = "",
     var password: String = ""

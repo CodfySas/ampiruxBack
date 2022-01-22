@@ -1,8 +1,8 @@
-package com.osia.logistic.need.dto.user.v1
+package com.osia.logistic.need.dto.client.v1
 
 import javax.validation.constraints.NotNull
 
-open class UserRequest {
+open class ClientRequest {
     @NotNull
     var name: String = ""
     @NotNull

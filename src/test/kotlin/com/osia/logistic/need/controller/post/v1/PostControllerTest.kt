@@ -72,7 +72,7 @@ internal class PostControllerTest {
                     MockMvcResultMatchers.status().isOk,
                     MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
                     MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(postDto.uuid.toString())),
-                    MockMvcResultMatchers.jsonPath("$.user_dto.name", Matchers.equalTo(postDto.userDto.name)),
+                    MockMvcResultMatchers.jsonPath("$.client_dto.name", Matchers.equalTo(postDto.clientDto.name)),
                     MockMvcResultMatchers.jsonPath("$.description", Matchers.equalTo(postDto.description)),
                 )
             )
@@ -160,7 +160,7 @@ internal class PostControllerTest {
                     MockMvcResultMatchers.status().isOk,
                     MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
                     MockMvcResultMatchers.jsonPath("$.[0].uuid", Matchers.equalTo(postDto.uuid.toString())),
-                    MockMvcResultMatchers.jsonPath("$.[0].user_dto.name", Matchers.equalTo(postDto.userDto.name)),
+                    MockMvcResultMatchers.jsonPath("$.[0].client_dto.name", Matchers.equalTo(postDto.clientDto.name)),
                     MockMvcResultMatchers.jsonPath("$.[0].description", Matchers.equalTo(postDto.description)),
                 )
             )

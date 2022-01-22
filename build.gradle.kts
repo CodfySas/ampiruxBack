@@ -67,8 +67,6 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.11.2")
     implementation("io.jsonwebtoken:jjwt-impl:0.11.2")
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.2")
-    implementation("org.springframework.data:spring-data-redis:2.6.0")
-    implementation("redis.clients:jedis:3.7.1")
     implementation("org.apache.commons:commons-pool2:2.11.1")
     implementation("org.xerial.snappy:snappy-java:1.1.8.4")
 }

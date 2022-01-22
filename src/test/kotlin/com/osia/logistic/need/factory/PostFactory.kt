@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component
 @Component
 class PostFactory(
     private val postService: PostService,
-    private val userFactory: UserFactory
+    private val clientFactory: ClientFactory
 ) {
     var faker = Faker()
 
     fun createRequest(): PostRequest {
         return PostRequest().apply {
-            this.userUuid = userFactory.create().uuid
+            this.clientUuid = clientFactory.create().uuid
             this.description = faker.harryPotter().location()
         }
     }

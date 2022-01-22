@@ -19,7 +19,7 @@ interface PostMapper {
     @Mappings(
         value =
         [
-            Mapping(target = "userDto.name", source = "post.user.name"),
+            Mapping(target = "clientDto.name", source = "post.client.name"),
         ]
     )
     fun toDto(post: Post): PostDto

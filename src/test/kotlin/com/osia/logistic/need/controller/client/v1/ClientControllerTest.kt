@@ -1,8 +1,8 @@
-package com.osia.logistic.need.controller.user.v1
+package com.osia.logistic.need.controller.client.v1
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.logistic.need.config.ExternalServiceMock
-import com.osia.logistic.need.factory.UserFactory
+import com.osia.logistic.need.factory.ClientFactory
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -21,20 +21,20 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class UserControllerTest {
+internal class ClientControllerTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
     @Autowired
-    private lateinit var userFactory: UserFactory
+    private lateinit var clientFactory: ClientFactory
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
     private var coverageServiceMock = ExternalServiceMock(8090)
 
-    private var uri: String = "/v1/users"
+    private var uri: String = "/v1/clients"
 
     @BeforeAll
     fun loadMock() {
@@ -49,7 +49,7 @@ internal class UserControllerTest {
     @Test
     fun index() {
         for (i in 10 downTo 1 step 1) {
-            userFactory.create()
+            clientFactory.create()
         }
         this.mockMvc.perform(MockMvcRequestBuilders.get(uri))
             .andDo(MockMvcResultHandlers.print())
@@ -64,33 +64,33 @@ internal class UserControllerTest {
 
     @Test
     fun show() {
-        val userDto = userFactory.create()
-        this.mockMvc.perform(MockMvcRequestBuilders.get("$uri/${userDto.uuid}"))
+        val clientDto = clientFactory.create()
+        this.mockMvc.perform(MockMvcRequestBuilders.get("$uri/${clientDto.uuid}"))
             .andDo(MockMvcResultHandlers.print())
             .andExpect(
                 ResultMatcher.matchAll(
                     MockMvcResultMatchers.status().isOk,
                     MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-                    MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(userDto.uuid.toString())),
-                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(userDto.name)),
+                    MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(clientDto.uuid.toString())),
+                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(clientDto.name)),
                 )
             )
     }
 
     @Test
     fun create() {
-        val userRequest = userFactory.createRequest()
+        val clientRequest = clientFactory.createRequest()
         this.mockMvc.perform(
             MockMvcRequestBuilders.post(uri)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequest))
+                .content(objectMapper.writeValueAsString(clientRequest))
                 .accept(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(
                 ResultMatcher.matchAll(
                     MockMvcResultMatchers.status().isOk,
-                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(userRequest.name)),
+                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(clientRequest.name)),
                     MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
                 )
             )
@@ -99,43 +99,43 @@ internal class UserControllerTest {
 
     @Test
     fun update() {
-        val userDto = userFactory.create()
+        val clientDto = clientFactory.create()
 
-        val userRequest = userFactory.createRequest()
+        val clientRequest = clientFactory.createRequest()
 
         this.mockMvc.perform(
-            MockMvcRequestBuilders.patch("$uri/${userDto.uuid}")
+            MockMvcRequestBuilders.patch("$uri/${clientDto.uuid}")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequest))
+                .content(objectMapper.writeValueAsString(clientRequest))
                 .accept(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(
                 ResultMatcher.matchAll(
                     MockMvcResultMatchers.status().isOk,
-                    MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(userDto.uuid.toString())),
-                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(userRequest.name)),
+                    MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(clientDto.uuid.toString())),
+                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(clientRequest.name)),
                 )
             )
     }
 
     @Test
     fun delete() {
-        val userDto = userFactory.create()
-        this.mockMvc.perform(MockMvcRequestBuilders.get("$uri/${userDto.uuid}"))
+        val clientDto = clientFactory.create()
+        this.mockMvc.perform(MockMvcRequestBuilders.get("$uri/${clientDto.uuid}"))
             .andDo(MockMvcResultHandlers.print())
             .andExpect(
                 ResultMatcher.matchAll(
                     MockMvcResultMatchers.status().isOk,
                     MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-                    MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(userDto.uuid.toString())),
-                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(userDto.name)),
+                    MockMvcResultMatchers.jsonPath("$.uuid", Matchers.equalTo(clientDto.uuid.toString())),
+                    MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(clientDto.name)),
                 )
             )
 
-        this.mockMvc.perform(MockMvcRequestBuilders.delete("$uri/${userDto.uuid}"))
+        this.mockMvc.perform(MockMvcRequestBuilders.delete("$uri/${clientDto.uuid}"))
 
-        this.mockMvc.perform(MockMvcRequestBuilders.get("$uri/${userDto.uuid}"))
+        this.mockMvc.perform(MockMvcRequestBuilders.get("$uri/${clientDto.uuid}"))
             .andDo(MockMvcResultHandlers.print())
             .andExpect(
                 ResultMatcher.matchAll(
@@ -146,11 +146,11 @@ internal class UserControllerTest {
 
     @Test
     fun showMultiple() {
-        val userDto = userFactory.create()
+        val clientDto = clientFactory.create()
         this.mockMvc.perform(
             MockMvcRequestBuilders.post("$uri/multiple")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(mutableListOf(userDto.uuid)))
+                .content(objectMapper.writeValueAsString(mutableListOf(clientDto.uuid)))
                 .accept(MediaType.APPLICATION_JSON)
         )
             .andDo(MockMvcResultHandlers.print())
@@ -158,8 +158,8 @@ internal class UserControllerTest {
                 ResultMatcher.matchAll(
                     MockMvcResultMatchers.status().isOk,
                     MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-                    MockMvcResultMatchers.jsonPath("$.[0].uuid", Matchers.equalTo(userDto.uuid.toString())),
-                    MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.equalTo(userDto.name)),
+                    MockMvcResultMatchers.jsonPath("$.[0].uuid", Matchers.equalTo(clientDto.uuid.toString())),
+                    MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.equalTo(clientDto.name)),
                 )
             )
     }

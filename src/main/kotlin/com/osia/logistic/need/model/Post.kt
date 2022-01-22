@@ -28,5 +28,5 @@ data class Post(
 ) : BaseModel() {
 
     @ManyToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    var user: User? = null
+    var client: Client? = null
 }

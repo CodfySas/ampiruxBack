@@ -1,8 +1,8 @@
-package com.osia.logistic.need.dto.user.v1
+package com.osia.logistic.need.dto.client.v1
 
 import com.osia.logistic.need.dto.BaseDto
 
-open class UserDto : BaseDto() {
+open class ClientDto : BaseDto() {
     var name: String = ""
     var email: String = ""
 }
