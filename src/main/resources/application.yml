@@ -8,20 +8,21 @@ spring:
         enable: false
   main:
     allow-bean-definition-overriding: true
+    allow-circular-references: true
   output:
     ansi:
       enabled: ALWAYS
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${FAMILY_POSTGRES_HOST:localhost}:5432/${MS_NAME:need}
+    url: jdbc:postgresql://${FAMILY_POSTGRES_HOST:localhost}:5432/${MS_NAME:osia_erp}
     username: ${MS_NAME:postgres}
     password: ${FAMILY_POSTGRES_PASSWORD:admin}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: update #change in time to none
     properties:
       hibernate:
         format_sql: true
@@ -32,6 +33,14 @@ spring:
           envers:
             default_schema: public
             store_data_at_delete: true
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-version: 1
+    schemas: "public"
+    locations: "classpath:db/migration"
+    sql-migration-prefix: "V"
+    sql-migration-suffixes: ".sql"
+    baseline-on-migrate: ${BASELINE_ON_MIGRATE:true}
   jackson:
     property-naming-strategy: SNAKE_CASE
 server:

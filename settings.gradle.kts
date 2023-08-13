@@ -1,1 +1,1 @@
-rootProject.name = "need"
+rootProject.name = "osia_erp"
