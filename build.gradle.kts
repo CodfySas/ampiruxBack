@@ -11,7 +11,7 @@ plugins {
     kotlin("kapt") version "1.6.21"
 }
 
-group = "com.osia.osia_erp"
+group = "com.osia.nota_maestro"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
 

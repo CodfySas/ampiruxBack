@@ -113,3 +113,38 @@ CREATE TABLE if not exists calendar_tasks
     uuid_client      UUID          null,
     CONSTRAINT calendar_tasks_pkey PRIMARY KEY (uuid)
 );
+
+
+CREATE TABLE if not exists clients
+(
+    uuid             uuid         NOT NULL,
+    code             varchar(255) NULL,
+    version          int8         NULL,
+    created_at       timestamp    NULL,
+    last_modified_at timestamp    NULL,
+    deleted_at       timestamp    NULL,
+    deleted          bool         NULL DEFAULT false,
+
+    uuid_company     UUID         null,
+    name             varchar      null,
+    id               varchar      null,
+    phone            varchar      null,
+    CONSTRAINT clients_pkey PRIMARY KEY (uuid)
+);
+
+CREATE TABLE if not exists workers
+(
+    uuid             uuid         NOT NULL,
+    code             varchar(255) NULL,
+    version          int8         NULL,
+    created_at       timestamp    NULL,
+    last_modified_at timestamp    NULL,
+    deleted_at       timestamp    NULL,
+    deleted          bool         NULL DEFAULT false,
+
+    uuid_company     UUID         null,
+    name             varchar      null,
+    id               varchar      null,
+    phone            varchar      null,
+    CONSTRAINT workers_pkey PRIMARY KEY (uuid)
+);
