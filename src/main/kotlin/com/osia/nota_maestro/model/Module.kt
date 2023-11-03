@@ -21,5 +21,5 @@ import javax.persistence.Table
 @Where(clause = "deleted = false")
 data class Module(
     var name: String? = null,
-    var order: Int? = null
+    var ordered: Int? = null
 ) : BaseModel()

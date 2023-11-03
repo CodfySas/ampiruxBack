@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull
 @Where(clause = "deleted = false")
 data class CalendarTask(
     @NotNull
-    var uuidCompany: UUID? = null,
+    var uuidSchool: UUID? = null,
     var scheduleInit: LocalDateTime? = null,
     var hour: String? = null,
     var scheduleFinish: LocalDateTime? = null,

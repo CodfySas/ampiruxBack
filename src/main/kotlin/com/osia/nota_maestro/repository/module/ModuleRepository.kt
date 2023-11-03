@@ -17,5 +17,5 @@ interface ModuleRepository :
     @Query(value = "SELECT COUNT(*) FROM modules", nativeQuery = true)
     override fun count(increment: Int): Long
 
-    fun findAllByUuidInOrderByOrder(list: List<UUID>): List<Module>
+    fun findAllByUuidInOrderByOrdered(list: List<UUID>): List<Module>
 }

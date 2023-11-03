@@ -1,7 +1,7 @@
-package com.osia.nota_maestro.dto.company.v1
+package com.osia.nota_maestro.dto.school.v1
 
 import com.osia.nota_maestro.dto.BaseMapper
-import com.osia.nota_maestro.model.Company
+import com.osia.nota_maestro.model.School
 import org.mapstruct.Mapper
 import org.mapstruct.MappingTarget
 import org.mapstruct.Mappings
@@ -15,15 +15,15 @@ import org.mapstruct.ReportingPolicy
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
 )
-interface CompanyMapper : BaseMapper<CompanyRequest, Company, CompanyDto> {
+interface SchoolMapper : BaseMapper<SchoolRequest, School, SchoolDto> {
     @Mappings
-    override fun toModel(r: CompanyRequest): Company
+    override fun toModel(r: SchoolRequest): School
 
     @Mappings
-    override fun toDto(m: Company): CompanyDto
+    override fun toDto(m: School): SchoolDto
 
     @Mappings
-    override fun toRequest(d: CompanyDto): CompanyRequest
+    override fun toRequest(d: SchoolDto): SchoolRequest
 
-    override fun update(r: CompanyRequest, @MappingTarget m: Company)
+    override fun update(r: SchoolRequest, @MappingTarget m: School)
 }

@@ -8,6 +8,6 @@ class UserDto : BaseDto() {
     var name: String? = null
     var role: String? = null
     var token: String? = null
-    var uuidCompany: UUID? = null
-    var companyName: String? = null
+    var uuidSchool: UUID? = null
+    var schoolName: String? = null
 }

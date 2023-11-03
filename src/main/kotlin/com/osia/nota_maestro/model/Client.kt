@@ -26,5 +26,5 @@ data class Client(
     var id: String? = null,
     var phone: String? = null,
     @NotNull
-    var uuidCompany: UUID? = null
+    var uuidSchool: UUID? = null
 ) : BaseModel()

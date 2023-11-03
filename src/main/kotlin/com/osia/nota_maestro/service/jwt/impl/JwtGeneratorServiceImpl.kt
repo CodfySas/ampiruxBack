@@ -20,7 +20,7 @@ class JwtGeneratorServiceImpl(
 
     override fun generateToken(user: UserDto): String {
         log.trace("auth login -> userRequest: ${objectMapper.writeValueAsString(user)}")
-        return Jwts.builder().setSubject(user.uuidCompany.toString()).setIssuedAt(Date())
+        return Jwts.builder().setSubject(user.uuidSchool.toString()).setIssuedAt(Date())
             .signWith(SignatureAlgorithm.HS256, "secret").compact()
     }
 }

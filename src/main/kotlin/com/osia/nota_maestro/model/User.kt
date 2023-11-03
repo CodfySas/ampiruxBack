@@ -27,5 +27,5 @@ data class User(
     var name: String? = null,
     var role: String? = null,
     @NotNull
-    var uuidCompany: UUID? = null
+    var uuidSchool: UUID? = null
 ) : BaseModel()

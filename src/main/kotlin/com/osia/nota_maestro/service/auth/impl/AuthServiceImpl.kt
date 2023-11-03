@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
-import com.osia.nota_maestro.repository.company.CompanyRepository
+import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.auth.AuthUseCase
 import com.osia.nota_maestro.service.jwt.JwtGenerator
@@ -20,7 +20,7 @@ class AuthServiceImpl(
     private val objectMapper: ObjectMapper,
     private val jwtGenerator: JwtGenerator,
     private val userMapper: UserMapper,
-    private val companyRepository: CompanyRepository
+    private val schoolRepository: SchoolRepository
 ) : AuthUseCase {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -38,11 +38,11 @@ class AuthServiceImpl(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid credentials")
         }
 
-        val company = companyRepository.findById(userFound.uuidCompany!!).get().name
+        val school = schoolRepository.findById(userFound.uuidSchool!!).get().name
 
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
-            this.companyName = company
+            this.schoolName = school
         }
     }
 }

@@ -24,5 +24,5 @@ data class SubModule(
     var name: String? = null,
     var uuidModule: UUID? = null,
     var routeName: String? = null,
-    var order: Int? = null
+    var ordered: Int? = null
 ) : BaseModel()

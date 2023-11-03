@@ -1,4 +1,4 @@
-CREATE TABLE if not exists companies
+CREATE TABLE if not exists schools
 (
     uuid             uuid         NOT NULL,
     code             varchar(255) NULL,
@@ -10,7 +10,7 @@ CREATE TABLE if not exists companies
     name             varchar(255) NULL,
     active           bool         NULL DEFAULT true,
     expire_date      timestamp    NULL,
-    CONSTRAINT companies_pkey PRIMARY KEY (uuid)
+    CONSTRAINT schools_pkey PRIMARY KEY (uuid)
 );
 
 CREATE TABLE if not exists users
@@ -26,7 +26,7 @@ CREATE TABLE if not exists users
     username         varchar(255) NULL,
     password         varchar(255) NULL,
     role             varchar(255) NULL,
-    uuid_company     uuid         NOT NULL,
+    uuid_school      uuid         NOT NULL,
     CONSTRAINT users_pkey PRIMARY KEY (uuid)
 );
 
@@ -55,7 +55,7 @@ CREATE TABLE if not exists modules
     deleted_at       timestamp    NULL,
     deleted          bool         NULL DEFAULT false,
     name             varchar(255) NULL,
-    "order"          int8         NULL,
+    ordered            int8         NULL,
     CONSTRAINT modules_pkey PRIMARY KEY (uuid)
 );
 
@@ -73,7 +73,7 @@ CREATE TABLE if not exists sub_modules
     name             varchar(255) NULL,
     route_name       varchar(255) NULL,
     uuid_module      uuid         NOT NULL,
-    "order"          int8         NULL,
+    ordered            int8         NULL,
     CONSTRAINT sub_modules_pkey PRIMARY KEY (uuid)
 );
 
@@ -103,7 +103,7 @@ CREATE TABLE if not exists calendar_tasks
     deleted_at       timestamp     NULL,
     deleted          bool          NULL DEFAULT false,
 
-    uuid_company     UUID          null,
+    uuid_school      UUID          null,
     schedule_init    timestamp     null,
     hour             varchar       null,
     schedule_finish  timestamp     null,
@@ -125,7 +125,7 @@ CREATE TABLE if not exists clients
     deleted_at       timestamp    NULL,
     deleted          bool         NULL DEFAULT false,
 
-    uuid_company     UUID         null,
+    uuid_school      UUID         null,
     name             varchar      null,
     id               varchar      null,
     phone            varchar      null,
@@ -142,7 +142,7 @@ CREATE TABLE if not exists workers
     deleted_at       timestamp    NULL,
     deleted          bool         NULL DEFAULT false,
 
-    uuid_company     UUID         null,
+    uuid_school      UUID         null,
     name             varchar      null,
     id               varchar      null,
     phone            varchar      null,

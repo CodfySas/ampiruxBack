@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class CalendarTaskDto : BaseDto() {
-    var uuidCompany: UUID? = null
+    var uuidSchool: UUID? = null
     var scheduleInit: LocalDateTime? = null
     var hour: String? = null
     var scheduleFinish: LocalDateTime? = null

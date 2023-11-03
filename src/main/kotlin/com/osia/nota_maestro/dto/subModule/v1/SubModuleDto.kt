@@ -7,5 +7,5 @@ class SubModuleDto : BaseDto() {
     var name: String? = null
     var routeName: String? = null
     var uuidModule: UUID? = null
-    var order: Int? = null
+    var ordered: Int? = null
 }

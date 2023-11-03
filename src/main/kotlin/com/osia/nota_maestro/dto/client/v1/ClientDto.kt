@@ -9,5 +9,5 @@ class ClientDto : BaseDto() {
     var id: String? = null
     var phone: String? = null
     @NotNull
-    var uuidCompany: UUID? = null
+    var uuidSchool: UUID? = null
 }

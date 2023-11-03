@@ -7,5 +7,5 @@ class UserRequest {
     var password: String? = null
     var name: String? = null
     var role: String? = null
-    var uuidCompany: UUID? = null
+    var uuidSchool: UUID? = null
 }

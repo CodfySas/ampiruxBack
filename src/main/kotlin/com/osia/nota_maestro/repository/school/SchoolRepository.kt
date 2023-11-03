@@ -1,6 +1,6 @@
-package com.osia.nota_maestro.repository.company
+package com.osia.nota_maestro.repository.school
 
-import com.osia.nota_maestro.model.Company
+import com.osia.nota_maestro.model.School
 import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
-@Repository("company.crud_repository")
-interface CompanyRepository :
-    JpaRepository<Company, UUID>,
-    JpaSpecificationExecutor<Company>,
+@Repository("school.crud_repository")
+interface SchoolRepository :
+    JpaRepository<School, UUID>,
+    JpaSpecificationExecutor<School>,
     BaseRepository {
 
-    @Query(value = "SELECT COUNT(*) FROM companies", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM schools", nativeQuery = true)
     override fun count(increment: Int): Long
 }

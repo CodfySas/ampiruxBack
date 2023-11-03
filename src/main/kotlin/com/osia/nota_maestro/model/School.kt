@@ -1,7 +1,7 @@
 package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
-import com.osia.nota_maestro.model.listener.company.CompanyListener
+import com.osia.nota_maestro.model.listener.school.SchoolListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.time.LocalDateTime
@@ -10,17 +10,17 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "companies",
+    name = "schools",
 )
 @Entity
 @DynamicUpdate
 @EntityListeners(
     value = [
-        CompanyListener::class
+        SchoolListener::class
     ]
 )
 @Where(clause = "deleted = false")
-data class Company(
+data class School(
     var name: String? = null,
     var active: Boolean? = true,
     var expireDate: LocalDateTime? = null

@@ -20,17 +20,17 @@ class JwtFilter : GenericFilterBean() {
         val servletResponse = response as HttpServletResponse
         try {
             val authHeader = servletRequest.getHeader("authorization")
-            val company = servletRequest.getHeader("company")
+            val school = servletRequest.getHeader("school")
             if ("OPTIONS" == servletRequest.method) {
                 servletResponse.status = HttpServletResponse.SC_OK
                 chain?.doFilter(servletRequest, servletResponse)
             } else {
-                if (authHeader == null || !authHeader.startsWith("Bearer ") || company == null) {
+                if (authHeader == null || !authHeader.startsWith("Bearer ") || school == null) {
                     servletResponse.status = HttpServletResponse.SC_UNAUTHORIZED
                     throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized")
                 }
                 val token = authHeader.substring(7)
-                if (Jwts.parser().setSigningKey("secret").parseClaimsJws(token).body.subject != company) {
+                if (Jwts.parser().setSigningKey("secret").parseClaimsJws(token).body.subject != school) {
                     throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized")
                 }
             }

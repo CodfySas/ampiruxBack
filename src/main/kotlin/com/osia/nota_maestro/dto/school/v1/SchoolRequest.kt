@@ -1,9 +1,8 @@
-package com.osia.nota_maestro.dto.company.v1
+package com.osia.nota_maestro.dto.school.v1
 
-import com.osia.nota_maestro.dto.BaseDto
 import java.time.LocalDateTime
 
-class CompanyDto : BaseDto() {
+class SchoolRequest {
     var name: String? = null
     var active: Boolean? = true
     var expireDate: LocalDateTime? = null
