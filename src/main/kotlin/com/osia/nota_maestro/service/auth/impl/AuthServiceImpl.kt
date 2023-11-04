@@ -34,6 +34,7 @@ class AuthServiceImpl(
         }
 
         val pass = Md5Hash().createMd5(userRequest.password!!)
+        userRequest.username = userRequest.username!!.lowercase()
         val userFound = userRepository.getFirstByUsernameAndPassword(userRequest.username!!, pass).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid credentials")
         }
