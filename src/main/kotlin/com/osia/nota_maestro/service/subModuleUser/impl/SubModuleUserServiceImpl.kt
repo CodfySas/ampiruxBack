@@ -7,6 +7,7 @@ import com.osia.nota_maestro.dto.subModuleUser.v1.SubModuleUserRequest
 import com.osia.nota_maestro.model.SubModuleUser
 import com.osia.nota_maestro.repository.subModuleUser.SubModuleUserRepository
 import com.osia.nota_maestro.service.subModuleUser.SubModuleUserService
+import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -17,9 +18,6 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.persistence.criteria.CriteriaBuilder
-import javax.persistence.criteria.CriteriaQuery
-import javax.persistence.criteria.Root
 
 @Service("subModuleUser.crud_service")
 @Transactional
@@ -59,7 +57,7 @@ class SubModuleUserServiceImpl(
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String): Page<SubModuleUserDto> {
         log.trace("subModuleUser findAllByFilter -> pageable: $pageable, where: $where")
-        return subModuleUserRepository.findAll(Specification.where(createSpec(where)), pageable).map(subModuleUserMapper::toDto)
+        return subModuleUserRepository.findAll(Specification.where(CreateSpec<SubModuleUser>().createSpec(where)), pageable).map(subModuleUserMapper::toDto)
     }
 
     @Transactional
@@ -112,17 +110,5 @@ class SubModuleUserServiceImpl(
             it.deletedAt = LocalDateTime.now()
         }
         subModuleUserRepository.saveAll(subModuleUsers)
-    }
-
-    fun createSpec(where: String): Specification<SubModuleUser> {
-        var finalSpec = Specification { root: Root<SubModuleUser>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
-            root.get<Any>("deleted").`in`(false)
-        }
-        where.split(",").forEach {
-            finalSpec = finalSpec.and { root: Root<SubModuleUser>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
-                root.get<Any>(it.split(":")[0]).`in`(it.split(":")[1])
-            }
-        }
-        return finalSpec
     }
 }

@@ -7,6 +7,7 @@ import com.osia.nota_maestro.dto.worker.v1.WorkerRequest
 import com.osia.nota_maestro.model.Worker
 import com.osia.nota_maestro.repository.worker.WorkerRepository
 import com.osia.nota_maestro.service.worker.WorkerService
+import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -17,9 +18,6 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.persistence.criteria.CriteriaBuilder
-import javax.persistence.criteria.CriteriaQuery
-import javax.persistence.criteria.Root
 
 @Service("worker.crud_service")
 @Transactional
@@ -59,7 +57,7 @@ class WorkerServiceImpl(
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String): Page<WorkerDto> {
         log.trace("worker findAllByFilter -> pageable: $pageable, where: $where")
-        return workerRepository.findAll(Specification.where(createSpec(where)), pageable).map(workerMapper::toDto)
+        return workerRepository.findAll(Specification.where(CreateSpec<Worker>().createSpec(where)), pageable).map(workerMapper::toDto)
     }
 
     @Transactional
@@ -112,17 +110,5 @@ class WorkerServiceImpl(
             it.deletedAt = LocalDateTime.now()
         }
         workerRepository.saveAll(workers)
-    }
-
-    fun createSpec(where: String): Specification<Worker> {
-        var finalSpec = Specification { root: Root<Worker>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
-            root.get<Any>("deleted").`in`(false)
-        }
-        where.split(",").forEach {
-            finalSpec = finalSpec.and { root: Root<Worker>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
-                root.get<Any>(it.split(":")[0]).`in`(it.split(":")[1])
-            }
-        }
-        return finalSpec
     }
 }

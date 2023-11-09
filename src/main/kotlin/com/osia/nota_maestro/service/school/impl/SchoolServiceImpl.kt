@@ -7,6 +7,7 @@ import com.osia.nota_maestro.dto.school.v1.SchoolRequest
 import com.osia.nota_maestro.model.School
 import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.service.school.SchoolService
+import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -17,9 +18,6 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.persistence.criteria.CriteriaBuilder
-import javax.persistence.criteria.CriteriaQuery
-import javax.persistence.criteria.Root
 
 @Service("school.crud_service")
 @Transactional
@@ -59,7 +57,7 @@ class SchoolServiceImpl(
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String): Page<SchoolDto> {
         log.trace("school findAllByFilter -> pageable: $pageable, where: $where")
-        return schoolRepository.findAll(Specification.where(createSpec(where)), pageable).map(schoolMapper::toDto)
+        return schoolRepository.findAll(Specification.where(CreateSpec<School>().createSpec(where)), pageable).map(schoolMapper::toDto)
     }
 
     @Transactional
@@ -112,17 +110,5 @@ class SchoolServiceImpl(
             it.deletedAt = LocalDateTime.now()
         }
         schoolRepository.saveAll(schools)
-    }
-
-    fun createSpec(where: String): Specification<School> {
-        var finalSpec = Specification { root: Root<School>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
-            root.get<Any>("deleted").`in`(false)
-        }
-        where.split(",").forEach {
-            finalSpec = finalSpec.and { root: Root<School>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
-                root.get<Any>(it.split(":")[0]).`in`(it.split(":")[1])
-            }
-        }
-        return finalSpec
     }
 }

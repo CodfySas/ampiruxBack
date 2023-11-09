@@ -55,7 +55,7 @@ class ModuleServiceImpl(
                     this.subModules = subModulesFromModule.map(subModulesMapper::toDto)
                 }
             )
-            ordered++;
+            ordered++
         }
 
         return finalList

@@ -2,7 +2,6 @@ package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
 import com.osia.nota_maestro.model.listener.teacher.TeacherListener
-import com.osia.nota_maestro.model.listener.worker.WorkerListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.util.UUID
