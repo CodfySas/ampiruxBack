@@ -45,15 +45,17 @@ class ModuleServiceImpl(
         val subModules = subModulesRepository.findAllByUuidInOrderByOrdered(subModulesByUser.mapNotNull { it.uuidSubModule }.distinct())
         val modules = moduleRepository.findAllByUuidInOrderByOrdered(subModules.mapNotNull { it.uuidModule }.distinct())
 
+        var ordered = 1
         modules.forEach {
             val subModulesFromModule = subModules.filter { sm -> sm.uuidModule == it.uuid }
             finalList.add(
                 ModulesBuilderDto().apply {
                     this.name = it.name
-                    this.ordered = it.ordered
+                    this.ordered = ordered
                     this.subModules = subModulesFromModule.map(subModulesMapper::toDto)
                 }
             )
+            ordered++;
         }
 
         return finalList

@@ -15,8 +15,7 @@ import org.mapstruct.ReportingPolicy
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
 )
-interface SubModuleUserMapper :
-    com.osia.nota_maestro.dto.BaseMapper<SubModuleUserRequest, SubModuleUser, SubModuleUserDto> {
+interface SubModuleUserMapper : BaseMapper<SubModuleUserRequest, SubModuleUser, SubModuleUserDto> {
     @Mappings
     override fun toModel(r: SubModuleUserRequest): SubModuleUser
 
