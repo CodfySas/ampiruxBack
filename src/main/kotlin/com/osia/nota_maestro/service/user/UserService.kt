@@ -12,7 +12,7 @@ interface UserService {
     fun count(increment: Int): Long
     fun getById(uuid: UUID): User
     fun findByMultiple(uuidList: List<UUID>): List<UserDto>
-    fun findAll(pageable: Pageable): Page<UserDto>
+    fun findAll(pageable: Pageable, school: UUID): Page<UserDto>
     fun findAllByFilter(pageable: Pageable, where: String): Page<UserDto>
     // Create
     fun save(userRequest: UserRequest): UserDto

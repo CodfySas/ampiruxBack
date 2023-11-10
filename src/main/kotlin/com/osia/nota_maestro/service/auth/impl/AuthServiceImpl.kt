@@ -39,11 +39,13 @@ class AuthServiceImpl(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid credentials")
         }
 
-        val school = schoolRepository.findById(userFound.uuidSchool!!).get().name
+        val school = schoolRepository.findById(userFound.uuidSchool!!).get()
 
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
-            this.schoolName = school
+            this.schoolName = school.name
+            this.color1 = school.color1
+            this.color2 = school.color2
         }
     }
 }

@@ -49,9 +49,9 @@ class UserServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAll(pageable: Pageable): Page<UserDto> {
+    override fun findAll(pageable: Pageable, school: UUID): Page<UserDto> {
         log.trace("user findAll -> pageable: $pageable")
-        return userRepository.findAll(pageable).map(userMapper::toDto)
+        return userRepository.findAll(Specification.where(CreateSpec<User>().createSpec("", school)),pageable).map(userMapper::toDto)
     }
 
     @Transactional(readOnly = true)
