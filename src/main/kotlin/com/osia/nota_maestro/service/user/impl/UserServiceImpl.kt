@@ -7,7 +7,6 @@ import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
 import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.model.enums.UserType
-import com.osia.nota_maestro.repository.teacher.TeacherRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.service.teacher.TeacherService
@@ -73,20 +72,22 @@ class UserServiceImpl(
         log.trace("user save -> request: $userRequest")
         val user = userMapper.toModel(userRequest)
         val actualSchool = schoolService.getById(school)
-        user.username = user.username + "@"+actualSchool.shortName
+        user.username = user.username + "@" + actualSchool.shortName
         user.password = Md5Hash().createMd5(user.password ?: "12345")
         user.uuidSchool = actualSchool.uuid
-        if(userRequest.role == UserType.teacher){
-            val teacher = teacherService.save(TeacherRequest().apply {
-                this.name = user.name
-                this.lastname = user.lastname
-                this.dni = user.dni
-                this.address = userRequest.address
-                this.email = userRequest.email
-                this.phone = userRequest.phone
-                this.documentType = user.documentType
-                this.uuidSchool = actualSchool.uuid
-            })
+        if (userRequest.role == UserType.teacher) {
+            val teacher = teacherService.save(
+                TeacherRequest().apply {
+                    this.name = user.name
+                    this.lastname = user.lastname
+                    this.dni = user.dni
+                    this.address = userRequest.address
+                    this.email = userRequest.email
+                    this.phone = userRequest.phone
+                    this.documentType = user.documentType
+                    this.uuidSchool = actualSchool.uuid
+                }
+            )
             user.uuidRole = teacher.uuid
         }
         return userMapper.toDto(userRepository.save(user))
