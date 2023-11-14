@@ -12,7 +12,7 @@ class CreateSpec<T> {
         var finalSpec = Specification { root: Root<T>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
             root.get<Any>("deleted").`in`(false)
         }
-        if(where != ""){
+        if (where != "") {
             where.split(",").forEach {
                 finalSpec = finalSpec.and { root: Root<T>, _: CriteriaQuery<*>?, cb: CriteriaBuilder ->
                     cb.like(cb.upper(root.get(it.split(":")[0])), "%" + it.split(":")[1].uppercase() + "%")

@@ -1,13 +1,19 @@
 package com.osia.nota_maestro.service.user.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.teacher.v1.TeacherRequest
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
 import com.osia.nota_maestro.model.User
+import com.osia.nota_maestro.model.enums.UserType
+import com.osia.nota_maestro.repository.teacher.TeacherRepository
 import com.osia.nota_maestro.repository.user.UserRepository
+import com.osia.nota_maestro.service.school.SchoolService
+import com.osia.nota_maestro.service.teacher.TeacherService
 import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
+import com.osia.nota_maestro.util.Md5Hash
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -23,6 +29,8 @@ import java.util.UUID
 @Transactional
 class UserServiceImpl(
     private val userRepository: UserRepository,
+    private val teacherService: TeacherService,
+    private val schoolService: SchoolService,
     private val userMapper: UserMapper,
     private val objectMapper: ObjectMapper
 ) : UserService {
@@ -51,19 +59,36 @@ class UserServiceImpl(
     @Transactional(readOnly = true)
     override fun findAll(pageable: Pageable, school: UUID): Page<UserDto> {
         log.trace("user findAll -> pageable: $pageable")
-        return userRepository.findAll(Specification.where(CreateSpec<User>().createSpec("", school)),pageable).map(userMapper::toDto)
+        return userRepository.findAll(Specification.where(CreateSpec<User>().createSpec("", school)), pageable).map(userMapper::toDto)
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<UserDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<UserDto> {
         log.trace("user findAllByFilter -> pageable: $pageable, where: $where")
-        return userRepository.findAll(Specification.where(CreateSpec<User>().createSpec(where)), pageable).map(userMapper::toDto)
+        return userRepository.findAll(Specification.where(CreateSpec<User>().createSpec(where, school)), pageable).map(userMapper::toDto)
     }
 
     @Transactional
-    override fun save(userRequest: UserRequest): UserDto {
+    override fun save(userRequest: UserRequest, school: UUID): UserDto {
         log.trace("user save -> request: $userRequest")
         val user = userMapper.toModel(userRequest)
+        val actualSchool = schoolService.getById(school)
+        user.username = user.username + "@"+actualSchool.shortName
+        user.password = Md5Hash().createMd5(user.password ?: "12345")
+        user.uuidSchool = actualSchool.uuid
+        if(userRequest.role == UserType.teacher){
+            val teacher = teacherService.save(TeacherRequest().apply {
+                this.name = user.name
+                this.lastname = user.lastname
+                this.dni = user.dni
+                this.address = userRequest.address
+                this.email = userRequest.email
+                this.phone = userRequest.phone
+                this.documentType = user.documentType
+                this.uuidSchool = actualSchool.uuid
+            })
+            user.uuidRole = teacher.uuid
+        }
         return userMapper.toDto(userRepository.save(user))
     }
 

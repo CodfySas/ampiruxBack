@@ -9,4 +9,5 @@ class SchoolDto : BaseDto() {
     var name: String? = null
     var active: Boolean? = true
     var expireDate: LocalDateTime? = null
+    var shortName: String? = null
 }

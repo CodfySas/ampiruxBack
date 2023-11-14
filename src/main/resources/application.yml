@@ -22,7 +22,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: true
     hibernate:
-      ddl-auto: update #change in time to none
+      ddl-auto: none #change in time to none
     properties:
       hibernate:
         format_sql: true

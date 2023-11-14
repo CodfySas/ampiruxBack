@@ -13,9 +13,9 @@ interface UserService {
     fun getById(uuid: UUID): User
     fun findByMultiple(uuidList: List<UUID>): List<UserDto>
     fun findAll(pageable: Pageable, school: UUID): Page<UserDto>
-    fun findAllByFilter(pageable: Pageable, where: String): Page<UserDto>
+    fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<UserDto>
     // Create
-    fun save(userRequest: UserRequest): UserDto
+    fun save(userRequest: UserRequest, school: UUID): UserDto
     fun saveMultiple(userRequestList: List<UserRequest>): List<UserDto>
     // Update
     fun update(uuid: UUID, userRequest: UserRequest): UserDto

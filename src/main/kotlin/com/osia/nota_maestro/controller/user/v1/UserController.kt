@@ -37,8 +37,8 @@ class UserController(
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page<UserDto> {
-        return userService.findAllByFilter(pageable, where)
+    fun findAllByFilter(pageable: Pageable, @PathVariable where: String, @RequestHeader school: UUID): Page<UserDto> {
+        return userService.findAllByFilter(pageable, where, school)
     }
 
     @GetMapping("/count/{increment}")
@@ -59,9 +59,10 @@ class UserController(
     // Create
     @PostMapping
     fun save(
-        @Validated(OnCreate::class) @RequestBody request: UserRequest
+        @Validated(OnCreate::class) @RequestBody request: UserRequest,
+        @RequestHeader school: UUID
     ): ResponseEntity<UserDto> {
-        return ResponseEntity(userService.save(request), HttpStatus.CREATED)
+        return ResponseEntity(userService.save(request, school), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")

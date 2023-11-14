@@ -49,15 +49,15 @@ class TeacherServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAll(pageable: Pageable): Page<TeacherDto> {
+    override fun findAll(pageable: Pageable, school: UUID): Page<TeacherDto> {
         log.trace("teacher findAll -> pageable: $pageable")
-        return teacherRepository.findAll(pageable).map(teacherMapper::toDto)
+        return teacherRepository.findAll(Specification.where(CreateSpec<Teacher>().createSpec("", school)), pageable).map(teacherMapper::toDto)
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<TeacherDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<TeacherDto> {
         log.trace("teacher findAllByFilter -> pageable: $pageable, where: $where")
-        return teacherRepository.findAll(Specification.where(CreateSpec<Teacher>().createSpec(where)), pageable).map(teacherMapper::toDto)
+        return teacherRepository.findAll(Specification.where(CreateSpec<Teacher>().createSpec(where, school)), pageable).map(teacherMapper::toDto)
     }
 
     @Transactional

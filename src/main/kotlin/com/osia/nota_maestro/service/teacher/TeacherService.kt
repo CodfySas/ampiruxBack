@@ -12,8 +12,8 @@ interface TeacherService {
     fun count(increment: Int): Long
     fun getById(uuid: UUID): Teacher
     fun findByMultiple(uuidList: List<UUID>): List<TeacherDto>
-    fun findAll(pageable: Pageable): Page<TeacherDto>
-    fun findAllByFilter(pageable: Pageable, where: String): Page<TeacherDto>
+    fun findAll(pageable: Pageable, school: UUID): Page<TeacherDto>
+    fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<TeacherDto>
     // Create
     fun save(teacherRequest: TeacherRequest): TeacherDto
     fun saveMultiple(teacherRequestList: List<TeacherRequest>): List<TeacherDto>

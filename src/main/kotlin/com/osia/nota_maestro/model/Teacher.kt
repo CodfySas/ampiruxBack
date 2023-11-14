@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull
 @Where(clause = "deleted = false")
 data class Teacher(
     var name: String? = null,
+    var lastname: String? = null,
     var dni: String? = null,
     var documentType: String? = null,
     var phone: String? = null,

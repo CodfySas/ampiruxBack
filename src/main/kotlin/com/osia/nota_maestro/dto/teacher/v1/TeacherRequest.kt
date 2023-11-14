@@ -5,6 +5,7 @@ import javax.validation.constraints.NotNull
 
 class TeacherRequest {
     var name: String? = null
+    var lastname: String? = null
     var dni: String? = null
     var documentType: String? = null
     var phone: String? = null

@@ -22,6 +22,7 @@ import javax.persistence.Table
 @Where(clause = "deleted = false")
 data class School(
     var name: String? = null,
+    var shortName: String? = null,
     var color1: String? = "E78617",
     var color2: String? = "e35205",
     var active: Boolean? = true,
