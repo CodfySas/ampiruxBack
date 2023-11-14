@@ -93,28 +93,6 @@ CREATE TABLE if not exists sub_module_users
     CONSTRAINT sub_module_users_pkey PRIMARY KEY (uuid)
 );
 
-CREATE TABLE if not exists calendar_tasks
-(
-    uuid             uuid          NOT NULL,
-    code             varchar(255)  NULL,
-    version          int8          NULL,
-    created_at       timestamp     NULL,
-    last_modified_at timestamp     NULL,
-    deleted_at       timestamp     NULL,
-    deleted          bool          NULL DEFAULT false,
-
-    uuid_school      UUID          null,
-    schedule_init    timestamp     null,
-    hour             varchar       null,
-    schedule_finish  timestamp     null,
-    task_type        varchar       null,
-    description      varchar(1000) null,
-    assigned_to      UUID          null,
-    uuid_client      UUID          null,
-    CONSTRAINT calendar_tasks_pkey PRIMARY KEY (uuid)
-);
-
-
 CREATE TABLE if not exists clients
 (
     uuid             uuid         NOT NULL,
