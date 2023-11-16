@@ -17,4 +17,8 @@ class UserDto : BaseDto() {
     var documentType: String? = null
     var lastname: String? = null
     var uuidRole: UUID? = null
+    var shortName: String? = null
+    var phone: String? = null
+    var address: String? = null
+    var email: String? = null
 }

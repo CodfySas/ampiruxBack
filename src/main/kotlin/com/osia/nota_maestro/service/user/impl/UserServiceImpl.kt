@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.service.user.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.student.v1.StudentRequest
 import com.osia.nota_maestro.dto.teacher.v1.TeacherRequest
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
@@ -9,6 +10,7 @@ import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.model.enums.UserType
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.school.SchoolService
+import com.osia.nota_maestro.service.student.StudentService
 import com.osia.nota_maestro.service.teacher.TeacherService
 import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
@@ -31,7 +33,9 @@ class UserServiceImpl(
     private val teacherService: TeacherService,
     private val schoolService: SchoolService,
     private val userMapper: UserMapper,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val studentService: StudentService
+
 ) : UserService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -44,9 +48,22 @@ class UserServiceImpl(
 
     @Transactional(readOnly = true)
     override fun getById(uuid: UUID): User {
-        return userRepository.findById(uuid).orElseThrow {
+        var user = userRepository.findById(uuid).orElseThrow {
             ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "User $uuid not found")
         }
+        if (user.role == UserType.teacher) {
+            val teacher = teacherService.getById(user.uuidRole!!)
+            user.phone = teacher.phone
+            user.address = teacher.address
+            user.email = teacher.email
+        }
+        if (user.role == UserType.student) {
+            val student = studentService.getById(user.uuidRole!!)
+            user.phone = student.phone
+            user.address = student.address
+            user.email = student.email
+        }
+        return user
     }
 
     @Transactional(readOnly = true)
@@ -89,6 +106,21 @@ class UserServiceImpl(
                 }
             )
             user.uuidRole = teacher.uuid
+        }
+        if (userRequest.role == UserType.student) {
+            val student = studentService.save(
+                StudentRequest().apply {
+                    this.name = user.name
+                    this.lastname = user.lastname
+                    this.dni = user.dni
+                    this.address = userRequest.address
+                    this.email = userRequest.email
+                    this.phone = userRequest.phone
+                    this.documentType = user.documentType
+                    this.uuidSchool = actualSchool.uuid
+                }
+            )
+            user.uuidRole = student.uuid
         }
         return userMapper.toDto(userRepository.save(user))
     }

@@ -46,6 +46,7 @@ class AuthServiceImpl(
             this.schoolName = school.name
             this.color1 = school.color1
             this.color2 = school.color2
+            this.shortName = school.shortName
         }
     }
 }
