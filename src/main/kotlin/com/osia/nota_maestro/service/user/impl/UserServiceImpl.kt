@@ -2,15 +2,20 @@ package com.osia.nota_maestro.service.user.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.student.v1.StudentRequest
+import com.osia.nota_maestro.dto.subModuleUser.v1.SubModuleUserRequest
 import com.osia.nota_maestro.dto.teacher.v1.TeacherRequest
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
+import com.osia.nota_maestro.model.SubModule
 import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.model.enums.UserType
 import com.osia.nota_maestro.repository.user.UserRepository
+import com.osia.nota_maestro.service.module.ModuleUseCase
 import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.service.student.StudentService
+import com.osia.nota_maestro.service.subModule.SubModuleService
+import com.osia.nota_maestro.service.subModuleUser.SubModuleUserService
 import com.osia.nota_maestro.service.teacher.TeacherService
 import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
@@ -34,7 +39,11 @@ class UserServiceImpl(
     private val schoolService: SchoolService,
     private val userMapper: UserMapper,
     private val objectMapper: ObjectMapper,
-    private val studentService: StudentService
+    private val studentService: StudentService,
+    private val subModuleService: SubModuleService,
+    private val subModuleUserService: SubModuleUserService,
+        private val moduleUseCase: ModuleUseCase
+
 
 ) : UserService {
 
@@ -122,6 +131,14 @@ class UserServiceImpl(
             )
             user.uuidRole = student.uuid
         }
+        val subModules = subModuleService.findAll(Pageable.unpaged())
+        if(user.role==UserType.admin){
+            val usersModule = subModules.first { it.name=="Usuarios" }
+            moduleUseCase.saveSubModuleUser(SubModuleUserRequest().apply {
+                this.uuidUser = user.uuid
+                this.uuidSubModules = listOf(usersModule.uuid!!)
+            })
+        }
         return userMapper.toDto(userRepository.save(user))
     }
 
@@ -137,6 +154,8 @@ class UserServiceImpl(
         log.trace("user update -> uuid: $uuid, request: $userRequest")
         val user = getById(uuid)
         userMapper.update(userRequest, user)
+        val actualSchool = schoolService.getById(user.uuidSchool!!)
+        user.username = user.username + "@" + actualSchool.shortName
         return userMapper.toDto(userRepository.save(user))
     }
 
