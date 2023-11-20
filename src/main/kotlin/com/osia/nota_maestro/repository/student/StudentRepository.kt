@@ -1,11 +1,13 @@
 package com.osia.nota_maestro.repository.student
 
 import com.osia.nota_maestro.model.Student
+import com.osia.nota_maestro.model.Teacher
 import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import java.util.Optional
 import java.util.UUID
 
 @Repository("student.crud_repository")
@@ -16,4 +18,6 @@ interface StudentRepository :
 
     @Query(value = "SELECT COUNT(*) FROM students", nativeQuery = true)
     override fun count(increment: Int): Long
+
+    fun findFirstByDni(dni: String): Optional<Student>
 }

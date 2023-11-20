@@ -61,9 +61,19 @@ class TeacherServiceImpl(
     }
 
     @Transactional
-    override fun save(teacherRequest: TeacherRequest): TeacherDto {
+    override fun save(teacherRequest: TeacherRequest, replace: Boolean): TeacherDto {
         log.trace("teacher save -> request: $teacherRequest")
-        val teacher = teacherMapper.toModel(teacherRequest)
+        val savedTeacher = teacherRepository.findFirstByDni(teacherRequest.dni!!)
+        val teacher = if(savedTeacher.isPresent){
+            if(!replace){
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Ya existe el docente ${teacherRequest.dni}")
+            }else{
+                teacherMapper.update(teacherRequest, savedTeacher.get())
+                savedTeacher.get()
+            }
+        }else{
+            teacherMapper.toModel(teacherRequest)
+        }
         return teacherMapper.toDto(teacherRepository.save(teacher))
     }
 

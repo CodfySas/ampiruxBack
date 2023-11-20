@@ -14,4 +14,5 @@ interface ModuleUseCase {
     fun saveModule(moduleRequest: ModuleRequest): ModuleDto
     fun saveSubModule(subModuleRequest: SubModuleRequest): SubModuleDto
     fun saveSubModuleUser(subModuleUserRequest: SubModuleUserRequest): List<SubModuleUserDto>
+    fun cleanSubModuleUsers(uuidUser: UUID)
 }

@@ -86,4 +86,10 @@ class ModuleServiceImpl(
         }
         return subModuleUserRepository.saveAll(subModelUsers).map(subModuleUserMapper::toDto)
     }
+
+    override fun cleanSubModuleUsers(uuidUser: UUID) {
+        log.trace("module cleanSubModuleUsers -> request: $uuidUser")
+        val subModulesByUser = subModuleUserRepository.findAllByUuidUser(uuidUser)
+        subModuleUserRepository.deleteAll(subModulesByUser)
+    }
 }

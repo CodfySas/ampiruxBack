@@ -15,7 +15,7 @@ interface TeacherService {
     fun findAll(pageable: Pageable, school: UUID): Page<TeacherDto>
     fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<TeacherDto>
     // Create
-    fun save(teacherRequest: TeacherRequest): TeacherDto
+    fun save(teacherRequest: TeacherRequest, replace: Boolean = false): TeacherDto
     fun saveMultiple(teacherRequestList: List<TeacherRequest>): List<TeacherDto>
     // Update
     fun update(uuid: UUID, teacherRequest: TeacherRequest): TeacherDto

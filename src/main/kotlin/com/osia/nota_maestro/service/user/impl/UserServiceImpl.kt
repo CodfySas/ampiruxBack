@@ -7,7 +7,7 @@ import com.osia.nota_maestro.dto.teacher.v1.TeacherRequest
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
-import com.osia.nota_maestro.model.SubModule
+import com.osia.nota_maestro.model.School
 import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.model.enums.UserType
 import com.osia.nota_maestro.repository.user.UserRepository
@@ -94,53 +94,44 @@ class UserServiceImpl(
     }
 
     @Transactional
-    override fun save(userRequest: UserRequest, school: UUID): UserDto {
+    override fun save(userRequest: UserRequest, school: UUID, replace: Boolean): UserDto {
         log.trace("user save -> request: $userRequest")
-        val user = userMapper.toModel(userRequest)
         val actualSchool = schoolService.getById(school)
-        user.username = user.username + "@" + actualSchool.shortName
+        userRequest.username = userRequest.dni + "@" + actualSchool.shortName
+
+        val createdUser = userRepository.getFirstByUsernameOrDni(userRequest.username!!, userRequest.dni!!)
+        val user = if (createdUser.isPresent){
+            if(!replace){
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No se pudo crear el usuario, ya existe el usuario ${userRequest.username}")
+            }else{
+                userMapper.update(userRequest, createdUser.get())
+                createdUser.get()
+            }
+        }else{
+            userMapper.toModel(userRequest)
+        }
+
         user.password = Md5Hash().createMd5(user.password ?: "12345")
         user.uuidSchool = actualSchool.uuid
-        if (userRequest.role == UserType.teacher) {
-            val teacher = teacherService.save(
-                TeacherRequest().apply {
-                    this.name = user.name
-                    this.lastname = user.lastname
-                    this.dni = user.dni
-                    this.address = userRequest.address
-                    this.email = userRequest.email
-                    this.phone = userRequest.phone
-                    this.documentType = user.documentType
-                    this.uuidSchool = actualSchool.uuid
-                }
-            )
-            user.uuidRole = teacher.uuid
-        }
-        if (userRequest.role == UserType.student) {
-            val student = studentService.save(
-                StudentRequest().apply {
-                    this.name = user.name
-                    this.lastname = user.lastname
-                    this.dni = user.dni
-                    this.address = userRequest.address
-                    this.email = userRequest.email
-                    this.phone = userRequest.phone
-                    this.documentType = user.documentType
-                    this.uuidSchool = actualSchool.uuid
-                }
-            )
-            user.uuidRole = student.uuid
-        }
-        val subModules = subModuleService.findAll(Pageable.unpaged())
-        if(user.role==UserType.admin){
-            val usersModule = subModules.first { it.name=="Usuarios" }
-            moduleUseCase.saveSubModuleUser(SubModuleUserRequest().apply {
-                this.uuidUser = user.uuid
-                this.uuidSubModules = listOf(usersModule.uuid!!)
-            })
-        }
+
+        generateRole(userRequest, user, actualSchool.uuid!!)
         return userMapper.toDto(userRepository.save(user))
     }
+
+    private fun saveSubModuleUsers(
+        userUUID: UUID,
+        moduleNames: List<String>
+    ) {
+        moduleUseCase.cleanSubModuleUsers(userUUID)
+
+        val subModules = subModuleService.findAll(Pageable.unpaged())
+        val usersModule = subModules.filter { moduleNames.contains(it.name) }.mapNotNull { it.uuid }
+        moduleUseCase.saveSubModuleUser(SubModuleUserRequest().apply {
+            this.uuidUser = userUUID
+            this.uuidSubModules = usersModule
+        })
+    }
+
 
     @Transactional
     override fun saveMultiple(userRequestList: List<UserRequest>): List<UserDto> {
@@ -153,9 +144,20 @@ class UserServiceImpl(
     override fun update(uuid: UUID, userRequest: UserRequest): UserDto {
         log.trace("user update -> uuid: $uuid, request: $userRequest")
         val user = getById(uuid)
-        userMapper.update(userRequest, user)
         val actualSchool = schoolService.getById(user.uuidSchool!!)
-        user.username = user.username + "@" + actualSchool.shortName
+
+        userRequest.username = userRequest.dni + "@" + actualSchool.shortName
+        if(userRequest.dni != null && userRequest.dni != user.dni){
+            val foundUser = userRepository.getFirstByUsernameOrDni(userRequest.username!!, userRequest.dni!!)
+            if(foundUser.isPresent){
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No se puede actualizar el usuario. " +
+                        "No se pudo cambiar el ${user.documentType} ${user.dni} A ${userRequest.documentType} ${userRequest.dni}," +
+                        " debido a que ya existe otro usuario con ${userRequest.documentType} ${userRequest.dni} en el sistema")
+            }
+        }
+        userMapper.update(userRequest, user)
+        generateRole(userRequest, user, actualSchool.uuid!!)
+
         return userMapper.toDto(userRepository.save(user))
     }
 
@@ -187,5 +189,47 @@ class UserServiceImpl(
             it.deletedAt = LocalDateTime.now()
         }
         userRepository.saveAll(users)
+    }
+
+    private fun generateRole(
+        userRequest: UserRequest,
+        user: User,
+        actualSchoolUuid: UUID
+    ) {
+        if (userRequest.role == UserType.teacher) {
+            saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
+            val teacher = teacherService.save(
+                TeacherRequest().apply {
+                    this.name = user.name
+                    this.lastname = user.lastname
+                    this.dni = user.dni
+                    this.address = userRequest.address
+                    this.email = userRequest.email
+                    this.phone = userRequest.phone
+                    this.documentType = user.documentType
+                    this.uuidSchool = actualSchoolUuid
+                }, true
+            )
+            user.uuidRole = teacher.uuid
+        }
+        if (userRequest.role == UserType.student) {
+            saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
+            val student = studentService.save(
+                StudentRequest().apply {
+                    this.name = user.name
+                    this.lastname = user.lastname
+                    this.dni = user.dni
+                    this.address = userRequest.address
+                    this.email = userRequest.email
+                    this.phone = userRequest.phone
+                    this.documentType = user.documentType
+                    this.uuidSchool = actualSchoolUuid
+                }, true
+            )
+            user.uuidRole = student.uuid
+        }
+        if (user.role == UserType.admin) {
+            saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
+        }
     }
 }

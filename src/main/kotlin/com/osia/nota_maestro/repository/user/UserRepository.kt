@@ -19,4 +19,6 @@ interface UserRepository :
     override fun count(increment: Int): Long
 
     fun getFirstByUsernameAndPassword(username: String, password: String): Optional<User>
+
+    fun getFirstByUsernameOrDni(username: String, dni: String): Optional<User>
 }
