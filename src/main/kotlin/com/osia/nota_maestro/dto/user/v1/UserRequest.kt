@@ -1,6 +1,5 @@
 package com.osia.nota_maestro.dto.user.v1
 
-import com.osia.nota_maestro.model.enums.UserType
 import java.util.UUID
 
 class UserRequest {
@@ -10,7 +9,7 @@ class UserRequest {
     var lastname: String? = null
     var documentType: String? = null
     var dni: String? = null
-    var role: UserType? = null
+    var role: String? = null
     var uuidSchool: UUID? = null
     var schoolName: String? = null
 

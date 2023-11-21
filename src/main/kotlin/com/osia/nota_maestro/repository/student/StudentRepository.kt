@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.repository.student
 
 import com.osia.nota_maestro.model.Student
-import com.osia.nota_maestro.model.Teacher
 import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor

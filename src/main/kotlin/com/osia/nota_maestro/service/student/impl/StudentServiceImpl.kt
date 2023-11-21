@@ -64,14 +64,14 @@ class StudentServiceImpl(
     override fun save(studentRequest: StudentRequest, replace: Boolean): StudentDto {
         log.trace("student save -> request: $studentRequest")
         val savedStudent = studentRepository.findFirstByDni(studentRequest.dni!!)
-        val student = if(savedStudent.isPresent){
-            if(!replace){
+        val student = if (savedStudent.isPresent) {
+            if (!replace) {
                 throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Ya existe el estudiante ${studentRequest.dni}")
-            }else{
+            } else {
                 studentMapper.update(studentRequest, savedStudent.get())
                 savedStudent.get()
             }
-        }else{
+        } else {
             studentMapper.toModel(studentRequest)
         }
         return studentMapper.toDto(studentRepository.save(student))

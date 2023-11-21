@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.controller.user.v1
 
 import com.osia.nota_maestro.dto.OnCreate
+import com.osia.nota_maestro.dto.user.v1.SavedMultipleUserDto
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
@@ -67,9 +68,10 @@ class UserController(
 
     @PostMapping("/multiple")
     fun saveMultiple(
-        @Validated(OnCreate::class) @RequestBody userRequestList: List<UserRequest>
-    ): ResponseEntity<List<UserDto>> {
-        return ResponseEntity(userService.saveMultiple(userRequestList), HttpStatus.CREATED)
+        @Validated(OnCreate::class) @RequestBody userRequestList: List<UserRequest>,
+        @RequestHeader school: UUID
+    ): ResponseEntity<SavedMultipleUserDto> {
+        return ResponseEntity(userService.saveMultiple(userRequestList,school), HttpStatus.CREATED)
     }
 
     // update

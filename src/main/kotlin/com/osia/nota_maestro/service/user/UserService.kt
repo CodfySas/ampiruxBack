@@ -1,5 +1,6 @@
 package com.osia.nota_maestro.service.user
 
+import com.osia.nota_maestro.dto.user.v1.SavedMultipleUserDto
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserRequest
 import com.osia.nota_maestro.model.User
@@ -16,7 +17,8 @@ interface UserService {
     fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<UserDto>
     // Create
     fun save(userRequest: UserRequest, school: UUID, replace: Boolean = false): UserDto
-    fun saveMultiple(userRequestList: List<UserRequest>): List<UserDto>
+    fun saveMultiple(userRequestList: List<UserRequest>, school: UUID): SavedMultipleUserDto
+
     // Update
     fun update(uuid: UUID, userRequest: UserRequest): UserDto
     fun updateMultiple(userDtoList: List<UserDto>): List<UserDto>
