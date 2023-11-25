@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.reflect.full.memberProperties
 
 @Service("user.crud_service")
 @Transactional
@@ -111,7 +112,7 @@ class UserServiceImpl(
                 )
             } else {
                 userMapper.update(userRequest, createdUser.get())
-                if(newPass != null){
+                if (newPass != null) {
                     createdUser.get().password = newPass
                 }
                 createdUser.get()
@@ -151,40 +152,58 @@ class UserServiceImpl(
         val notSaved = mutableListOf<NotSavedUserDto>()
         val savedSuccess = mutableListOf<UserDto>()
         userRequestList.forEach {
-            if (it.documentType == null || it.documentType == "" || it.dni == null || it.dni == "") {
-                notSaved.add(NotSavedUserDto().apply {
-                    this.user = it
-                    this.reason = "No se envió la informacion completa del documento de identidad"
-                })
-            } else {
-                val myDoc = getDocumentTypeByExamples(it.documentType!!)
-                if (!types.contains(myDoc)) {
-                    notSaved.add(NotSavedUserDto().apply {
-                        this.user = it
-                        this.reason = "No se reconoce el tipo de documento ${it.documentType}"
-                    })
-                } else {
-                    if (it.role == null || it.role == "") {
-                        it.role = "admin"
-                    }
-                    val myRole = getRoleByExamples(it.role!!)
-                    if (!roles.contains(myRole)) {
-                        notSaved.add(NotSavedUserDto().apply {
+            var validUser = false
+            val properties = it::class.memberProperties
+            for (property in properties) {
+                val value = property.getter.call(it)
+                if (value != null) {
+                    validUser = true
+                }
+            }
+            if (validUser) {
+                if (it.documentType == null || it.documentType == "" || it.dni == null || it.dni == "") {
+                    notSaved.add(
+                        NotSavedUserDto().apply {
                             this.user = it
-                            this.reason = "No se reconoce el Rol ${it.role}"
-                        })
-                    } else {
-                        try {
-                            it.role = myRole
-                            it.documentType = myDoc
-                            val saved = this.save(it, school, true)
-                            savedSuccess.add(saved)
-                        } catch (e: Exception) {
-                            log.info("error creando un usuario -> ${e.message}")
-                            notSaved.add(NotSavedUserDto().apply {
+                            this.reason = "No se envió la informacion completa del documento de identidad"
+                        }
+                    )
+                } else {
+                    val myDoc = getDocumentTypeByExamples(it.documentType!!)
+                    if (!types.contains(myDoc)) {
+                        notSaved.add(
+                            NotSavedUserDto().apply {
                                 this.user = it
-                                this.reason = e.message
-                            })
+                                this.reason = "No se reconoce el tipo de documento ${it.documentType}"
+                            }
+                        )
+                    } else {
+                        if (it.role == null || it.role == "") {
+                            it.role = "admin"
+                        }
+                        val myRole = getRoleByExamples(it.role!!)
+                        if (!roles.contains(myRole)) {
+                            notSaved.add(
+                                NotSavedUserDto().apply {
+                                    this.user = it
+                                    this.reason = "No se reconoce el Rol ${it.role}"
+                                }
+                            )
+                        } else {
+                            try {
+                                it.role = myRole
+                                it.documentType = myDoc
+                                val saved = this.save(it, school, true)
+                                savedSuccess.add(saved)
+                            } catch (e: Exception) {
+                                log.info("error creando un usuario -> ${e.message}")
+                                notSaved.add(
+                                    NotSavedUserDto().apply {
+                                        this.user = it
+                                        this.reason = e.message
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -209,8 +228,8 @@ class UserServiceImpl(
                 throw ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     "No se puede actualizar el usuario. " +
-                            "No se pudo cambiar el ${user.documentType} ${user.dni} A ${userRequest.documentType} ${userRequest.dni}," +
-                            " debido a que ya existe otro usuario con ${userRequest.documentType} ${userRequest.dni} en el sistema"
+                        "No se pudo cambiar el ${user.documentType} ${user.dni} A ${userRequest.documentType} ${userRequest.dni}," +
+                        " debido a que ya existe otro usuario con ${userRequest.documentType} ${userRequest.dni} en el sistema"
                 )
             }
         }
@@ -322,13 +341,13 @@ class UserServiceImpl(
         if (lower.contains("adm", true)) {
             return "admin"
         }
-        if (lower.contains("prof", true) || lower.contains("doc", true)
-            || lower.contains("maes", true)
+        if (lower.contains("prof", true) || lower.contains("doc", true) ||
+            lower.contains("maes", true)
         ) {
             return "teacher"
         }
-        if (lower.contains("est", true) || lower.contains("alu", true)
-            || lower.contains("niñ", true) || lower.contains("padr", true)
+        if (lower.contains("est", true) || lower.contains("alu", true) ||
+            lower.contains("niñ", true) || lower.contains("padr", true)
         ) {
             return "student"
         }

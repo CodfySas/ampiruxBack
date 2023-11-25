@@ -71,7 +71,7 @@ class UserController(
         @Validated(OnCreate::class) @RequestBody userRequestList: List<UserRequest>,
         @RequestHeader school: UUID
     ): ResponseEntity<SavedMultipleUserDto> {
-        return ResponseEntity(userService.saveMultiple(userRequestList,school), HttpStatus.CREATED)
+        return ResponseEntity(userService.saveMultiple(userRequestList, school), HttpStatus.CREATED)
     }
 
     // update
