@@ -77,7 +77,7 @@ class StudentController(
         @PathVariable uuid: UUID,
         @RequestBody request: StudentRequest
     ): ResponseEntity<StudentDto> {
-        return ResponseEntity.ok().body(studentService.update(uuid, request))
+        return ResponseEntity.ok().body(studentService.update(uuid, request,))
     }
 
     @PatchMapping("/multiple")

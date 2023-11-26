@@ -85,9 +85,13 @@ class StudentServiceImpl(
     }
 
     @Transactional
-    override fun update(uuid: UUID, studentRequest: StudentRequest): StudentDto {
+    override fun update(uuid: UUID, studentRequest: StudentRequest, includeDelete: Boolean): StudentDto {
         log.trace("student update -> uuid: $uuid, request: $studentRequest")
-        val student = getById(uuid)
+        val student = if (!includeDelete) {
+            getById(uuid)
+        } else {
+            studentRepository.getByUuid(uuid).get()
+        }
         studentMapper.update(studentRequest, student)
         return studentMapper.toDto(studentRepository.save(student))
     }

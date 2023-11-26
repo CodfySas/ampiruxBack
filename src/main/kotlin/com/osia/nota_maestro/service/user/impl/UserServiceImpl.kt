@@ -1,9 +1,7 @@
 package com.osia.nota_maestro.service.user.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.osia.nota_maestro.dto.student.v1.StudentRequest
 import com.osia.nota_maestro.dto.subModuleUser.v1.SubModuleUserRequest
-import com.osia.nota_maestro.dto.teacher.v1.TeacherRequest
 import com.osia.nota_maestro.dto.user.v1.NotSavedUserDto
 import com.osia.nota_maestro.dto.user.v1.SavedMultipleUserDto
 import com.osia.nota_maestro.dto.user.v1.UserDto
@@ -13,10 +11,7 @@ import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.module.ModuleUseCase
 import com.osia.nota_maestro.service.school.SchoolService
-import com.osia.nota_maestro.service.student.StudentService
 import com.osia.nota_maestro.service.subModule.SubModuleService
-import com.osia.nota_maestro.service.subModuleUser.SubModuleUserService
-import com.osia.nota_maestro.service.teacher.TeacherService
 import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
 import com.osia.nota_maestro.util.Md5Hash
@@ -36,13 +31,10 @@ import kotlin.reflect.full.memberProperties
 @Transactional
 class UserServiceImpl(
     private val userRepository: UserRepository,
-    private val teacherService: TeacherService,
     private val schoolService: SchoolService,
     private val userMapper: UserMapper,
     private val objectMapper: ObjectMapper,
-    private val studentService: StudentService,
     private val subModuleService: SubModuleService,
-    private val subModuleUserService: SubModuleUserService,
     private val moduleUseCase: ModuleUseCase
 
 ) : UserService {
@@ -56,23 +48,14 @@ class UserServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun getById(uuid: UUID): User {
-        var user = userRepository.findById(uuid).orElseThrow {
-            ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "User $uuid not found")
+    override fun getById(uuid: UUID, includeDelete: Boolean): User {
+        return if (includeDelete) {
+            userRepository.getByUuid(uuid).get()
+        } else {
+            userRepository.findById(uuid).orElseThrow {
+                ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "User $uuid not found")
+            }
         }
-        if (user.role == "teacher") {
-            val teacher = teacherService.getById(user.uuidRole!!)
-            user.phone = teacher.phone
-            user.address = teacher.address
-            user.email = teacher.email
-        }
-        if (user.role == "student") {
-            val student = studentService.getById(user.uuidRole!!)
-            user.phone = student.phone
-            user.address = student.address
-            user.email = student.email
-        }
-        return user
     }
 
     @Transactional(readOnly = true)
@@ -124,7 +107,7 @@ class UserServiceImpl(
         }
         user.uuidSchool = actualSchool.uuid
 
-        generateRole(userRequest, user, actualSchool.uuid!!)
+        generateRole(user.role ?: "student", user)
         return userMapper.toDto(userRepository.save(user))
     }
 
@@ -145,10 +128,9 @@ class UserServiceImpl(
     }
 
     @Transactional
-    override fun saveMultiple(userRequestList: List<UserRequest>, school: UUID): SavedMultipleUserDto {
+    override fun saveMultiple(userRequestList: List<UserRequest>, school: UUID, role: String): SavedMultipleUserDto {
         log.trace("user saveMultiple -> requestList: ${objectMapper.writeValueAsString(userRequestList)}")
         val types = listOf("cc", "ti", "de", "rc", "nit", "pa", "ot")
-        val roles = listOf("student", "teacher", "admin")
         val notSaved = mutableListOf<NotSavedUserDto>()
         val savedSuccess = mutableListOf<UserDto>()
         userRequestList.forEach {
@@ -178,32 +160,19 @@ class UserServiceImpl(
                             }
                         )
                     } else {
-                        if (it.role == null || it.role == "") {
-                            it.role = "admin"
-                        }
-                        val myRole = getRoleByExamples(it.role!!)
-                        if (!roles.contains(myRole)) {
+                        try {
+                            it.role = role
+                            it.documentType = myDoc
+                            val saved = this.save(it, school, true)
+                            savedSuccess.add(saved)
+                        } catch (e: Exception) {
+                            log.info("error creando un usuario -> ${e.message}")
                             notSaved.add(
                                 NotSavedUserDto().apply {
                                     this.user = it
-                                    this.reason = "No se reconoce el Rol ${it.role}"
+                                    this.reason = e.message
                                 }
                             )
-                        } else {
-                            try {
-                                it.role = myRole
-                                it.documentType = myDoc
-                                val saved = this.save(it, school, true)
-                                savedSuccess.add(saved)
-                            } catch (e: Exception) {
-                                log.info("error creando un usuario -> ${e.message}")
-                                notSaved.add(
-                                    NotSavedUserDto().apply {
-                                        this.user = it
-                                        this.reason = e.message
-                                    }
-                                )
-                            }
                         }
                     }
                 }
@@ -234,7 +203,7 @@ class UserServiceImpl(
             }
         }
         userMapper.update(userRequest, user)
-        generateRole(userRequest, user, actualSchool.uuid!!)
+        generateRole(user.role ?: "students", user)
 
         return userMapper.toDto(userRepository.save(user))
     }
@@ -270,46 +239,17 @@ class UserServiceImpl(
     }
 
     private fun generateRole(
-        userRequest: UserRequest,
+        role: String,
         user: User,
-        actualSchoolUuid: UUID
     ) {
-        if (userRequest.role == "teacher") {
+        if (role == "teacher") {
             saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
-            val teacher = teacherService.save(
-                TeacherRequest().apply {
-                    this.name = user.name
-                    this.lastname = user.lastname
-                    this.dni = user.dni
-                    this.address = userRequest.address
-                    this.email = userRequest.email
-                    this.phone = userRequest.phone
-                    this.documentType = user.documentType
-                    this.uuidSchool = actualSchoolUuid
-                },
-                true
-            )
-            user.uuidRole = teacher.uuid
         }
-        if (userRequest.role == "student") {
+        if (role == "student") {
             saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
-            val student = studentService.save(
-                StudentRequest().apply {
-                    this.name = user.name
-                    this.lastname = user.lastname
-                    this.dni = user.dni
-                    this.address = userRequest.address
-                    this.email = userRequest.email
-                    this.phone = userRequest.phone
-                    this.documentType = user.documentType
-                    this.uuidSchool = actualSchoolUuid
-                },
-                true
-            )
-            user.uuidRole = student.uuid
         }
-        if (user.role == "admin") {
-            saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
+        if (role == "admin") {
+            saveSubModuleUsers(user.uuid!!, listOf("Administradores", "Estudiantes", "Docentes"))
         }
     }
 
@@ -332,24 +272,6 @@ class UserServiceImpl(
         }
         if (lower.contains("otr", true)) {
             return "ot"
-        }
-        return lower
-    }
-
-    private fun getRoleByExamples(string: String): String {
-        val lower = string.lowercase()
-        if (lower.contains("adm", true)) {
-            return "admin"
-        }
-        if (lower.contains("prof", true) || lower.contains("doc", true) ||
-            lower.contains("maes", true)
-        ) {
-            return "teacher"
-        }
-        if (lower.contains("est", true) || lower.contains("alu", true) ||
-            lower.contains("niñ", true) || lower.contains("padr", true)
-        ) {
-            return "student"
         }
         return lower
     }

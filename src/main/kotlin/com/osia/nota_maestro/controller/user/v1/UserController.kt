@@ -66,12 +66,28 @@ class UserController(
         return ResponseEntity(userService.save(request, school), HttpStatus.CREATED)
     }
 
-    @PostMapping("/multiple")
-    fun saveMultiple(
+    @PostMapping("/multiple/admins")
+    fun saveMultipleAdmins(
         @Validated(OnCreate::class) @RequestBody userRequestList: List<UserRequest>,
         @RequestHeader school: UUID
     ): ResponseEntity<SavedMultipleUserDto> {
-        return ResponseEntity(userService.saveMultiple(userRequestList, school), HttpStatus.CREATED)
+        return ResponseEntity(userService.saveMultiple(userRequestList, school, "admin"), HttpStatus.CREATED)
+    }
+
+    @PostMapping("/multiple/students")
+    fun saveMultipleStudents(
+        @Validated(OnCreate::class) @RequestBody userRequestList: List<UserRequest>,
+        @RequestHeader school: UUID
+    ): ResponseEntity<SavedMultipleUserDto> {
+        return ResponseEntity(userService.saveMultiple(userRequestList, school, "student"), HttpStatus.CREATED)
+    }
+
+    @PostMapping("/multiple/teachers")
+    fun saveMultipleTeachers(
+        @Validated(OnCreate::class) @RequestBody userRequestList: List<UserRequest>,
+        @RequestHeader school: UUID
+    ): ResponseEntity<SavedMultipleUserDto> {
+        return ResponseEntity(userService.saveMultiple(userRequestList, school, "teacher"), HttpStatus.CREATED)
     }
 
     // update

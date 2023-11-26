@@ -21,4 +21,7 @@ interface UserRepository :
     fun getFirstByUsernameAndPassword(username: String, password: String): Optional<User>
 
     fun getFirstByUsernameOrDni(username: String, dni: String): Optional<User>
+
+    @Query(value = "SELECT * FROM users where uuid = ?1", nativeQuery = true)
+    fun getByUuid(uuid: UUID): Optional<User>
 }

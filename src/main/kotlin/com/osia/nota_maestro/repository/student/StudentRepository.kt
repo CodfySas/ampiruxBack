@@ -19,4 +19,7 @@ interface StudentRepository :
     override fun count(increment: Int): Long
 
     fun findFirstByDni(dni: String): Optional<Student>
+
+    @Query(value = "SELECT * FROM students where uuid = ?1", nativeQuery = true)
+    fun getByUuid(uuid: UUID): Optional<Student>
 }

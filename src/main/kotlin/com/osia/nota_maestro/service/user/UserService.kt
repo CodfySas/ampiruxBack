@@ -11,14 +11,13 @@ import java.util.UUID
 interface UserService {
     // Read
     fun count(increment: Int): Long
-    fun getById(uuid: UUID): User
+    fun getById(uuid: UUID, includeDelete: Boolean = false): User
     fun findByMultiple(uuidList: List<UUID>): List<UserDto>
     fun findAll(pageable: Pageable, school: UUID): Page<UserDto>
     fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<UserDto>
     // Create
     fun save(userRequest: UserRequest, school: UUID, replace: Boolean = false): UserDto
-    fun saveMultiple(userRequestList: List<UserRequest>, school: UUID): SavedMultipleUserDto
-
+    fun saveMultiple(userRequestList: List<UserRequest>, school: UUID, role: String = "admin"): SavedMultipleUserDto
     // Update
     fun update(uuid: UUID, userRequest: UserRequest): UserDto
     fun updateMultiple(userDtoList: List<UserDto>): List<UserDto>

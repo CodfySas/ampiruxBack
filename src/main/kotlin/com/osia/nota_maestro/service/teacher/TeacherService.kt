@@ -18,7 +18,7 @@ interface TeacherService {
     fun save(teacherRequest: TeacherRequest, replace: Boolean = false): TeacherDto
     fun saveMultiple(teacherRequestList: List<TeacherRequest>): List<TeacherDto>
     // Update
-    fun update(uuid: UUID, teacherRequest: TeacherRequest): TeacherDto
+    fun update(uuid: UUID, teacherRequest: TeacherRequest, includeDelete: Boolean = false): TeacherDto
     fun updateMultiple(teacherDtoList: List<TeacherDto>): List<TeacherDto>
     // Delete
     fun delete(uuid: UUID)
