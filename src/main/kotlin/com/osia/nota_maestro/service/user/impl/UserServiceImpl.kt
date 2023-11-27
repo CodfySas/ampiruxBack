@@ -2,6 +2,7 @@ package com.osia.nota_maestro.service.user.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.subModuleUser.v1.SubModuleUserRequest
+import com.osia.nota_maestro.dto.user.v1.ChangePasswordRequest
 import com.osia.nota_maestro.dto.user.v1.NotSavedUserDto
 import com.osia.nota_maestro.dto.user.v1.SavedMultipleUserDto
 import com.osia.nota_maestro.dto.user.v1.UserDto
@@ -190,7 +191,9 @@ class UserServiceImpl(
         val user = getById(uuid)
         val actualSchool = schoolService.getById(user.uuidSchool!!)
 
-        userRequest.username = userRequest.dni + "@" + actualSchool.shortName
+        if (userRequest.dni != null) {
+            userRequest.username = userRequest.dni + "@" + actualSchool.shortName
+        }
         if (userRequest.dni != null && userRequest.dni != user.dni) {
             val foundUser = userRepository.getFirstByUsernameOrDni(userRequest.username!!, userRequest.dni!!)
             if (foundUser.isPresent) {
@@ -205,6 +208,17 @@ class UserServiceImpl(
         userMapper.update(userRequest, user)
         generateRole(user.role ?: "students", user)
 
+        return userMapper.toDto(userRepository.save(user))
+    }
+
+    @Transactional
+    override fun changePassword(changePasswordRequest: ChangePasswordRequest): UserDto {
+        val user = this.getById(changePasswordRequest.uuidUser!!)
+        if (user.password == Md5Hash().createMd5(changePasswordRequest.actualPassword ?: "")) {
+            user.password = Md5Hash().createMd5(changePasswordRequest.password!!)
+        } else {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "La contraseña actual no es correcta")
+        }
         return userMapper.toDto(userRepository.save(user))
     }
 

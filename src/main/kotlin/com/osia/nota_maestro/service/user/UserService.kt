@@ -1,5 +1,6 @@
 package com.osia.nota_maestro.service.user
 
+import com.osia.nota_maestro.dto.user.v1.ChangePasswordRequest
 import com.osia.nota_maestro.dto.user.v1.SavedMultipleUserDto
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserRequest
@@ -20,6 +21,7 @@ interface UserService {
     fun saveMultiple(userRequestList: List<UserRequest>, school: UUID, role: String = "admin"): SavedMultipleUserDto
     // Update
     fun update(uuid: UUID, userRequest: UserRequest): UserDto
+    fun changePassword(changePasswordRequest: ChangePasswordRequest): UserDto
     fun updateMultiple(userDtoList: List<UserDto>): List<UserDto>
     // Delete
     fun delete(uuid: UUID)

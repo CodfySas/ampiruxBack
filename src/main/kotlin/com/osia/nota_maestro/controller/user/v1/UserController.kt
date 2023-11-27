@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.controller.user.v1
 
 import com.osia.nota_maestro.dto.OnCreate
+import com.osia.nota_maestro.dto.user.v1.ChangePasswordRequest
 import com.osia.nota_maestro.dto.user.v1.SavedMultipleUserDto
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
@@ -97,6 +98,13 @@ class UserController(
         @RequestBody request: UserRequest
     ): ResponseEntity<UserDto> {
         return ResponseEntity.ok().body(userService.update(uuid, request))
+    }
+
+    @PostMapping("update-password")
+    fun changePass(
+        @RequestBody request: ChangePasswordRequest
+    ): ResponseEntity<UserDto> {
+        return ResponseEntity.ok().body(userService.changePassword(request))
     }
 
     @PatchMapping("/multiple")
