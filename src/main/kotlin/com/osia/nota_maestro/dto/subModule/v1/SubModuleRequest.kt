@@ -8,4 +8,6 @@ class SubModuleRequest : BaseDto() {
     var routeName: String? = null
     var uuidModule: UUID? = null
     var ordered: Int? = null
+    var parent: Boolean? = null
+    var parentUuid: UUID? = null
 }

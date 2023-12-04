@@ -45,14 +45,21 @@ class ModuleServiceImpl(
         val subModules = subModulesRepository.findAllByUuidInOrderByOrdered(subModulesByUser.mapNotNull { it.uuidSubModule }.distinct())
         val modules = moduleRepository.findAllByUuidInOrderByOrdered(subModules.mapNotNull { it.uuidModule }.distinct())
 
+        val subModelsDto = subModules.map(subModulesMapper::toDto)
+        subModelsDto.forEach {
+            if (it.parent == true) {
+                it.childs = subModelsDto.filter { sm -> sm.parentUuid == it.uuid }
+            }
+        }
+
         var ordered = 1
         modules.forEach {
-            val subModulesFromModule = subModules.filter { sm -> sm.uuidModule == it.uuid }
+            val subModulesFromModule = subModelsDto.filter { sm -> sm.uuidModule == it.uuid }
             finalList.add(
                 ModulesBuilderDto().apply {
                     this.name = it.name
                     this.ordered = ordered
-                    this.subModules = subModulesFromModule.map(subModulesMapper::toDto)
+                    this.subModules = subModulesFromModule
                 }
             )
             ordered++

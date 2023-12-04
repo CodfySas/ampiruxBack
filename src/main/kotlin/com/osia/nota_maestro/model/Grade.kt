@@ -1,32 +1,28 @@
 package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
+import com.osia.nota_maestro.model.listener.grade.GradeListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
-import org.springframework.boot.context.properties.bind.DefaultValue
-import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.Table
+import javax.validation.constraints.NotNull
 
 @Table(
-    name = "sub_modules",
+    name = "grades",
 )
 @Entity
 @DynamicUpdate
 @EntityListeners(
     value = [
-        AuditingEntityListener::class,
+        GradeListener::class
     ]
 )
 @Where(clause = "deleted = false")
-data class SubModule(
+data class Grade(
     var name: String? = null,
-    var uuidModule: UUID? = null,
-    var routeName: String? = null,
-    var ordered: Int? = null,
-    @DefaultValue("false")
-    var parent: Boolean? = false,
-    var parentUuid: UUID? = null
+    @NotNull
+    var uuidSchool: UUID? = null
 ) : BaseModel()

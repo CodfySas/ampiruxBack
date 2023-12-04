@@ -16,4 +16,5 @@ class UserRequest {
     var phone: String? = null
     var email: String? = null
     var address: String? = null
+    var actualGrade: UUID? = null
 }

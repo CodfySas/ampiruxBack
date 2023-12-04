@@ -20,4 +20,5 @@ class UserDto : BaseDto() {
     var phone: String? = null
     var address: String? = null
     var email: String? = null
+    var actualGrade: UUID? = null
 }

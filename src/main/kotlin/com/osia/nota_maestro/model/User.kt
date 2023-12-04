@@ -34,5 +34,6 @@ data class User(
     var uuidRole: UUID? = null,
     var phone: String? = null,
     var address: String? = null,
-    var email: String? = null
+    var email: String? = null,
+    var actualGrade: UUID? = null
 ) : BaseModel()
