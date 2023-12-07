@@ -13,7 +13,7 @@ interface ClassroomStudentService {
     fun getById(uuid: UUID): ClassroomStudent
     fun findByMultiple(uuidList: List<UUID>): List<ClassroomStudentDto>
     fun findAll(pageable: Pageable, school: UUID): Page<ClassroomStudentDto>
-    fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<ClassroomStudentDto>
+    fun findAllByFilter(pageable: Pageable, where: String, school: UUID?): Page<ClassroomStudentDto>
     // Create
     fun save(classroomStudentRequest: ClassroomStudentRequest, replace: Boolean = false): ClassroomStudentDto
     fun saveMultiple(classroomStudentRequestList: List<ClassroomStudentRequest>): List<ClassroomStudentDto>

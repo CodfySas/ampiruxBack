@@ -2,7 +2,6 @@ package com.osia.nota_maestro.controller.grade.v1
 
 import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
-import com.osia.nota_maestro.dto.grade.v1.GradeCompleteDto
 import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.grade.v1.GradeMapper
 import com.osia.nota_maestro.dto.grade.v1.GradeRequest
@@ -69,6 +68,14 @@ class GradeController(
         @Validated(OnCreate::class) @RequestBody request: GradeRequest
     ): ResponseEntity<GradeDto> {
         return ResponseEntity(gradeService.save(request), HttpStatus.CREATED)
+    }
+
+    @PostMapping("/complete")
+    fun saveGrade(
+        @Validated(OnCreate::class) @RequestBody request: CourseInfoDto,
+        @RequestHeader school: UUID
+    ): ResponseEntity<CourseInfoDto> {
+        return ResponseEntity(gradeService.saveComplete2(request, school), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")

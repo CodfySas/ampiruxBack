@@ -1,8 +1,6 @@
 package com.osia.nota_maestro.repository.classroomStudent
 
 import com.osia.nota_maestro.model.ClassroomStudent
-import com.osia.nota_maestro.model.Student
-import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -24,4 +22,6 @@ interface ClassroomStudentRepository :
     fun getByUuid(uuid: UUID): Optional<ClassroomStudent>
 
     fun getAllByUuidClassroomIn(classrooms: List<UUID>): List<ClassroomStudent>
+
+    fun findAllByUuidStudent(uuidStudent: UUID): List<ClassroomStudent>
 }

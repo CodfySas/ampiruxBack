@@ -1,9 +1,11 @@
 package com.osia.nota_maestro.service.grade.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.classroom.v1.ClassroomCompleteDto
 import com.osia.nota_maestro.dto.classroom.v1.ClassroomMapper
+import com.osia.nota_maestro.dto.classroom.v1.ClassroomRequest
+import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentRequest
 import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
-import com.osia.nota_maestro.dto.grade.v1.GradeCompleteDto
 import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.grade.v1.GradeMapper
 import com.osia.nota_maestro.dto.grade.v1.GradeRequest
@@ -13,6 +15,8 @@ import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.user.UserRepository
+import com.osia.nota_maestro.service.classroom.ClassroomService
+import com.osia.nota_maestro.service.classroomStudent.ClassroomStudentService
 import com.osia.nota_maestro.service.grade.GradeService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
@@ -23,7 +27,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -34,7 +37,9 @@ class GradeServiceImpl(
     private val gradeMapper: GradeMapper,
     private val userMapper: UserMapper,
     private val classroomMapper: ClassroomMapper,
+    private val classroomService: ClassroomService,
     private val classroomRepository: ClassroomRepository,
+    private val classroomStudentService: ClassroomStudentService,
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val userRepository: UserRepository,
     private val objectMapper: ObjectMapper
@@ -78,12 +83,12 @@ class GradeServiceImpl(
         val studentsWithoutClassroom = userRepository.getStudentsWithoutClassroom()
 
         classrooms.forEach {
-            val myList = studentsInClassRooms.filter { s-> s.uuidClassroom == it.uuid }
-            it.students = students.filter { s-> myList.mapNotNull { m-> m.uuidStudent }.contains(s.uuid) }.map(userMapper::toDto)
+            val myList = studentsInClassRooms.filter { s -> s.uuidClassroom == it.uuid }
+            it.students = students.filter { s -> myList.mapNotNull { m -> m.uuidStudent }.contains(s.uuid) }.map(userMapper::toDto)
         }
         grades.forEach {
-            it.classrooms = classrooms.filter { c-> c.uuidGrade == it.uuid }
-            it.noAssignedStudents = studentsWithoutClassroom.filter { s-> s.actualGrade == it.uuid }.map(userMapper::toDto)
+            it.classrooms = classrooms.filter { c -> c.uuidGrade == it.uuid }
+            it.noAssignedStudents = studentsWithoutClassroom.filter { s -> s.actualGrade == it.uuid }.map(userMapper::toDto)
         }
         return CourseInfoDto().apply {
             this.grades = grades
@@ -102,6 +107,98 @@ class GradeServiceImpl(
         log.trace("grade save -> request: $gradeRequest")
         val savedGrade = gradeMapper.toModel(gradeRequest)
         return gradeMapper.toDto(gradeRepository.save(savedGrade))
+    }
+
+    override fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto {
+        log.trace("grade saveComplete -> request: ${objectMapper.writeValueAsString(grades)}")
+        val completeInfo = findCompleteInfo(school)
+        val allClassRooms = mutableListOf<ClassroomCompleteDto>()
+        completeInfo.grades?.forEach { allClassRooms.addAll(it.classrooms) }
+        completeInfo.grades?.forEach {
+            val gradesToDelete = mutableListOf<UUID>()
+            val classToDelete = mutableListOf<UUID>()
+            allClassRooms.addAll(it.classrooms)
+            if(grades.grades?.mapNotNull { m-> m.uuid }?.contains(it.uuid) == false){
+                gradesToDelete.add(it.uuid!!)
+            }
+            it.classrooms.forEach { c->
+                if(!allClassRooms.mapNotNull { a-> a.uuid }.contains(c.uuid)){
+                    classToDelete.add(c.uuid!!)
+                }
+            }
+            deleteMultiple(gradesToDelete)
+            classroomService.deleteMultiple(classToDelete)
+        }
+        grades.grades?.forEach {
+            val gradeSaved = if (it.uuid == null) {
+                save(
+                    GradeRequest().apply {
+                        this.name = it.name
+                        this.uuidSchool = school
+                    }
+                )
+            } else {
+                update(
+                    it.uuid!!,
+                    GradeRequest().apply {
+                        this.name = it.name
+                    }
+                )
+            }
+            it.classrooms.forEach { c ->
+                val classSaved = if (c.uuid == null) {
+                    classroomService.save(
+                        ClassroomRequest().apply {
+                            this.name = it.name
+                            this.uuidSchool = school
+                            this.year = LocalDateTime.now().year
+                            this.uuidGrade = gradeSaved.uuid
+                        }
+                    )
+                } else {
+                    classroomService.update(
+                        c.uuid!!,
+                        ClassroomRequest().apply {
+                            this.name = it.name
+                        }
+                    )
+                }
+                c.students?.forEach { s ->
+                    val classesUuids = it.classrooms.mapNotNull { cc -> cc.uuid }
+                    var studentInClass = classroomStudentService.findAllByFilter(Pageable.unpaged(), "uuidStudent:${s.uuid}", null);
+                    studentInClass.filter { f-> classesUuids.contains(f.uuidClassroom) }
+                    if (studentInClass.isEmpty()) {
+                        classroomStudentService.save(
+                            ClassroomStudentRequest().apply {
+                                this.uuidStudent = s.uuid
+                                this.uuidClassroom = classSaved.uuid
+                            }
+                        )
+                    } else {
+                        studentInClass.forEach { sc ->
+                            classroomStudentService.update(
+                                sc.uuid!!,
+                                ClassroomStudentRequest().apply {
+                                    this.uuidClassroom = c.uuid
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        return findCompleteInfo(school)
+    }
+
+    @Transactional
+    override fun saveComplete2(grade: CourseInfoDto, school: UUID): CourseInfoDto {
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
+        val gradeUuids = grade.grades?.mapNotNull { it.uuid }?.toSet() ?: emptySet()
+        val gradesNotIn = allGrades.filter { it.uuid !in gradeUuids }.mapNotNull { it.uuid }
+        gradeRepository.deleteByUuids(gradesNotIn)
+        classroomStudentRepository.findAllByUuidStudent(UUID.randomUUID())
+        return grade
     }
 
     @Transactional
@@ -137,19 +234,12 @@ class GradeServiceImpl(
     override fun delete(uuid: UUID) {
         log.trace("grade delete -> uuid: $uuid")
         val grade = getById(uuid)
-        grade.deleted = true
-        grade.deletedAt = LocalDateTime.now()
-        gradeRepository.save(grade)
+        gradeRepository.delete(grade)
     }
 
     @Transactional
     override fun deleteMultiple(uuidList: List<UUID>) {
         log.trace("grade deleteMultiple -> uuid: $uuidList")
-        val grades = gradeRepository.findAllById(uuidList)
-        grades.forEach {
-            it.deleted = true
-            it.deletedAt = LocalDateTime.now()
-        }
-        gradeRepository.saveAll(grades)
+        gradeRepository.deleteAllById(uuidList)
     }
 }

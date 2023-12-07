@@ -18,9 +18,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.persistence.criteria.CriteriaBuilder
+import javax.persistence.criteria.CriteriaQuery
+import javax.persistence.criteria.Root
 
 @Service("classroomStudent.crud_service")
 @Transactional
@@ -59,10 +61,20 @@ class ClassroomStudentServiceImpl(
         return classroomStudentRepository.findAll(Specification.where(CreateSpec<ClassroomStudent>().createSpec("", school)), pageable).map(classroomStudentMapper::toDto)
     }
 
+    private fun emptySpec(where: String): Specification<ClassroomStudent> {
+        var finalSpec = Specification { root: Root<ClassroomStudent>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
+            root.get<Any>("deleted").`in`(false)
+        }
+        finalSpec = finalSpec.and { root: Root<ClassroomStudent>, _: CriteriaQuery<*>?, cb: CriteriaBuilder ->
+            root.get<UUID>(where.split(":")[0]).`in`(UUID.fromString(where.split(":")[1]))
+        }
+        return finalSpec
+    }
+
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<ClassroomStudentDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, school: UUID?): Page<ClassroomStudentDto> {
         log.trace("classroomStudent findAllByFilter -> pageable: $pageable, where: $where")
-        return classroomStudentRepository.findAll(Specification.where(CreateSpec<ClassroomStudent>().createSpec(where, school)), pageable).map(classroomStudentMapper::toDto)
+        return classroomStudentRepository.findAll(Specification.where(emptySpec(where)), pageable).map(classroomStudentMapper::toDto)
     }
 
     @Transactional

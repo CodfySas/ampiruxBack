@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.service.grade
 
 import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
-import com.osia.nota_maestro.dto.grade.v1.GradeCompleteDto
 import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.grade.v1.GradeRequest
 import com.osia.nota_maestro.model.Grade
@@ -19,6 +18,8 @@ interface GradeService {
     fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<GradeDto>
     // Create
     fun save(gradeRequest: GradeRequest, replace: Boolean = false): GradeDto
+    fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto
+    fun saveComplete2(grade: CourseInfoDto, school: UUID): CourseInfoDto
     fun saveMultiple(gradeRequestList: List<GradeRequest>): List<GradeDto>
     // Update
     fun update(uuid: UUID, gradeRequest: GradeRequest, includeDelete: Boolean = false): GradeDto
