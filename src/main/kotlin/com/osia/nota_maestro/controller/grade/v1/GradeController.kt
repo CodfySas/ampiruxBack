@@ -75,7 +75,7 @@ class GradeController(
         @Validated(OnCreate::class) @RequestBody request: CourseInfoDto,
         @RequestHeader school: UUID
     ): ResponseEntity<CourseInfoDto> {
-        return ResponseEntity(gradeService.saveComplete2(request, school), HttpStatus.CREATED)
+        return ResponseEntity(gradeService.saveComplete(request, school), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")

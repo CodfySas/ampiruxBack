@@ -19,7 +19,6 @@ interface GradeService {
     // Create
     fun save(gradeRequest: GradeRequest, replace: Boolean = false): GradeDto
     fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto
-    fun saveComplete2(grade: CourseInfoDto, school: UUID): CourseInfoDto
     fun saveMultiple(gradeRequestList: List<GradeRequest>): List<GradeDto>
     // Update
     fun update(uuid: UUID, gradeRequest: GradeRequest, includeDelete: Boolean = false): GradeDto

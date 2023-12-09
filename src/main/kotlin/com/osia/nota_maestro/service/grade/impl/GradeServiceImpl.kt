@@ -2,13 +2,16 @@ package com.osia.nota_maestro.service.grade.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.classroom.v1.ClassroomCompleteDto
+import com.osia.nota_maestro.dto.classroom.v1.ClassroomDto
 import com.osia.nota_maestro.dto.classroom.v1.ClassroomMapper
 import com.osia.nota_maestro.dto.classroom.v1.ClassroomRequest
+import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentDto
 import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentRequest
 import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
 import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.grade.v1.GradeMapper
 import com.osia.nota_maestro.dto.grade.v1.GradeRequest
+import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.model.Grade
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
@@ -18,6 +21,7 @@ import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroom.ClassroomService
 import com.osia.nota_maestro.service.classroomStudent.ClassroomStudentService
 import com.osia.nota_maestro.service.grade.GradeService
+import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -42,6 +46,7 @@ class GradeServiceImpl(
     private val classroomStudentService: ClassroomStudentService,
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val userRepository: UserRepository,
+    private val userService: UserService,
     private val objectMapper: ObjectMapper
 ) : GradeService {
 
@@ -75,12 +80,12 @@ class GradeServiceImpl(
     @Transactional(readOnly = true)
     override fun findCompleteInfo(school: UUID): CourseInfoDto {
         log.trace("grade findCompleteInfo -> school: $school")
-        val grades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
+        val grades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete).sortedBy { it.code }
         val classrooms = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, LocalDateTime.now().year).map(classroomMapper::toComplete)
 
         val studentsInClassRooms = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val students = userRepository.getAllByUuidIn(studentsInClassRooms.mapNotNull { it.uuidStudent })
-        val studentsWithoutClassroom = userRepository.getStudentsWithoutClassroom()
+        val studentsWithoutClassroom = userRepository.getStudentsWithoutClassroom(school)
 
         classrooms.forEach {
             val myList = studentsInClassRooms.filter { s -> s.uuidClassroom == it.uuid }
@@ -92,7 +97,7 @@ class GradeServiceImpl(
         }
         return CourseInfoDto().apply {
             this.grades = grades
-            this.noAssignedStudents = studentsWithoutClassroom.filter { it.actualGrade == null || it.actualGrade == UUID.fromString("00000000-0000-0000-0000-000000000000") }.map(userMapper::toDto)
+            this.noAssignedStudents = studentsWithoutClassroom.filter { it.actualGrade == null || !classrooms.mapNotNull { c-> c.uuid }.contains(it.actualGrade) }.map(userMapper::toDto)
         }
     }
 
@@ -109,95 +114,97 @@ class GradeServiceImpl(
         return gradeMapper.toDto(gradeRepository.save(savedGrade))
     }
 
-    override fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto {
-        log.trace("grade saveComplete -> request: ${objectMapper.writeValueAsString(grades)}")
-        val completeInfo = findCompleteInfo(school)
-        val allClassRooms = mutableListOf<ClassroomCompleteDto>()
-        completeInfo.grades?.forEach { allClassRooms.addAll(it.classrooms) }
-        completeInfo.grades?.forEach {
-            val gradesToDelete = mutableListOf<UUID>()
-            val classToDelete = mutableListOf<UUID>()
-            allClassRooms.addAll(it.classrooms)
-            if(grades.grades?.mapNotNull { m-> m.uuid }?.contains(it.uuid) == false){
-                gradesToDelete.add(it.uuid!!)
+    @Transactional
+    override fun saveComplete(grade: CourseInfoDto, school: UUID): CourseInfoDto {
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
+        val gTD = allGrades.filterNot { grade.grades!!.mapNotNull { g -> g.uuid }.contains(it.uuid) }
+        val cTD = mutableListOf<ClassroomCompleteDto>()
+        val uTD = grade.noAssignedStudents!!.mapNotNull { it.uuid }.toMutableList()
+        val classRoomReq = mutableListOf<ClassroomStudentRequest>()
+        val users = mutableListOf<UUID>()
+        val classRoom = mutableListOf<UUID>()
+        val usersUpdate = mutableListOf<UserDto>()
+        grade.grades?.forEach {
+            uTD.addAll(it.noAssignedStudents!!.mapNotNull { s -> s.uuid })
+            val r = GradeRequest().apply {
+                this.name = it.name
+                this.uuidSchool = school
             }
-            it.classrooms.forEach { c->
-                if(!allClassRooms.mapNotNull { a-> a.uuid }.contains(c.uuid)){
-                    classToDelete.add(c.uuid!!)
+            val savedGrade = if (it.uuid == null) {
+                save(r)
+            } else {
+                val classroomsInGrade = classroomRepository.findAllByUuidGradeInAndYear(listOf(it.uuid!!), LocalDateTime.now().year).map(classroomMapper::toComplete)
+                cTD.addAll(classroomsInGrade.filterNot { cig -> it.classrooms.mapNotNull { c -> c.uuid }.contains(cig.uuid) })
+                classroomStudentRepository.deleteByUuidClassroom(classroomsInGrade.mapNotNull { ctd -> ctd.uuid })
+                update(it.uuid!!, r)
+            }
+            it.classrooms.forEach { c ->
+                val rc = ClassroomRequest().apply {
+                    this.name = c.name
+                    this.uuidSchool = school
+                    this.year = LocalDateTime.now().year
+                    this.uuidGrade = savedGrade.uuid
                 }
+                val classroom = if (c.uuid == null) {
+                    classroomService.save(rc)
+                } else {
+                    ClassroomDto().apply {
+                        this.uuid = c.uuid
+                    }
+                }
+                c.students?.forEach { u ->
+                    usersUpdate.add(
+                        UserDto().apply {
+                            this.uuid = u.uuid
+                            this.actualGrade = it.uuid
+                        }
+                    )
+                    classRoomReq.add(
+                        ClassroomStudentRequest().apply {
+                            this.uuidClassroom = classroom.uuid
+                            this.uuidStudent = u.uuid
+                        }
+                    )
+                }
+                classRoom.add(classroom.uuid!!)
+                users.addAll(c.students!!.mapNotNull { s -> s.uuid })
             }
-            deleteMultiple(gradesToDelete)
-            classroomService.deleteMultiple(classToDelete)
         }
-        grades.grades?.forEach {
-            val gradeSaved = if (it.uuid == null) {
-                save(
-                    GradeRequest().apply {
-                        this.name = it.name
-                        this.uuidSchool = school
+        val usersTD = userRepository.findAllById(uTD)
+        gradeRepository.deleteByUuids(gTD.mapNotNull { it.uuid })
+        classroomRepository.deleteByUuids(cTD.mapNotNull { it.uuid })
+
+        val actives = classroomStudentRepository.findAllByUuidStudentInAndUuidClassroomIn(users, classRoom)
+        val classRoomsInYear = classroomRepository.findAllByYear(LocalDateTime.now().year)
+
+        val csTU = mutableListOf<ClassroomStudentDto>()
+        val csTS = mutableListOf<ClassroomStudentRequest>()
+        classroomStudentRepository.deleteByUuidStudentsAndClassRooms(uTD, classRoomsInYear.mapNotNull { it.uuid })
+        classRoomReq.forEach {
+            if (actives.mapNotNull { a -> a.uuidStudent }.contains(it.uuidStudent)) {
+                val actualSaved = actives.first { a -> a.uuidStudent == it.uuidStudent }
+                csTU.add(
+                    ClassroomStudentDto().apply {
+                        this.uuidClassroom = it.uuidClassroom
+                        this.uuid = actualSaved.uuid
                     }
                 )
             } else {
-                update(
-                    it.uuid!!,
-                    GradeRequest().apply {
-                        this.name = it.name
+                csTS.add(
+                    ClassroomStudentRequest().apply {
+                        this.uuidClassroom = it.uuidClassroom
+                        this.uuidStudent = it.uuidStudent
                     }
                 )
             }
-            it.classrooms.forEach { c ->
-                val classSaved = if (c.uuid == null) {
-                    classroomService.save(
-                        ClassroomRequest().apply {
-                            this.name = it.name
-                            this.uuidSchool = school
-                            this.year = LocalDateTime.now().year
-                            this.uuidGrade = gradeSaved.uuid
-                        }
-                    )
-                } else {
-                    classroomService.update(
-                        c.uuid!!,
-                        ClassroomRequest().apply {
-                            this.name = it.name
-                        }
-                    )
-                }
-                c.students?.forEach { s ->
-                    val classesUuids = it.classrooms.mapNotNull { cc -> cc.uuid }
-                    var studentInClass = classroomStudentService.findAllByFilter(Pageable.unpaged(), "uuidStudent:${s.uuid}", null);
-                    studentInClass.filter { f-> classesUuids.contains(f.uuidClassroom) }
-                    if (studentInClass.isEmpty()) {
-                        classroomStudentService.save(
-                            ClassroomStudentRequest().apply {
-                                this.uuidStudent = s.uuid
-                                this.uuidClassroom = classSaved.uuid
-                            }
-                        )
-                    } else {
-                        studentInClass.forEach { sc ->
-                            classroomStudentService.update(
-                                sc.uuid!!,
-                                ClassroomStudentRequest().apply {
-                                    this.uuidClassroom = c.uuid
-                                }
-                            )
-                        }
-                    }
-                }
-            }
         }
-
-        return findCompleteInfo(school)
-    }
-
-    @Transactional
-    override fun saveComplete2(grade: CourseInfoDto, school: UUID): CourseInfoDto {
-        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
-        val gradeUuids = grade.grades?.mapNotNull { it.uuid }?.toSet() ?: emptySet()
-        val gradesNotIn = allGrades.filter { it.uuid !in gradeUuids }.mapNotNull { it.uuid }
-        gradeRepository.deleteByUuids(gradesNotIn)
-        classroomStudentRepository.findAllByUuidStudent(UUID.randomUUID())
+        classroomStudentService.saveMultiple(csTS)
+        classroomStudentService.updateMultiple(csTU)
+        userService.updateMultiple(usersUpdate)
+        usersTD.forEach {
+            it.actualGrade = null
+        }
+        userRepository.saveAll(usersTD)
         return grade
     }
 

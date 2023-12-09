@@ -28,12 +28,15 @@ interface UserRepository :
     fun getAllByUuidIn(uuids: List<UUID>): List<User>
 
     @Query(
-        value = "select * from users u where role = 'student' and deleted != true AND uuid NOT IN (\n" +
+        value = "select * from users u where role = 'student' and deleted != true " +
+            "AND uuid_school = ?1 AND uuid NOT IN (\n" +
             "    SELECT uuid_student\n" +
             "    FROM classroom_students\n" +
-            "    WHERE uuid_student IS NOT null\n" +
+            "    WHERE uuid_student IS NOT null and deleted is not true and uuid_classroom != '00000000-0000-0000-0000-000000000000'\n" +
             "  );",
         nativeQuery = true
     )
-    fun getStudentsWithoutClassroom(): List<User>
+    fun getStudentsWithoutClassroom(school: UUID): List<User>
+
+    fun findAllByUuidSchool(school: UUID): List<User>
 }
