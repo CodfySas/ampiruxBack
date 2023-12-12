@@ -1,10 +1,7 @@
 package com.osia.nota_maestro.controller.grade.v1
 
 import com.osia.nota_maestro.dto.OnCreate
-import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
-import com.osia.nota_maestro.dto.grade.v1.GradeDto
-import com.osia.nota_maestro.dto.grade.v1.GradeMapper
-import com.osia.nota_maestro.dto.grade.v1.GradeRequest
+import com.osia.nota_maestro.dto.grade.v1.*
 import com.osia.nota_maestro.service.grade.GradeService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -40,6 +37,11 @@ class GradeController(
     @GetMapping("/complete-info")
     fun getCompleteInfo(@RequestHeader school: UUID): CourseInfoDto {
         return gradeService.findCompleteInfo(school)
+    }
+
+    @GetMapping("/subjects")
+    fun getGradesWithSubjects(@RequestHeader school: UUID): List<GradeSubjectDto> {
+        return gradeService.getGradeWithSubjects(school)
     }
 
     @GetMapping("/filter/{where}")

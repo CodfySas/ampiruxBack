@@ -1,0 +1,25 @@
+package com.osia.nota_maestro.repository.gradeSubject
+
+import com.osia.nota_maestro.model.GradeSubject
+import com.osia.nota_maestro.repository.BaseRepository
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Repository
+import java.util.Optional
+import java.util.UUID
+
+@Repository("gradeSubject.crud_repository")
+interface GradeSubjectRepository :
+    JpaRepository<GradeSubject, UUID>,
+    JpaSpecificationExecutor<GradeSubject>,
+    BaseRepository {
+
+    @Query(value = "SELECT COUNT(*) FROM grade_subjects", nativeQuery = true)
+    override fun count(increment: Int): Long
+
+    @Query(value = "SELECT * FROM grade_subjects where uuid = ?1", nativeQuery = true)
+    fun getByUuid(uuid: UUID): Optional<GradeSubject>
+
+    fun findAllByUuidGradeIn(grades: List<UUID>): List<GradeSubject>
+}

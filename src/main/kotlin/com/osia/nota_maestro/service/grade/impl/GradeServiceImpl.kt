@@ -7,20 +7,22 @@ import com.osia.nota_maestro.dto.classroom.v1.ClassroomMapper
 import com.osia.nota_maestro.dto.classroom.v1.ClassroomRequest
 import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentDto
 import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentRequest
-import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
-import com.osia.nota_maestro.dto.grade.v1.GradeDto
-import com.osia.nota_maestro.dto.grade.v1.GradeMapper
-import com.osia.nota_maestro.dto.grade.v1.GradeRequest
+import com.osia.nota_maestro.dto.grade.v1.*
+import com.osia.nota_maestro.dto.gradeSubject.v1.GradeSubjectMapper
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.model.Grade
+import com.osia.nota_maestro.model.GradeSubject
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
+import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroom.ClassroomService
 import com.osia.nota_maestro.service.classroomStudent.ClassroomStudentService
 import com.osia.nota_maestro.service.grade.GradeService
+import com.osia.nota_maestro.service.gradeSubject.GradeSubjectService
+import com.osia.nota_maestro.service.subject.SubjectService
 import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
@@ -47,7 +49,10 @@ class GradeServiceImpl(
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val userRepository: UserRepository,
     private val userService: UserService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val gradeSubjectRepository: GradeSubjectRepository,
+    private val gradeSubjectMapper: GradeSubjectMapper,
+    private val subjectService: SubjectService
 ) : GradeService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -248,5 +253,21 @@ class GradeServiceImpl(
     override fun deleteMultiple(uuidList: List<UUID>) {
         log.trace("grade deleteMultiple -> uuid: $uuidList")
         gradeRepository.deleteAllById(uuidList)
+    }
+
+    override fun getGradeWithSubjects(school: UUID): List<GradeSubjectDto> {
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
+        val gradeSubject = gradeSubjectRepository.findAllByUuidGradeIn(allGrades.mapNotNull { it.uuid })
+        val final = mutableListOf<GradeSubjectDto>()
+        val subjects = subjectService.findByMultiple(gradeSubject.mapNotNull { it.uuidSubject })
+        allGrades.forEach{
+            val sg = gradeSubject.filter { g->g.uuidGrade==it.uuid }.map(gradeSubjectMapper::toDto)
+            final.add(GradeSubjectDto().apply {
+                this.uuid = it.uuid
+                this.name = it.name
+                this.subjects = subjects.filter { s->sg.mapNotNull { g->g.uuidSubject }.contains(s.uuid) }
+            })
+        }
+        return final
     }
 }
