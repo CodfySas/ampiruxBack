@@ -107,7 +107,7 @@ class GradeServiceImpl(
         }
         return CourseInfoDto().apply {
             this.grades = grades
-            this.noAssignedStudents = studentsWithoutClassroom.filter { it.actualGrade == null || !classrooms.mapNotNull { c-> c.uuid }.contains(it.actualGrade) }.map(userMapper::toDto)
+            this.noAssignedStudents = studentsWithoutClassroom.filter { it.actualGrade == null || !grades.mapNotNull { c-> c.uuid }.contains(it.actualGrade) }.map(userMapper::toDto)
         }
     }
 
