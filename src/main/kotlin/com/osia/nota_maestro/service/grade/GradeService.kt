@@ -3,7 +3,7 @@ package com.osia.nota_maestro.service.grade
 import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
 import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.grade.v1.GradeRequest
-import com.osia.nota_maestro.dto.grade.v1.GradeSubjectDto
+import com.osia.nota_maestro.dto.grade.v1.GradeSubjectsDto
 import com.osia.nota_maestro.model.Grade
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -20,6 +20,7 @@ interface GradeService {
     // Create
     fun save(gradeRequest: GradeRequest, replace: Boolean = false): GradeDto
     fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto
+    fun saveGradeSubjects(gradeSubjectsDto: List<GradeSubjectsDto>, school: UUID): List<GradeSubjectsDto>
     fun saveMultiple(gradeRequestList: List<GradeRequest>): List<GradeDto>
     // Update
     fun update(uuid: UUID, gradeRequest: GradeRequest, includeDelete: Boolean = false): GradeDto
@@ -27,5 +28,5 @@ interface GradeService {
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
-    fun getGradeWithSubjects(school: UUID): List<GradeSubjectDto>
+    fun getGradeWithSubjects(school: UUID): List<GradeSubjectsDto>
 }

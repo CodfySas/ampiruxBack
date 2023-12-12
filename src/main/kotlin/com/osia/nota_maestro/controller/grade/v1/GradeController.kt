@@ -1,7 +1,11 @@
 package com.osia.nota_maestro.controller.grade.v1
 
 import com.osia.nota_maestro.dto.OnCreate
-import com.osia.nota_maestro.dto.grade.v1.*
+import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
+import com.osia.nota_maestro.dto.grade.v1.GradeDto
+import com.osia.nota_maestro.dto.grade.v1.GradeMapper
+import com.osia.nota_maestro.dto.grade.v1.GradeRequest
+import com.osia.nota_maestro.dto.grade.v1.GradeSubjectsDto
 import com.osia.nota_maestro.service.grade.GradeService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -40,7 +44,7 @@ class GradeController(
     }
 
     @GetMapping("/subjects")
-    fun getGradesWithSubjects(@RequestHeader school: UUID): List<GradeSubjectDto> {
+    fun getGradesWithSubjects(@RequestHeader school: UUID): List<GradeSubjectsDto> {
         return gradeService.getGradeWithSubjects(school)
     }
 
@@ -78,6 +82,14 @@ class GradeController(
         @RequestHeader school: UUID
     ): ResponseEntity<CourseInfoDto> {
         return ResponseEntity(gradeService.saveComplete(request, school), HttpStatus.CREATED)
+    }
+
+    @PostMapping("/grade-subjects")
+    fun saveGradeSubject(
+        @Validated(OnCreate::class) @RequestBody request: List<GradeSubjectsDto>,
+        @RequestHeader school: UUID
+    ): ResponseEntity<List<GradeSubjectsDto>> {
+        return ResponseEntity(gradeService.saveGradeSubjects(request, school), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")

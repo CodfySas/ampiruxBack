@@ -8,7 +8,6 @@ import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.Table
-import javax.validation.constraints.NotNull
 
 @Table(
     name = "grade_subjects",
@@ -22,7 +21,7 @@ import javax.validation.constraints.NotNull
 )
 @Where(clause = "deleted = false")
 data class GradeSubject(
-        var uuidGrade: UUID? = null,
-        var uuidSubject: UUID? = null,
-        var uuidTeacher: UUID? = null
+    var uuidGrade: UUID? = null,
+    var uuidSubject: UUID? = null,
+    var uuidTeacher: UUID? = null
 ) : BaseModel()

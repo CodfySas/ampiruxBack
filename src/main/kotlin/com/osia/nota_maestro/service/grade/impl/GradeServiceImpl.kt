@@ -7,12 +7,16 @@ import com.osia.nota_maestro.dto.classroom.v1.ClassroomMapper
 import com.osia.nota_maestro.dto.classroom.v1.ClassroomRequest
 import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentDto
 import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentRequest
-import com.osia.nota_maestro.dto.grade.v1.*
+import com.osia.nota_maestro.dto.grade.v1.CourseInfoDto
+import com.osia.nota_maestro.dto.grade.v1.GradeDto
+import com.osia.nota_maestro.dto.grade.v1.GradeMapper
+import com.osia.nota_maestro.dto.grade.v1.GradeRequest
+import com.osia.nota_maestro.dto.grade.v1.GradeSubjectsDto
 import com.osia.nota_maestro.dto.gradeSubject.v1.GradeSubjectMapper
+import com.osia.nota_maestro.dto.gradeSubject.v1.GradeSubjectRequest
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.model.Grade
-import com.osia.nota_maestro.model.GradeSubject
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
@@ -50,6 +54,7 @@ class GradeServiceImpl(
     private val userRepository: UserRepository,
     private val userService: UserService,
     private val objectMapper: ObjectMapper,
+    private val gradeSubjectService: GradeSubjectService,
     private val gradeSubjectRepository: GradeSubjectRepository,
     private val gradeSubjectMapper: GradeSubjectMapper,
     private val subjectService: SubjectService
@@ -214,6 +219,28 @@ class GradeServiceImpl(
     }
 
     @Transactional
+    override fun saveGradeSubjects(gradeSubjectsDto: List<GradeSubjectsDto>, school: UUID): List<GradeSubjectsDto> {
+        val gradeSubjectsByGrade = gradeSubjectRepository.findAllByUuidGradeIn(gradeSubjectsDto.mapNotNull { it.uuid })
+        gradeSubjectsDto.forEach {
+            val subjects = it.subjects
+            val savedGrade = gradeSubjectsByGrade.filter { g -> g.uuidGrade == it.uuid }
+            val toDelete = savedGrade.filterNot { sg -> subjects.mapNotNull { s -> s.uuid }.contains(sg.uuidSubject) }
+            gradeSubjectRepository.deleteByUuids(toDelete.mapNotNull { t -> t.uuid })
+            it.subjects.forEach { sub ->
+                if (!savedGrade.mapNotNull { sx-> sx.uuidSubject }.contains(sub.uuid)) {
+                    gradeSubjectService.save(
+                        GradeSubjectRequest().apply {
+                            this.uuidSubject = sub.uuid
+                            this.uuidGrade = it.uuid
+                        }
+                    )
+                }
+            }
+        }
+        return gradeSubjectsDto
+    }
+
+    @Transactional
     override fun saveMultiple(gradeRequestList: List<GradeRequest>): List<GradeDto> {
         log.trace("grade saveMultiple -> requestList: ${objectMapper.writeValueAsString(gradeRequestList)}")
         val grades = gradeRequestList.map(gradeMapper::toModel)
@@ -255,18 +282,20 @@ class GradeServiceImpl(
         gradeRepository.deleteAllById(uuidList)
     }
 
-    override fun getGradeWithSubjects(school: UUID): List<GradeSubjectDto> {
+    override fun getGradeWithSubjects(school: UUID): List<GradeSubjectsDto> {
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
         val gradeSubject = gradeSubjectRepository.findAllByUuidGradeIn(allGrades.mapNotNull { it.uuid })
-        val final = mutableListOf<GradeSubjectDto>()
+        val final = mutableListOf<GradeSubjectsDto>()
         val subjects = subjectService.findByMultiple(gradeSubject.mapNotNull { it.uuidSubject })
-        allGrades.forEach{
-            val sg = gradeSubject.filter { g->g.uuidGrade==it.uuid }.map(gradeSubjectMapper::toDto)
-            final.add(GradeSubjectDto().apply {
-                this.uuid = it.uuid
-                this.name = it.name
-                this.subjects = subjects.filter { s->sg.mapNotNull { g->g.uuidSubject }.contains(s.uuid) }
-            })
+        allGrades.forEach {
+            val sg = gradeSubject.filter { g -> g.uuidGrade == it.uuid }.map(gradeSubjectMapper::toDto)
+            final.add(
+                GradeSubjectsDto().apply {
+                    this.uuid = it.uuid
+                    this.name = it.name
+                    this.subjects = subjects.filter { s -> sg.mapNotNull { g -> g.uuidSubject }.contains(s.uuid) }
+                }
+            )
         }
         return final
     }
