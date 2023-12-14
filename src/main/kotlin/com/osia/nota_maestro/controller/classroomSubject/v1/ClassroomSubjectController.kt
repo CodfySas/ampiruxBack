@@ -5,6 +5,7 @@ import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectCompleteDto
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectDto
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectMapper
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectRequest
+import com.osia.nota_maestro.dto.classroomSubject.v1.CompleteSubjectsTeachersDto
 import com.osia.nota_maestro.service.classroomSubject.ClassroomSubjectService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -55,6 +56,11 @@ class ClassroomSubjectController(
     @GetMapping("/complete-info")
     fun getGradesAndClassroomSubjects(@RequestHeader school: UUID): ResponseEntity<List<ClassroomSubjectCompleteDto>> {
         return ResponseEntity.ok().body(classroomSubjectService.getCompleteInfo(school))
+    }
+
+    @GetMapping("/complete-info-2")
+    fun getGradesAndClassroomSubjects2(@RequestHeader school: UUID): ResponseEntity<CompleteSubjectsTeachersDto> {
+        return ResponseEntity.ok().body(classroomSubjectService.getCompleteInfo2(school))
     }
 
     @GetMapping("/multiple")

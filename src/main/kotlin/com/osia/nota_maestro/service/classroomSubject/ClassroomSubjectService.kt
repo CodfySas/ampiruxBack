@@ -3,6 +3,7 @@ package com.osia.nota_maestro.service.classroomSubject
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectCompleteDto
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectDto
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectRequest
+import com.osia.nota_maestro.dto.classroomSubject.v1.CompleteSubjectsTeachersDto
 import com.osia.nota_maestro.model.ClassroomSubject
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -26,4 +27,6 @@ interface ClassroomSubjectService {
     fun deleteMultiple(uuidList: List<UUID>)
 
     fun getCompleteInfo(school: UUID): List<ClassroomSubjectCompleteDto>
+
+    fun getCompleteInfo2(school: UUID): CompleteSubjectsTeachersDto
 }

@@ -25,6 +25,8 @@ interface GradeSubjectRepository :
 
     fun findAllByUuidGradeIn(grades: List<UUID>): List<GradeSubject>
 
+    fun findAllByUuidSubjectIn(subjects: List<UUID>): List<GradeSubject>
+
     @Modifying
     @Transactional
     @Query("UPDATE GradeSubject SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")

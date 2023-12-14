@@ -7,6 +7,12 @@ import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectCompleteDto
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectDto
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectMapper
 import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectRequest
+import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomsTeachersDto
+import com.osia.nota_maestro.dto.classroomSubject.v1.CompleteSubjectsTeachersDto
+import com.osia.nota_maestro.dto.classroomSubject.v1.GradeTeachersDto
+import com.osia.nota_maestro.dto.classroomSubject.v1.SubjectTeachersDto
+import com.osia.nota_maestro.dto.subject.v1.SubjectMapper
+import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.model.ClassroomSubject
 import com.osia.nota_maestro.model.Grade
 import com.osia.nota_maestro.model.Subject
@@ -40,7 +46,9 @@ class ClassroomSubjectServiceImpl(
     private val classroomRepository: ClassroomRepository,
     private val gradeSubjectRepository: GradeSubjectRepository,
     private val subjectRepository: SubjectRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val userMapper: UserMapper,
+    private val subjectMapper: SubjectMapper
 ) : ClassroomSubjectService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -180,6 +188,8 @@ class ClassroomSubjectServiceImpl(
         val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school)))
         val teachers = userRepository.findAll(Specification.where(CreateSpec<User>().createSpec("role:teacher", school)))
 
+
+
         val final = mutableListOf<ClassroomSubjectCompleteDto>()
         allGrades.forEach { g ->
             final.add(
@@ -209,5 +219,44 @@ class ClassroomSubjectServiceImpl(
             )
         }
         return final
+    }
+
+    override fun getCompleteInfo2(school: UUID): CompleteSubjectsTeachersDto {
+        val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school))).sortedByDescending { it.code }
+        val teachers = userRepository.findAll(Specification.where(CreateSpec<User>().createSpec("role:teacher", school))).sortedBy { it.name }
+        val gradeSubjects = gradeSubjectRepository.findAllByUuidSubjectIn(subjects.mapNotNull { it.uuid })
+
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, LocalDateTime.now().year).sortedBy { it.name }
+        val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+
+        val subjectList = mutableListOf<SubjectTeachersDto>()
+        subjects.forEach { s->
+            subjectList.add(SubjectTeachersDto().apply {
+                this.uuid = s.uuid
+                this.name = s.name
+                this.grades = gradeSubjects.filter { it.uuidSubject == s.uuid }.map { g->
+                    val grade = allGrades.first { a-> a.uuid == g.uuidGrade }
+                    GradeTeachersDto().apply {
+                        this.uuid = grade.uuid
+                        this.name = grade.name
+                        this.classrooms = classrooms.filter { it.uuidGrade == grade.uuid }.map { c ->
+                            ClassroomsTeachersDto().apply {
+                            val savedTeacher = subjectsInClassrooms.firstOrNull{ si -> si.uuidSubject == s.uuid && si.uuidClassroom == c.uuid}
+                                this.uuid = c.uuid
+                                this.name = c.name
+                                this.uuidTeacher = savedTeacher?.uuid
+                                this.nameTeacher = savedTeacher?.let { teachers.firstOrNull { t-> t.uuid == it.uuid } }?.name
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        return CompleteSubjectsTeachersDto().apply {
+            this.teachers = teachers.map(userMapper::toDto)
+            this.subjects = subjectList
+        }
     }
 }
