@@ -257,7 +257,7 @@ class UserServiceImpl(
         user: User,
     ) {
         if (role == "teacher") {
-            saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
+            saveSubModuleUsers(user.uuid!!, listOf("Notas"))
         }
         if (role == "student") {
             saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
