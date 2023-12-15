@@ -29,4 +29,5 @@ interface ClassroomSubjectService {
     fun getCompleteInfo(school: UUID): List<ClassroomSubjectCompleteDto>
 
     fun getCompleteInfo2(school: UUID): CompleteSubjectsTeachersDto
+    fun saveCompleteInfo(toSave: CompleteSubjectsTeachersDto, school: UUID): CompleteSubjectsTeachersDto
 }

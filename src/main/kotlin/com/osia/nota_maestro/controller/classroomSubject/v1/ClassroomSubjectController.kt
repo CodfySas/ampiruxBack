@@ -63,6 +63,11 @@ class ClassroomSubjectController(
         return ResponseEntity.ok().body(classroomSubjectService.getCompleteInfo2(school))
     }
 
+    @PostMapping("/save-complete")
+    fun saveCompleteInfo(@RequestHeader school: UUID, @RequestBody request: CompleteSubjectsTeachersDto): ResponseEntity<CompleteSubjectsTeachersDto> {
+        return ResponseEntity.ok().body(classroomSubjectService.saveCompleteInfo(request, school))
+    }
+
     @GetMapping("/multiple")
     fun getByMultipleId(@RequestBody uuidList: List<UUID>): ResponseEntity<List<ClassroomSubjectDto>> {
         return ResponseEntity.ok().body(classroomSubjectService.findByMultiple(uuidList))

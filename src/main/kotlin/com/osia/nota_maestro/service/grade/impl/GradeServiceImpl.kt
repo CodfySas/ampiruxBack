@@ -90,8 +90,8 @@ class GradeServiceImpl(
     @Transactional(readOnly = true)
     override fun findCompleteInfo(school: UUID): CourseInfoDto {
         log.trace("grade findCompleteInfo -> school: $school")
-        val grades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete).sortedBy { it.code }
-        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, LocalDateTime.now().year).map(classroomMapper::toComplete)
+        val grades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete).sortedBy { it.ordered }
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, LocalDateTime.now().year).map(classroomMapper::toComplete).sortedBy { it.name }
 
         val studentsInClassRooms = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val students = userRepository.getAllByUuidIn(studentsInClassRooms.mapNotNull { it.uuidStudent })
@@ -125,20 +125,21 @@ class GradeServiceImpl(
     }
 
     @Transactional
-    override fun saveComplete(grade: CourseInfoDto, school: UUID): CourseInfoDto {
+    override fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto {
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
-        val gTD = allGrades.filterNot { grade.grades!!.mapNotNull { g -> g.uuid }.contains(it.uuid) }
+        val gTD = allGrades.filterNot { grades.grades!!.mapNotNull { g -> g.uuid }.contains(it.uuid) }
         val cTD = mutableListOf<ClassroomCompleteDto>()
-        val uTD = grade.noAssignedStudents!!.mapNotNull { it.uuid }.toMutableList()
+        val uTD = grades.noAssignedStudents!!.mapNotNull { it.uuid }.toMutableList()
         val classRoomReq = mutableListOf<ClassroomStudentRequest>()
         val users = mutableListOf<UUID>()
         val classRoom = mutableListOf<UUID>()
         val usersUpdate = mutableListOf<UserDto>()
-        grade.grades?.forEach {
+        grades.grades?.forEach {
             uTD.addAll(it.noAssignedStudents!!.mapNotNull { s -> s.uuid })
             val r = GradeRequest().apply {
                 this.name = it.name
                 this.uuidSchool = school
+                this.ordered = it.ordered
             }
             val savedGrade = if (it.uuid == null) {
                 save(r)
@@ -215,7 +216,7 @@ class GradeServiceImpl(
             it.actualGrade = null
         }
         userRepository.saveAll(usersTD)
-        return grade
+        return grades
     }
 
     @Transactional

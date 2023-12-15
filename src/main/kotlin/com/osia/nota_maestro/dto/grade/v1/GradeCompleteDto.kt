@@ -12,4 +12,5 @@ class GradeCompleteDto : BaseDto() {
     var uuidSchool: UUID? = null
     var classrooms: List<ClassroomCompleteDto> = mutableListOf()
     var noAssignedStudents: List<UserDto>? = null
+    var ordered: Int? = null
 }

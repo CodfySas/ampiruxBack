@@ -188,8 +188,6 @@ class ClassroomSubjectServiceImpl(
         val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school)))
         val teachers = userRepository.findAll(Specification.where(CreateSpec<User>().createSpec("role:teacher", school)))
 
-
-
         val final = mutableListOf<ClassroomSubjectCompleteDto>()
         allGrades.forEach { g ->
             final.add(
@@ -245,7 +243,7 @@ class ClassroomSubjectServiceImpl(
                             val savedTeacher = subjectsInClassrooms.firstOrNull{ si -> si.uuidSubject == s.uuid && si.uuidClassroom == c.uuid}
                                 this.uuid = c.uuid
                                 this.name = c.name
-                                this.uuidTeacher = savedTeacher?.uuid
+                                this.uuidTeacher = savedTeacher?.uuidTeacher
                                 this.nameTeacher = savedTeacher?.let { teachers.firstOrNull { t-> t.uuid == it.uuid } }?.name
                             }
                         }
@@ -258,5 +256,46 @@ class ClassroomSubjectServiceImpl(
             this.teachers = teachers.map(userMapper::toDto)
             this.subjects = subjectList
         }
+    }
+
+    override fun saveCompleteInfo(toSave: CompleteSubjectsTeachersDto, school: UUID): CompleteSubjectsTeachersDto {
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }
+
+        val toUpdate = mutableMapOf<UUID, ClassroomSubjectRequest>()
+        val toSaveR = mutableListOf<ClassroomSubjectRequest>()
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, LocalDateTime.now().year).sortedBy { it.name }
+        val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+
+        val inded = mutableListOf<Pair<UUID, UUID>>()
+
+        toSave.subjects?.forEach { s->
+            s.grades?.forEach { g->
+                g.classrooms?.forEach { c->
+                    inded.add(Pair(s.uuid!!, c.uuid!!))
+                    val new = ClassroomSubjectRequest().apply {
+                        this.uuidSubject = s.uuid
+                        this.uuidTeacher = c.uuidTeacher
+                        this.uuidClassroom = c.uuid
+                    }
+                    val found = subjectsInClassrooms.firstOrNull { it.uuidSubject == s.uuid && it.uuidClassroom == c.uuid }
+                    if(found != null){
+                        val foundUuid = found.uuid!!
+                        toUpdate[foundUuid] = new
+                    }else{
+                        toSaveR.add(new)
+                    }
+                }
+            }
+        }
+        val toDelete = subjectsInClassrooms.filterNot { inded.contains(Pair(it.uuidSubject, it.uuidClassroom)) }
+
+        saveMultiple(toSaveR)
+        updateMultiple(toUpdate.map { ClassroomSubjectDto().apply {
+            this.uuid = it.key
+            this.uuidTeacher = it.value.uuidTeacher
+        } })
+        classroomSubjectRepository.deleteByUuids(toDelete.mapNotNull { it.uuid })
+
+        return toSave
     }
 }

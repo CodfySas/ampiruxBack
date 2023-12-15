@@ -7,4 +7,5 @@ class GradeRequest {
     var name: String? = null
     @NotNull
     var uuidSchool: UUID? = null
+    var ordered: Int? = null
 }
