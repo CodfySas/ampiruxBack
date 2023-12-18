@@ -6,7 +6,9 @@ import com.osia.nota_maestro.dto.school.v1.SchoolMapper
 import com.osia.nota_maestro.dto.school.v1.SchoolRequest
 import com.osia.nota_maestro.model.School
 import com.osia.nota_maestro.repository.school.SchoolRepository
+import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.service.school.SchoolService
+import com.osia.nota_maestro.service.schoolPeriod.SchoolPeriodService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -24,7 +26,9 @@ import java.util.UUID
 class SchoolServiceImpl(
     private val schoolRepository: SchoolRepository,
     private val schoolMapper: SchoolMapper,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val schoolPeriodRepository: SchoolPeriodRepository,
+    private val schoolPeriodService: SchoolPeriodService
 ) : SchoolService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -79,6 +83,11 @@ class SchoolServiceImpl(
         log.trace("school update -> uuid: $uuid, request: $schoolRequest")
         val school = getById(uuid)
         schoolMapper.update(schoolRequest, school)
+        schoolPeriodRepository.deleteByUuidSchool(uuid)
+        schoolRequest.periodList?.forEach {
+            it.uuidSchool = uuid
+        }
+        schoolRequest.periodList?.let { schoolPeriodService.saveMultiple(it) }
         return schoolMapper.toDto(schoolRepository.save(school))
     }
 

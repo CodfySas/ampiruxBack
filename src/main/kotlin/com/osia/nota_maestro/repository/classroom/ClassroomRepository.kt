@@ -23,6 +23,8 @@ interface ClassroomRepository :
     @Query(value = "SELECT * FROM classrooms where uuid = ?1", nativeQuery = true)
     fun getByUuid(uuid: UUID): Optional<Classroom>
 
+    fun findByUuidInAndYear(uuids: List<UUID>, year: Int): List<Classroom>
+
     fun findAllByUuidGradeInAndYear(classrooms: List<UUID>, year: Int): List<Classroom>
 
     fun findAllByYear(year: Int): List<Classroom>

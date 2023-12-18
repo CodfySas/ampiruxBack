@@ -29,4 +29,6 @@ interface ClassroomSubjectRepository :
     fun deleteByUuids(uuids: List<UUID>)
 
     fun getAllByUuidClassroomIn(classrooms: List<UUID>): List<ClassroomSubject>
+
+    fun getAllByUuidTeacher(uuidTeacher: UUID): List<ClassroomSubject>
 }

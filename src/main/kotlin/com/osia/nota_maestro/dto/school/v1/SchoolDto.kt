@@ -10,4 +10,5 @@ class SchoolDto : BaseDto() {
     var active: Boolean? = true
     var expireDate: LocalDateTime? = null
     var shortName: String? = null
+    var periods: Int? = null
 }

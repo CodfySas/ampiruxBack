@@ -1,31 +1,29 @@
 package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
-import com.osia.nota_maestro.model.listener.school.SchoolListener
+import com.osia.nota_maestro.model.listener.schoolPeriod.SchoolPeriodListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "schools",
+    name = "school_periods",
 )
 @Entity
 @DynamicUpdate
 @EntityListeners(
     value = [
-        SchoolListener::class
+        SchoolPeriodListener::class
     ]
 )
 @Where(clause = "deleted = false")
-data class School(
-    var name: String? = null,
-    var shortName: String? = null,
-    var color1: String? = "E78617",
-    var color2: String? = "e35205",
-    var active: Boolean? = true,
-    var expireDate: LocalDateTime? = null,
-    var periods: Int? = null
+data class SchoolPeriod(
+    var number: Int? = null,
+    var init: LocalDateTime? = null,
+    var finish: LocalDateTime? = null,
+    var uuidSchool: UUID? = null
 ) : BaseModel()

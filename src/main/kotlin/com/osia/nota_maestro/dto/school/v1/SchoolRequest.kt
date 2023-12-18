@@ -1,5 +1,6 @@
 package com.osia.nota_maestro.dto.school.v1
 
+import com.osia.nota_maestro.dto.schoolPeriod.v1.SchoolPeriodRequest
 import java.time.LocalDateTime
 
 class SchoolRequest {
@@ -9,4 +10,6 @@ class SchoolRequest {
     var active: Boolean? = true
     var expireDate: LocalDateTime? = null
     var shortName: String? = null
+    var periods: Int? = null
+    var periodList: List<SchoolPeriodRequest>? = null
 }

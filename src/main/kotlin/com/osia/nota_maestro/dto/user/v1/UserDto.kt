@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.dto.user.v1
 
 import com.osia.nota_maestro.dto.BaseDto
+import com.osia.nota_maestro.dto.schoolPeriod.v1.SchoolPeriodDto
 import java.util.UUID
 
 class UserDto : BaseDto() {
@@ -21,4 +22,6 @@ class UserDto : BaseDto() {
     var address: String? = null
     var email: String? = null
     var actualGrade: UUID? = null
+    var periods: Int? = null
+    var periodList: List<SchoolPeriodDto>? = null
 }

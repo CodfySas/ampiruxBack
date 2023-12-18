@@ -27,6 +27,8 @@ interface UserRepository :
 
     fun getAllByUuidIn(uuids: List<UUID>): List<User>
 
+    fun findAllByRoleAndUuidSchool(role: String, uuid: UUID): List<User>
+
     @Query(
         value = "select * from users u where role = 'student' and deleted != true " +
             "AND uuid_school = ?1 AND uuid NOT IN (\n" +

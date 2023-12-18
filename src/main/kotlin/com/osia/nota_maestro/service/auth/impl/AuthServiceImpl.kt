@@ -1,10 +1,12 @@
 package com.osia.nota_maestro.service.auth.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.schoolPeriod.v1.SchoolPeriodMapper
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
 import com.osia.nota_maestro.repository.school.SchoolRepository
+import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.auth.AuthUseCase
 import com.osia.nota_maestro.service.jwt.JwtGenerator
@@ -20,7 +22,9 @@ class AuthServiceImpl(
     private val objectMapper: ObjectMapper,
     private val jwtGenerator: JwtGenerator,
     private val userMapper: UserMapper,
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
+    private val schoolPeriodRepository: SchoolPeriodRepository,
+    private val schoolPeriodMapper: SchoolPeriodMapper
 ) : AuthUseCase {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -40,6 +44,7 @@ class AuthServiceImpl(
         }
 
         val school = schoolRepository.findById(userFound.uuidSchool!!).get()
+        val periodList = schoolPeriodRepository.findAllByUuidSchool(school.uuid!!)
 
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
@@ -47,6 +52,8 @@ class AuthServiceImpl(
             this.color1 = school.color1
             this.color2 = school.color2
             this.shortName = school.shortName
+            this.periods = school.periods
+            this.periodList = periodList.map(schoolPeriodMapper::toDto).sortedBy { it.number }
         }
     }
 }
