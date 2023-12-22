@@ -59,12 +59,18 @@ class NoteServiceImpl(
                                         NoteSubjectsDto().apply {
                                             this.uuid = cx.uuidSubject
                                             this.name = subjects.first { it.uuid == cx.uuidSubject }.name
-                                            this.notes = studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject }.sortedBy { sn -> sn.number }.map { sn ->
-                                                NoteDetailsDto().apply {
-                                                    this.uuid = sn.uuid
-                                                    this.name = sn.noteName
-                                                    this.note = sn.note
-                                                    this.number = sn.number
+                                            if(studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject }.size==0){
+                                                this.notes = mutableListOf(NoteDetailsDto().apply {
+                                                    this.number = 0
+                                                })
+                                            } else {
+                                                this.notes = studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject }.sortedBy { sn -> sn.number }.map { sn ->
+                                                    NoteDetailsDto().apply {
+                                                        this.uuid = sn.uuid
+                                                        this.name = sn.noteName
+                                                        this.note = sn.note
+                                                        this.number = sn.number
+                                                    }
                                                 }
                                             }
                                         }
