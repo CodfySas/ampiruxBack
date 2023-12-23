@@ -74,7 +74,7 @@ class NoteServiceImpl(
                                                     NoteDetailsDto().apply {
                                                         this.uuid = sn.uuid
                                                         this.name = sn.noteName
-                                                        this.note = sn.note.toString().replace(".", ",")
+                                                        this.note = if(sn.note != null){sn.note.toString().replace(".", ",")}else{""}
                                                         this.number = sn.number
                                                     }
                                                 }
@@ -111,12 +111,12 @@ class NoteServiceImpl(
                                 this.uuidClassroomStudent = cs.uuid
                                 this.uuidSubject = u.uuid
                                 this.number = n.number
-                                this.note = n.note?.replace(",",".")?.toDouble()
+                                this.note = if(n.note != null && n.note != ""){ n.note?.replace(",",".")?.toDouble()}else{null}
                                 this.noteName = n.name
                                 this.uuidStudent = s.uuid
                             }
                             if (n.uuid != null) {
-                                toUpdate[s.uuid!!] = req
+                                toUpdate[n.uuid!!] = req
                             } else {
                                 toCreate.add(req)
                             }
