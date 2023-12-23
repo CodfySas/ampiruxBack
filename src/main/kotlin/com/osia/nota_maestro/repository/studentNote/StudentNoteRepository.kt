@@ -25,8 +25,15 @@ interface StudentNoteRepository :
 
     fun findAllByUuidClassroomStudentIn(uuids: List<UUID>): List<StudentNote>
 
+    fun findAllByUuidClassroomStudentInAndUuidSubjectIn(uuids: List<UUID>, uuidSubjects: List<UUID>): List<StudentNote>
+
     @Modifying
     @Transactional
     @Query("UPDATE StudentNote SET deleted = true, deletedAt = now() WHERE uuid = :uuid")
     fun deleteByUuid(uuid: UUID)
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE StudentNote SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
+    fun deleteByUuids(uuids: List<UUID>)
 }

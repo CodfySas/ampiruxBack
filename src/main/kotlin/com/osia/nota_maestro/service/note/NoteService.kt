@@ -5,4 +5,5 @@ import java.util.UUID
 
 interface NoteService {
     fun getMyNotes(teacher: UUID): NoteDto
+    fun submitNotes(noteDto: NoteDto, teacher: UUID): NoteDto
 }

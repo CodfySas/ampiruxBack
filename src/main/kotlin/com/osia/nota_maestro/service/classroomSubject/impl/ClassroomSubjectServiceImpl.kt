@@ -16,7 +16,6 @@ import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.model.ClassroomSubject
 import com.osia.nota_maestro.model.Grade
 import com.osia.nota_maestro.model.Subject
-import com.osia.nota_maestro.model.User
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
