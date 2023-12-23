@@ -74,7 +74,7 @@ class NoteServiceImpl(
                                                     NoteDetailsDto().apply {
                                                         this.uuid = sn.uuid
                                                         this.name = sn.noteName
-                                                        this.note = sn.note
+                                                        this.note = sn.note.toString().replace(".", ",")
                                                         this.number = sn.number
                                                     }
                                                 }
@@ -111,7 +111,7 @@ class NoteServiceImpl(
                                 this.uuidClassroomStudent = cs.uuid
                                 this.uuidSubject = u.uuid
                                 this.number = n.number
-                                this.note = n.note
+                                this.note = n.note?.replace(",",".")?.toDouble()
                                 this.noteName = n.name
                                 this.uuidStudent = s.uuid
                             }
