@@ -4,5 +4,6 @@ import com.osia.nota_maestro.dto.BaseDto
 
 class NoteSubjectsDto : BaseDto() {
     var name: String? = null
-    var notes: List<NoteDetailsDto>? = mutableListOf()
+    var periods: List<NotePeriodDto>? = mutableListOf()
+    var judgments: List<String> = mutableListOf()
 }

@@ -10,4 +10,5 @@ class StudentNoteDto : BaseDto() {
     var note: Double? = null
     var uuidClassroomStudent: UUID? = null
     var uuidSubject: UUID? = null
+    var period: Int? = null
 }
