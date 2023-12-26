@@ -234,11 +234,11 @@ class ClassroomSubjectServiceImpl(
                     this.uuid = s.uuid
                     this.name = s.name
                     this.grades = gradeSubjects.filter { it.uuidSubject == s.uuid }.map { g ->
-                        val grade = allGrades.first { a -> a.uuid == g.uuidGrade }
+                        val grade = allGrades.firstOrNull { a -> a.uuid == g.uuidGrade }
                         GradeTeachersDto().apply {
-                            this.uuid = grade.uuid
-                            this.name = grade.name
-                            this.classrooms = classrooms.filter { it.uuidGrade == grade.uuid }.map { c ->
+                            this.uuid = grade?.uuid
+                            this.name = grade?.name
+                            this.classrooms = classrooms.filter { it.uuidGrade == grade?.uuid }.map { c ->
                                 ClassroomsTeachersDto().apply {
                                     val savedTeacher = subjectsInClassrooms.firstOrNull { si -> si.uuidSubject == s.uuid && si.uuidClassroom == c.uuid }
                                     this.uuid = c.uuid
