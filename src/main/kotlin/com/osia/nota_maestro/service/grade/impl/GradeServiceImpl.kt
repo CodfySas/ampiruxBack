@@ -146,7 +146,6 @@ class GradeServiceImpl(
             } else {
                 val classroomsInGrade = classroomRepository.findAllByUuidGradeInAndYear(listOf(it.uuid!!), LocalDateTime.now().year).map(classroomMapper::toComplete)
                 cTD.addAll(classroomsInGrade.filterNot { cig -> it.classrooms.mapNotNull { c -> c.uuid }.contains(cig.uuid) })
-                classroomStudentRepository.deleteByUuidClassroom(classroomsInGrade.mapNotNull { ctd -> ctd.uuid })
                 update(it.uuid!!, r)
             }
             it.classrooms.forEach { c ->
@@ -186,12 +185,11 @@ class GradeServiceImpl(
         classroomRepository.deleteByUuids(cTD.mapNotNull { it.uuid })
 
         val actives = classroomStudentRepository.findAllByUuidStudentInAndUuidClassroomIn(users, classRoom)
-        val classRoomsInYear = classroomRepository.findAllByYear(LocalDateTime.now().year)
 
         val csTU = mutableListOf<ClassroomStudentDto>()
         val csTS = mutableListOf<ClassroomStudentRequest>()
-        classroomStudentRepository.deleteByUuidStudentsAndClassRooms(uTD, classRoomsInYear.mapNotNull { it.uuid })
         classRoomReq.forEach {
+
             if (actives.mapNotNull { a -> a.uuidStudent }.contains(it.uuidStudent)) {
                 val actualSaved = actives.first { a -> a.uuidStudent == it.uuidStudent }
                 csTU.add(
@@ -209,6 +207,9 @@ class GradeServiceImpl(
                 )
             }
         }
+        val csTd = actives.mapNotNull { a -> a.uuid }.filterNot { a -> csTU.mapNotNull { it.uuid }.contains(a) }
+        classroomStudentRepository.deleteByUuids(csTd)
+
         classroomStudentService.saveMultiple(csTS)
         classroomStudentService.updateMultiple(csTU)
         userService.updateMultiple(usersUpdate)

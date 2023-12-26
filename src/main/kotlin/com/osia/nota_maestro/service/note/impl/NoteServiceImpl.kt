@@ -50,7 +50,7 @@ class NoteServiceImpl(
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
         val judgments = judgmentRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
-        val periods = grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null && it.init!! <= LocalDateTime.now() && it.finish!! >= LocalDateTime.now()} ?: mutableListOf()
+        val periods = grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null && it.init!! <= LocalDateTime.now() && it.finish!! >= LocalDateTime.now() } ?: mutableListOf()
 
         return NoteDto().apply {
             this.grades = grades.map { g ->
@@ -72,11 +72,11 @@ class NoteServiceImpl(
                                             this.uuid = cx.uuidSubject
                                             this.name = subjects.first { it.uuid == cx.uuidSubject }.name
 
-                                            this.periods = periods.map { p->
+                                            this.periods = periods.map { p ->
                                                 NotePeriodDto().apply {
-                                                    this.judgment = judgments.firstOrNull { j-> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cx.uuid && j.period == p.number }?.name ?: ""
+                                                    this.judgment = judgments.firstOrNull { j -> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cx.uuid && j.period == p.number }?.name ?: ""
                                                     this.number = p.number
-                                                    if (studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number}.size == 0) {
+                                                    if (studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }.size == 0) {
                                                         this.notes = mutableListOf(
                                                             NoteDetailsDto().apply {
                                                                 this.number = 0
@@ -87,7 +87,7 @@ class NoteServiceImpl(
                                                             NoteDetailsDto().apply {
                                                                 this.uuid = sn.uuid
                                                                 this.name = sn.noteName
-                                                                this.note = if(sn.note != null){sn.note.toString().replace(".", ",")}else{""}
+                                                                this.note = if (sn.note != null) { sn.note.toString().replace(".", ",") } else { "" }
                                                                 this.number = sn.number
                                                             }
                                                         }
@@ -129,7 +129,7 @@ class NoteServiceImpl(
                 c.students?.forEach { s ->
                     val cs = classroomStudents.first { cst -> cst.uuidStudent == s.uuid && cst.uuidClassroom == c.uuid }
                     s.subjects?.forEach { u ->
-                        u.periods?.forEach { p->
+                        u.periods?.forEach { p ->
                             p.notes?.forEach { n ->
                                 val reqJ = JudgmentRequest().apply {
                                     this.name = p.judgment
@@ -138,10 +138,10 @@ class NoteServiceImpl(
                                     this.uuidSubject = u.uuid
                                     this.uuidStudent = s.uuid
                                 }
-                                val found = judgments.firstOrNull { ju-> ju.uuidSubject == u.uuid && ju.uuidClassroomStudent == cs.uuid && ju.period == p.number }
-                                if(found != null){
+                                val found = judgments.firstOrNull { ju -> ju.uuidSubject == u.uuid && ju.uuidClassroomStudent == cs.uuid && ju.period == p.number }
+                                if (found != null) {
                                     toUpdateJ[found.uuid!!] = reqJ
-                                }else{
+                                } else {
                                     toCreateJ.add(reqJ)
                                 }
 
@@ -149,7 +149,7 @@ class NoteServiceImpl(
                                     this.uuidClassroomStudent = cs.uuid
                                     this.uuidSubject = u.uuid
                                     this.number = n.number
-                                    this.note = if(n.note != null && n.note != ""){ n.note?.replace(",",".")?.toDouble()}else{null}
+                                    this.note = if (n.note != null && n.note != "") { n.note?.replace(",", ".")?.toDouble() } else { null }
                                     this.noteName = n.name
                                     this.uuidStudent = s.uuid
                                     this.period = p.number

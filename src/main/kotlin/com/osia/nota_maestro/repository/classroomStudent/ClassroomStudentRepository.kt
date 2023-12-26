@@ -34,6 +34,11 @@ interface ClassroomStudentRepository :
 
     @Modifying
     @Transactional
+    @Query("UPDATE ClassroomStudent SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
+    fun deleteByUuids(uuids: List<UUID>)
+
+    @Modifying
+    @Transactional
     @Query("UPDATE ClassroomStudent SET deleted = true, deletedAt = now() WHERE uuidClassroom IN :uuids")
     fun deleteByUuidClassroom(uuids: List<UUID>)
 }
