@@ -18,7 +18,7 @@ interface StudentNoteRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM student_notes", nativeQuery = true)
-    override fun count(increment: Int): Long
+    override fun count(increment: Int, schoolUuid: UUID): Long
 
     @Query(value = "SELECT * FROM student_notes where uuid = ?1", nativeQuery = true)
     fun getByUuid(uuid: UUID): Optional<StudentNote>
@@ -37,7 +37,8 @@ interface StudentNoteRepository :
     @Query("UPDATE StudentNote SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
 
-    @Query("SELECT MAX(cnt) AS max_count " +
+    @Query(
+        "SELECT MAX(cnt) AS max_count " +
             "FROM (" +
             "    SELECT uuid_classroom_student, COUNT(*) AS cnt " +
             "    FROM student_notes " +
@@ -45,6 +46,8 @@ interface StudentNoteRepository :
             "      AND period = ?2 " +
             "      AND uuid_subject = ?3 " +
             "    GROUP BY uuid_classroom_student" +
-            ") AS counts;", nativeQuery = true)
+            ") AS counts;",
+        nativeQuery = true
+    )
     fun getNoteMAx(uuids: List<UUID>, period: Int, uuidSubject: UUID): Int
 }

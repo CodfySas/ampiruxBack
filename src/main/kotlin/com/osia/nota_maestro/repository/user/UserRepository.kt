@@ -15,8 +15,8 @@ interface UserRepository :
     JpaSpecificationExecutor<User>,
     BaseRepository {
 
-    @Query(value = "SELECT COUNT(*) FROM users", nativeQuery = true)
-    override fun count(increment: Int): Long
+    @Query(value = "SELECT COUNT(*) FROM users WHERE uuid_school = ?2", nativeQuery = true)
+    override fun count(increment: Int, schoolUuid: UUID): Long
 
     fun getFirstByUsernameAndPassword(username: String, password: String): Optional<User>
 

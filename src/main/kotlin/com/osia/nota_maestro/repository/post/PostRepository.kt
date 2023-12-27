@@ -15,5 +15,5 @@ interface PostRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM posts", nativeQuery = true)
-    override fun count(increment: Int): Long
+    override fun count(increment: Int, schoolUuid: UUID): Long
 }

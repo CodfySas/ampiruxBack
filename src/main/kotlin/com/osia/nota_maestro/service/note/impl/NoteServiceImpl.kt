@@ -80,9 +80,11 @@ class NoteServiceImpl(
                                                     if (studentNotes.none { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }) {
                                                         val emptyNotes = mutableListOf<NoteDetailsDto>()
                                                         for (i in 1..maxNote) {
-                                                            emptyNotes.add(NoteDetailsDto().apply {
-                                                                this.number = 0
-                                                            })
+                                                            emptyNotes.add(
+                                                                NoteDetailsDto().apply {
+                                                                    this.number = 0
+                                                                }
+                                                            )
                                                         }
                                                         this.notes = emptyNotes
                                                     } else {

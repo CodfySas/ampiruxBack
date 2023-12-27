@@ -190,7 +190,7 @@ class GradeServiceImpl(
         classRoomReq.forEach {
             if (actives.mapNotNull { a -> a.uuidStudent }.contains(it.uuidStudent)) {
                 val actualSaved = actives.first { a -> a.uuidStudent == it.uuidStudent }
-                if(!uTD.contains(it.uuidStudent) ){
+                if (!uTD.contains(it.uuidStudent)) {
                     csTU.add(
                         ClassroomStudentDto().apply {
                             this.uuidClassroom = it.uuidClassroom

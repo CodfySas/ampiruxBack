@@ -18,7 +18,7 @@ interface ClassroomStudentRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM classroom_students", nativeQuery = true)
-    override fun count(increment: Int): Long
+    override fun count(increment: Int, schoolUuid: UUID): Long
 
     @Query(value = "SELECT * FROM classroom_students where uuid = ?1", nativeQuery = true)
     fun getByUuid(uuid: UUID): Optional<ClassroomStudent>
