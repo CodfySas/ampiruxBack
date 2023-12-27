@@ -257,13 +257,13 @@ class UserServiceImpl(
         user: User,
     ) {
         if (role == "teacher") {
-            saveSubModuleUsers(user.uuid!!, listOf("Notas"))
+            saveSubModuleUsers(user.uuid!!, listOf("Notas","Archivo De Notas"))
         }
         if (role == "student") {
             saveSubModuleUsers(user.uuid!!, listOf("Usuarios"))
         }
         if (role == "admin") {
-            saveSubModuleUsers(user.uuid!!, listOf("Usuarios", "Administradores", "Estudiantes", "Docentes", "Cursos", "Asignaturas", "Asignar Docentes"))
+            saveSubModuleUsers(user.uuid!!, listOf("Usuarios", "Administradores", "Estudiantes", "Docentes", "Cursos", "Asignaturas", "Asignar Docentes","Archivo De Notas"))
         }
     }
 
