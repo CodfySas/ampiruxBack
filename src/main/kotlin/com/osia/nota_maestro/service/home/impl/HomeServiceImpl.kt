@@ -56,8 +56,12 @@ class HomeServiceImpl(
         val periods = studentNotes.sortedBy { it.period }.groupBy { it.period }
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
 
-        val formato = DecimalFormat("#.#")
-        formato.maximumFractionDigits = 1
+        val singleAdvanced = mutableListOf<ChartDto>()
+        var valueSuperior = 0.0
+        var valueAlto = 0.0
+        var valueBasico = 0.0
+        var valueBajo = 0.0
+        var valueNotDefined = 0.0
 
         val noteByCourses = mutableListOf<ChartSeriesDto>()
         byClass.forEach { (classroom, students) ->
@@ -92,6 +96,25 @@ class HomeServiceImpl(
                     if (prom != null) {
                         noteFinal += prom
                         studentN++
+                        if(prom > 4.55){
+                            valueSuperior++
+                        }else{
+                            if(prom >= 4){
+                                valueAlto++
+                            }else{
+                                if(prom >= 3){
+                                    valueBasico++
+                                }else{
+                                    if(prom >= 0.1){
+                                        valueBajo++
+                                    }else{
+                                        valueNotDefined++
+                                    }
+                                }
+                            }
+                        }
+                    }else{
+                        valueNotDefined++
                     }
                 }
                 val promFinal = if (noteFinal == 0.0) { 0.0 } else { noteFinal / studentN }
@@ -108,6 +131,22 @@ class HomeServiceImpl(
 
         return HomeAdminDto().apply {
             this.performanceByCourses = noteByCourses
+            this.performanceBasics = mutableListOf(ChartDto().apply {
+                this.name = "Superior"
+                this.value = valueSuperior
+            }, ChartDto().apply {
+                this.name = "Alto"
+                this.value = valueAlto
+            },ChartDto().apply {
+                this.name = "Basico"
+                this.value = valueBasico
+            },ChartDto().apply {
+                this.name = "Bajo"
+                this.value = valueBajo
+            },ChartDto().apply {
+                this.name = "No calificados"
+                this.value = valueNotDefined
+            })
         }
     }
 }
