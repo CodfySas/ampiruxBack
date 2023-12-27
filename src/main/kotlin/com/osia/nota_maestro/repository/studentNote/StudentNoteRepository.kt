@@ -36,4 +36,15 @@ interface StudentNoteRepository :
     @Transactional
     @Query("UPDATE StudentNote SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
+
+    @Query("SELECT MAX(cnt) AS max_count " +
+            "FROM (" +
+            "    SELECT uuid_classroom_student, COUNT(*) AS cnt " +
+            "    FROM student_notes " +
+            "    WHERE uuid_classroom_student IN ?1 " +
+            "      AND period = ?2 " +
+            "      AND uuid_subject = ?3 " +
+            "    GROUP BY uuid_classroom_student" +
+            ") AS counts;", nativeQuery = true)
+    fun getNoteMAx(uuids: List<UUID>, period: Int, uuidSubject: UUID): Int
 }

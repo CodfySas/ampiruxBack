@@ -67,21 +67,24 @@ class NoteServiceImpl(
                                     this.uuid = cs.uuidStudent
                                     this.name = student.name
                                     this.lastname = student.lastname
-                                    this.subjects = classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }.mapNotNull { cx ->
+                                    this.subjects = classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }.map { cx ->
                                         NoteSubjectsDto().apply {
                                             this.uuid = cx.uuidSubject
                                             this.name = subjects.first { it.uuid == cx.uuidSubject }.name
 
                                             this.periods = periods.map { p ->
+                                                val maxNote = studentNoteRepository.getNoteMAx(classroomStudents.mapNotNull { it.uuid }, p.number!!, cx.uuidSubject!!)
                                                 NotePeriodDto().apply {
                                                     this.judgment = judgments.firstOrNull { j -> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cx.uuid && j.period == p.number }?.name ?: ""
                                                     this.number = p.number
-                                                    if (studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }.size == 0) {
-                                                        this.notes = mutableListOf(
-                                                            NoteDetailsDto().apply {
+                                                    if (studentNotes.none { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }) {
+                                                        val emptyNotes = mutableListOf<NoteDetailsDto>()
+                                                        for (i in 1..maxNote) {
+                                                            emptyNotes.add(NoteDetailsDto().apply {
                                                                 this.number = 0
-                                                            }
-                                                        )
+                                                            })
+                                                        }
+                                                        this.notes = emptyNotes
                                                     } else {
                                                         this.notes = studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }.sortedBy { sn -> sn.number }.map { sn ->
                                                             NoteDetailsDto().apply {
