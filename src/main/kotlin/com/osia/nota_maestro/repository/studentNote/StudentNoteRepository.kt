@@ -45,6 +45,7 @@ interface StudentNoteRepository :
             "    WHERE uuid_classroom_student IN ?1 " +
             "      AND period = ?2 " +
             "      AND uuid_subject = ?3 " +
+            "      AND deleted = false " +
             "    GROUP BY uuid_classroom_student" +
             ") AS counts;",
         nativeQuery = true
