@@ -12,7 +12,6 @@ import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.home.HomeService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -56,12 +55,12 @@ class HomeServiceImpl(
         val periods = studentNotes.sortedBy { it.period }.groupBy { it.period }
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
 
-        val singleAdvanced = mutableListOf<ChartDto>()
         var valueSuperior = 0.0
         var valueAlto = 0.0
         var valueBasico = 0.0
         var valueBajo = 0.0
         var valueNotDefined = 0.0
+        val perStudent = mutableMapOf<UUID, List<Double?>>()
 
         val noteByCourses = mutableListOf<ChartSeriesDto>()
         byClass.forEach { (classroom, students) ->
@@ -96,26 +95,10 @@ class HomeServiceImpl(
                     if (prom != null) {
                         noteFinal += prom
                         studentN++
-                        if(prom > 4.55){
-                            valueSuperior++
-                        }else{
-                            if(prom >= 4){
-                                valueAlto++
-                            }else{
-                                if(prom >= 3){
-                                    valueBasico++
-                                }else{
-                                    if(prom >= 0.1){
-                                        valueBajo++
-                                    }else{
-                                        valueNotDefined++
-                                    }
-                                }
-                            }
-                        }
-                    }else{
-                        valueNotDefined++
                     }
+                    val list = perStudent.getOrPut(s.uuidStudent!!) { mutableListOf() }.toMutableList()
+                    list.add(prom)
+                    perStudent[s.uuidStudent!!] = list
                 }
                 val promFinal = if (noteFinal == 0.0) { 0.0 } else { noteFinal / studentN }
                 notesByPeriod.add(ChartDto().apply { this.name = "$p Periodo"; this.value = promFinal })
@@ -129,24 +112,62 @@ class HomeServiceImpl(
             )
         }
 
+        perStudent.forEach { (k, v) ->
+            var sum = 0.0
+            var count = 0.0
+            var prom = 0.0
+            v.forEach {
+                if (it != null) {
+                    sum += it
+                    count++
+                }
+            }
+            if (sum != 0.0) {
+                prom = sum / count
+            }
+            if (prom > 4.55) {
+                valueSuperior++
+            } else {
+                if (prom >= 4) {
+                    valueAlto++
+                } else {
+                    if (prom >= 3) {
+                        valueBasico++
+                    } else {
+                        if (prom >= 0.1) {
+                            valueBajo++
+                        } else {
+                            valueNotDefined++
+                        }
+                    }
+                }
+            }
+        }
+
         return HomeAdminDto().apply {
             this.performanceByCourses = noteByCourses
-            this.performanceBasics = mutableListOf(ChartDto().apply {
-                this.name = "Superior"
-                this.value = valueSuperior
-            }, ChartDto().apply {
-                this.name = "Alto"
-                this.value = valueAlto
-            },ChartDto().apply {
-                this.name = "Basico"
-                this.value = valueBasico
-            },ChartDto().apply {
-                this.name = "Bajo"
-                this.value = valueBajo
-            },ChartDto().apply {
-                this.name = "No calificados"
-                this.value = valueNotDefined
-            })
+            this.performanceBasics = mutableListOf(
+                ChartDto().apply {
+                    this.name = "Superior"
+                    this.value = valueSuperior
+                },
+                ChartDto().apply {
+                    this.name = "Alto"
+                    this.value = valueAlto
+                },
+                ChartDto().apply {
+                    this.name = "Basico"
+                    this.value = valueBasico
+                },
+                ChartDto().apply {
+                    this.name = "Bajo"
+                    this.value = valueBajo
+                },
+                ChartDto().apply {
+                    this.name = "No calificados"
+                    this.value = valueNotDefined
+                }
+            )
         }
     }
 }
