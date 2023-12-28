@@ -16,7 +16,7 @@ interface TeacherRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM teachers", nativeQuery = true)
-    override fun count(increment: Int, schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID): Long
 
     fun findFirstByDni(dni: String): Optional<Teacher>
 

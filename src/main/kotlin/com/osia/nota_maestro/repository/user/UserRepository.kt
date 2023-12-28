@@ -5,6 +5,7 @@ import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.util.Optional
 import java.util.UUID
@@ -15,8 +16,8 @@ interface UserRepository :
     JpaSpecificationExecutor<User>,
     BaseRepository {
 
-    @Query(value = "SELECT COUNT(*) FROM users WHERE uuid_school = ?2", nativeQuery = true)
-    override fun count(increment: Int, schoolUuid: UUID): Long
+    @Query(value = "SELECT COUNT(*) FROM users WHERE uuid_school = :schoolUuid", nativeQuery = true)
+    override fun count(@Param("schoolUuid") schoolUuid: UUID): Long
 
     fun getFirstByUsernameAndPassword(username: String, password: String): Optional<User>
 

@@ -4,7 +4,7 @@ import com.osia.nota_maestro.repository.BaseRepository
 
 abstract class CodeSetter {
     fun setCode(repository: BaseRepository, baseModel: BaseModel) {
-        var counter = repository.count(0, baseModel.uuid!!)
+        var counter = repository.count(baseModel.uuid!!)
         baseModel.code = baseModel.getCode(++counter)
     }
 }

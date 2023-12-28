@@ -10,6 +10,8 @@ import com.osia.nota_maestro.dto.note.v1.NoteStudentDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
 import com.osia.nota_maestro.dto.studentNote.v1.StudentNoteDto
 import com.osia.nota_maestro.dto.studentNote.v1.StudentNoteRequest
+import com.osia.nota_maestro.model.Classroom
+import com.osia.nota_maestro.model.ClassroomSubject
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
@@ -44,13 +46,31 @@ class NoteServiceImpl(
     override fun getMyNotes(teacher: UUID): NoteDto {
         val classroomSubjects = classroomSubjectRepository.getAllByUuidTeacher(teacher)
         val classrooms = classroomRepository.findByUuidInAndYear(classroomSubjects.mapNotNull { it.uuidClassroom }, LocalDateTime.now().year)
+        return returnNotes(classrooms, classroomSubjects, false)
+    }
+
+    override fun getMyNotesArchive(teacher: UUID, year: Int): NoteDto {
+        val classroomSubjects = classroomSubjectRepository.getAllByUuidTeacher(teacher)
+        val classrooms = classroomRepository.findByUuidInAndYear(classroomSubjects.mapNotNull { it.uuidClassroom }, year)
+        return returnNotes(classrooms, classroomSubjects, true)
+    }
+
+    private fun returnNotes(
+        classrooms: List<Classroom>,
+        classroomSubjects: List<ClassroomSubject>,
+        includeAllPeriods: Boolean
+    ): NoteDto {
         val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
         val studentNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
         val judgments = judgmentRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
-        val periods = grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null && it.init!! <= LocalDateTime.now().plusDays(1) && it.finish!!.plusDays(1) >= LocalDateTime.now() } ?: mutableListOf()
+        val periods = if(includeAllPeriods) {
+            grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null && it.init!! <= LocalDateTime.now().plusDays(1) && it.finish!!.plusDays(1) >= LocalDateTime.now() } ?: mutableListOf()
+        }else {
+            grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null } ?: mutableListOf()
+        }
 
         return NoteDto().apply {
             this.grades = grades.map { g ->
@@ -67,40 +87,54 @@ class NoteServiceImpl(
                                     this.uuid = cs.uuidStudent
                                     this.name = student.name
                                     this.lastname = student.lastname
-                                    this.subjects = classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }.map { cx ->
-                                        NoteSubjectsDto().apply {
-                                            this.uuid = cx.uuidSubject
-                                            this.name = subjects.first { it.uuid == cx.uuidSubject }.name
+                                    this.subjects =
+                                        classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }
+                                            .map { cx ->
+                                                NoteSubjectsDto().apply {
+                                                    this.uuid = cx.uuidSubject
+                                                    this.name = subjects.first { it.uuid == cx.uuidSubject }.name
 
-                                            this.periods = periods.map { p ->
-                                                val maxNote = studentNoteRepository.getNoteMAx(classroomStudents.mapNotNull { it.uuid }, p.number!!, cx.uuidSubject!!)
-                                                NotePeriodDto().apply {
-                                                    this.judgment = judgments.firstOrNull { j -> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cx.uuid && j.period == p.number }?.name ?: ""
-                                                    this.number = p.number
-                                                    if (studentNotes.none { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }) {
-                                                        val emptyNotes = mutableListOf<NoteDetailsDto>()
-                                                        for (i in 1..maxNote) {
-                                                            emptyNotes.add(
-                                                                NoteDetailsDto().apply {
-                                                                    this.number = 0
+                                                    this.periods = periods.map { p ->
+                                                        val maxNote = studentNoteRepository.getNoteMAx(
+                                                            classroomStudents.mapNotNull { it.uuid },
+                                                            p.number!!,
+                                                            cx.uuidSubject!!
+                                                        )
+                                                        NotePeriodDto().apply {
+                                                            this.judgment =
+                                                                judgments.firstOrNull { j -> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cx.uuid && j.period == p.number }?.name
+                                                                    ?: ""
+                                                            this.number = p.number
+                                                            if (studentNotes.none { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }) {
+                                                                val emptyNotes = mutableListOf<NoteDetailsDto>()
+                                                                for (i in 1..maxNote) {
+                                                                    emptyNotes.add(
+                                                                        NoteDetailsDto().apply {
+                                                                            this.number = 0
+                                                                        }
+                                                                    )
                                                                 }
-                                                            )
-                                                        }
-                                                        this.notes = emptyNotes
-                                                    } else {
-                                                        this.notes = studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }.sortedBy { sn -> sn.number }.map { sn ->
-                                                            NoteDetailsDto().apply {
-                                                                this.uuid = sn.uuid
-                                                                this.name = sn.noteName
-                                                                this.note = if (sn.note != null) { sn.note.toString().replace(".", ",") } else { "" }
-                                                                this.number = sn.number
+                                                                this.notes = emptyNotes
+                                                            } else {
+                                                                this.notes =
+                                                                    studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }
+                                                                        .sortedBy { sn -> sn.number }.map { sn ->
+                                                                            NoteDetailsDto().apply {
+                                                                                this.uuid = sn.uuid
+                                                                                this.name = sn.noteName
+                                                                                this.note = if (sn.note != null) {
+                                                                                    sn.note.toString().replace(".", ",")
+                                                                                } else {
+                                                                                    ""
+                                                                                }
+                                                                                this.number = sn.number
+                                                                            }
+                                                                        }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-                                        }
-                                    }
                                 }
                             }.sortedBy { it.name }.sortedBy { it.lastname }
                         }

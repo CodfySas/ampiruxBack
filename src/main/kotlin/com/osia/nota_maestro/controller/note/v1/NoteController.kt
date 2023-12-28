@@ -25,6 +25,11 @@ class NoteController(
         return ResponseEntity.ok().body(noteService.getMyNotes(teacher))
     }
 
+    @GetMapping("/{teacher}/year/{year}")
+    fun getArchive(@PathVariable teacher: UUID, @PathVariable year: Int): ResponseEntity<NoteDto> {
+        return ResponseEntity.ok().body(noteService.getMyNotesArchive(teacher, year))
+    }
+
     @PostMapping("/submit/{teacher}")
     fun submitNotes(@PathVariable teacher: UUID, @RequestBody notes: NoteDto): ResponseEntity<NoteDto> {
         return ResponseEntity.ok().body(noteService.submitNotes(notes, teacher))

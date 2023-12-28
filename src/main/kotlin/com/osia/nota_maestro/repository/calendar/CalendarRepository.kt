@@ -13,7 +13,7 @@ import java.util.UUID
 interface CalendarRepository : JpaRepository<CalendarTask, UUID>, JpaSpecificationExecutor<CalendarTask>, BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM calendar_tasks", nativeQuery = true)
-    override fun count(increment: Int, schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID): Long
 
     fun findAllByScheduleInitAfterAndScheduleFinishBeforeOrderByScheduleInitAsc(initTime: LocalDateTime, finishTime: LocalDateTime): List<CalendarTask>
 }
