@@ -8,6 +8,7 @@ import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentReposit
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
+import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.home.HomeService
 import org.springframework.stereotype.Service
@@ -24,6 +25,7 @@ class HomeServiceImpl(
     private val classroomRepository: ClassroomRepository,
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val studentNoteRepository: StudentNoteRepository,
+    private val subjectRepository: SubjectRepository
 ) : HomeService {
 
     override fun getByAdmin(school: UUID): HomeAdminDto {
@@ -168,6 +170,47 @@ class HomeServiceImpl(
                     this.value = valueNotDefined
                 }
             )
+        }
+    }
+
+    override fun getByStudent(student: UUID): HomeAdminDto {
+        val classroomStudent = classroomStudentRepository.findAllByUuidStudent(student)
+        val classrooms = classroomRepository.findByUuidInAndYear(classroomStudent.mapNotNull { it.uuidClassroom }, LocalDateTime.now().year)
+        val validClassroomStudent = classroomStudent.filter { classrooms.map { it.uuid }.contains(it.uuidClassroom) }
+        val studentNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(validClassroomStudent.mapNotNull { it.uuid })
+        val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(validClassroomStudent.mapNotNull { it.uuidClassroom })
+        val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
+        val charts = mutableListOf<ChartDto>()
+        subjects.forEach {
+            var finalValue = 0.0
+            val notes = studentNotes.filter { sn-> sn.uuidSubject == it.uuid }
+            if(notes.isNotEmpty()){
+                var vpp = 0.0
+                var npp = 0
+                notes.sortedBy { it.period }.groupBy { it.period }.forEach {(p,v)->
+                    var sum = 0.0
+                    var nums = 0
+                    v.forEach { n->
+                        sum += (n.note ?: 0.0)
+                        nums++;
+                    }
+                    if(sum != 0.0){
+                        vpp += (sum/nums)
+                        npp++;
+                    }
+                }
+                if(vpp != 0.0){
+                    finalValue = vpp/npp
+                }
+
+            }
+            charts.add(ChartDto().apply {
+                this.name = it.name ?: ""
+                this.value = finalValue
+            })
+        }
+        return HomeAdminDto().apply {
+            this.polarStudent = charts
         }
     }
 }

@@ -6,4 +6,5 @@ class HomeAdminDto : BaseDto() {
     var studentsByGrade: List<ChartDto> = mutableListOf()
     var performanceByCourses: List<ChartSeriesDto> = mutableListOf(ChartSeriesDto())
     var performanceBasics: List<ChartDto> = mutableListOf(ChartDto())
+    var polarStudent: List<ChartDto> = mutableListOf(ChartDto())
 }

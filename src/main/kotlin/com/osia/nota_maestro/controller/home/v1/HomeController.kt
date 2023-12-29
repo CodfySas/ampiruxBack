@@ -28,4 +28,9 @@ class HomeController(
     fun getByTeacher(@PathVariable uuid: UUID): ResponseEntity<HomeAdminDto> {
         return ResponseEntity.ok().body(homeService.getByTeacher(uuid))
     }
+
+    @GetMapping("/student/{uuid}")
+    fun getByStudent(@PathVariable uuid: UUID): ResponseEntity<HomeAdminDto>{
+        return ResponseEntity.ok().body(homeService.getByStudent(uuid))
+    }
 }

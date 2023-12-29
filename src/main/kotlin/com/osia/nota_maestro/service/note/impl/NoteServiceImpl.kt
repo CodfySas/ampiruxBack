@@ -87,6 +87,7 @@ class NoteServiceImpl(
                                     this.uuid = cs.uuidStudent
                                     this.name = student.name
                                     this.lastname = student.lastname
+                                    this.code = student.code
                                     this.subjects =
                                         classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }
                                             .map { cx ->
