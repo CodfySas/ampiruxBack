@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.service.home
 
 import com.osia.nota_maestro.dto.home.v1.HomeAdminDto
-import com.osia.nota_maestro.model.Student
 import java.util.UUID
 
 interface HomeService {

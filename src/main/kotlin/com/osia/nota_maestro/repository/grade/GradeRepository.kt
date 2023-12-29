@@ -27,4 +27,6 @@ interface GradeRepository :
     @Transactional
     @Query("UPDATE Grade SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
+
+    fun findAllByUuidSchool(uuid: UUID): List<Grade>
 }

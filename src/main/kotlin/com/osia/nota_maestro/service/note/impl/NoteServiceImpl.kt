@@ -66,9 +66,9 @@ class NoteServiceImpl(
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
         val judgments = judgmentRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
-        val periods = if(!includeAllPeriods) {
+        val periods = if (!includeAllPeriods) {
             grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null && it.init!! <= LocalDateTime.now().plusDays(1) && it.finish!!.plusDays(1) >= LocalDateTime.now() } ?: mutableListOf()
-        }else {
+        } else {
             grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchool(it) }?.filter { it.init != null && it.finish != null } ?: mutableListOf()
         }
 
@@ -100,11 +100,11 @@ class NoteServiceImpl(
                                                             classroomStudents.mapNotNull { it.uuid },
                                                             p.number!!,
                                                             cx.uuidSubject!!
-                                                        )
+                                                        ) ?: 1
                                                         NotePeriodDto().apply {
                                                             this.judgment =
                                                                 judgments.firstOrNull { j -> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cx.uuid && j.period == p.number }?.name
-                                                                    ?: ""
+                                                                ?: ""
                                                             this.number = p.number
                                                             if (studentNotes.none { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }) {
                                                                 val emptyNotes = mutableListOf<NoteDetailsDto>()
@@ -153,10 +153,11 @@ class NoteServiceImpl(
 
         val judgments = judgmentRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
 
+        val submitPeriods = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.flatMap { it.periods!! }.map { it.number!! }
         val allNotes = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.flatMap { it.periods!! }.flatMap { it.notes!! }
         val allJudgments = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.flatMap { it.periods!! }.flatMap { it.notes!! }
 
-        val toDel = (studentNotes.filterNot { sn -> allNotes.mapNotNull { it.uuid }.contains(sn.uuid) })
+        val toDel = (studentNotes.filterNot { sn -> allNotes.mapNotNull { it.uuid }.contains(sn.uuid) }.filter { submitPeriods.contains(it.period) })
         val toUpdate = mutableMapOf<UUID, StudentNoteRequest>()
         val toCreate = mutableListOf<StudentNoteRequest>()
 

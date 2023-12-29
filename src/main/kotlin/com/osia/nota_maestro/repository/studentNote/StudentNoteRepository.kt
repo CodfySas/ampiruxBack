@@ -50,5 +50,5 @@ interface StudentNoteRepository :
             ") AS counts;",
         nativeQuery = true
     )
-    fun getNoteMAx(uuids: List<UUID>, period: Int, uuidSubject: UUID): Int
+    fun getNoteMAx(uuids: List<UUID>, period: Int, uuidSubject: UUID): Int?
 }
