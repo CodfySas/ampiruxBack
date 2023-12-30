@@ -33,7 +33,7 @@ class HomeServiceImpl(
 ) : HomeService {
 
     override fun getByAdmin(school: UUID): HomeAdminDto {
-
+        val notesByTeacher = studentNoteRepository.getNotesByTeachers()
         val gradesProm = mutableListOf<ChartDto>()
         val gradesAll = gradeRepository.findAllByUuidSchool(school)
         val classrooms =
@@ -42,6 +42,7 @@ class HomeServiceImpl(
         val studentClass = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val studentNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(studentClass.mapNotNull { it.uuid })
         val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school)
 
         gradesAll.forEach { g ->
             var promFinal = 0.0
@@ -51,11 +52,11 @@ class HomeServiceImpl(
             gradeClasses.forEach { c ->
                 val mySubjects = classroomSubjects.filter { it.uuidClassroom == c.uuid }
                 val myStudentInClass = studentClass.filter { it.uuidClassroom == c.uuid }
-                var promByClass: Double? = null
+                var promByClass: Double?
                 var sumByClass = 0.0
                 var notesByClass = 0
                 periods.forEach { p ->
-                    var promByPeriod: Double? = null
+                    var promByPeriod: Double?
                     var sumByPeriod = 0.0
                     var notesByPeriod = 0
                     myStudentInClass.forEach { s ->
@@ -127,6 +128,12 @@ class HomeServiceImpl(
         return HomeAdminDto().apply {
             this.studentsByGrade = chartDto
             this.promPerGrade = gradesProm
+            this.horizontalTeachers = notesByTeacher.map {
+                ChartDto().apply {
+                    this.name = teachers.firstOrNull { t -> t.uuid == it.uuid }?.name ?: ""
+                    this.value = it.note ?: 0.0
+                }
+            }
         }
     }
 

@@ -51,4 +51,18 @@ interface StudentNoteRepository :
         nativeQuery = true
     )
     fun getNoteMAx(uuids: List<UUID>, period: Int, uuidSubject: UUID): Int?
+
+    @Query(
+        "select sum(note) as note, 'XD' as code, null as created_at, null as last_modified_at," +
+            "0 as number, '' as note_name, null as uuid_classroom_student, null as uuid_subject, 0 as period," +
+            " false as deleted, null as deleted_at, 0 as version, uuid_teacher as uuid, null as uuid_student " +
+            "from (select CAST(max(n.x)/2 AS INTEGER) as note, period, uuid_teacher " +
+            "from (select count(*) as x, sn.period, cs2.uuid_teacher  from student_notes sn " +
+            "inner join classroom_students cs on cs.uuid = sn.uuid_classroom_student inner join " +
+            "classroom_subjects cs2 on cs2.uuid_classroom = cs.uuid_classroom  where sn.deleted = false" +
+            " and sn.note is not null group by sn.uuid_classroom_student, sn.period, cs2.uuid_teacher) n" +
+            " group by period, uuid_teacher) xd group by uuid_teacher",
+        nativeQuery = true
+    )
+    fun getNotesByTeachers(): List<StudentNote>
 }
