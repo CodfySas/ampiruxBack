@@ -55,11 +55,19 @@ class NoteServiceImpl(
         return returnNotes(classrooms, classroomSubjects, false)
     }
 
-    override fun getMyNotesArchive(teacher: UUID, year: Int): NoteDto {
-        val classroomSubjects = classroomSubjectRepository.getAllByUuidTeacher(teacher)
-        val classrooms =
-            classroomRepository.findByUuidInAndYear(classroomSubjects.mapNotNull { it.uuidClassroom }, year)
-        return returnNotes(classrooms, classroomSubjects, true)
+    override fun getMyNotesArchive(teacher: UUID, year: Int, role: String): NoteDto {
+        val myUser = userRepository.findById(teacher)
+        var classes = listOf<Classroom>()
+        val classroomSubjects = if(role == "teacher"){
+            val cs = classroomSubjectRepository.getAllByUuidTeacher(teacher)
+            classes = classroomRepository.findByUuidInAndYear(cs.mapNotNull { it.uuidClassroom }, year)
+            cs
+        }else{
+            val grades = gradeRepository.findAllByUuidSchool(myUser.get().uuidSchool!!)
+            classes = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, year)
+            classroomSubjectRepository.getAllByUuidClassroomIn(classes.mapNotNull { it.uuid })
+        }
+        return returnNotes(classes, classroomSubjects, true)
     }
 
     private fun returnNotes(
