@@ -9,4 +9,7 @@ class NotePeriodDto : BaseDto() {
     var uuidJudgment: UUID? = null
     var notes: List<NoteDetailsDto>? = mutableListOf()
     var defi: Double? = null
+    var uuidStudentSubject: UUID? = null
+    var recovery: Double? = null
+
 }

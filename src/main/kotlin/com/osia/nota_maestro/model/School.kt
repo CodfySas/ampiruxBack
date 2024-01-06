@@ -27,5 +27,13 @@ data class School(
     var color2: String? = "e35205",
     var active: Boolean? = true,
     var expireDate: LocalDateTime? = null,
-    var periods: Int? = null
+    var periods: Int? = null,
+    var actualYear: Int? = null,
+    var enabledTeacher: Boolean? = null,
+    var enabledStudent: Boolean? = null,
+    var maxNote: Int? = null,
+    var minNote: Int? = null,
+    var toLose: Int? = null,
+    var recoveryType: String? = null,
+    var enabledFinalRecovery: Boolean? = null
 ) : BaseModel()

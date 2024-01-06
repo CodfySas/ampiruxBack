@@ -25,5 +25,7 @@ data class SchoolPeriod(
     var number: Int? = null,
     var init: LocalDateTime? = null,
     var finish: LocalDateTime? = null,
-    var uuidSchool: UUID? = null
+    var uuidSchool: UUID? = null,
+    var actualYear: Int? = null,
+    var recovery: Boolean? = null
 ) : BaseModel()

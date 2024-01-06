@@ -24,4 +24,11 @@ class UserDto : BaseDto() {
     var actualGrade: UUID? = null
     var periods: Int? = null
     var periodList: List<SchoolPeriodDto>? = null
+    var actualYear: Int? = null
+    var enabledTeacher: Boolean? = null
+    var enabledStudent: Boolean? = null
+    var maxNote: Int? = null
+    var minNote: Int? = null
+    var toLose: Int? = null
+    var recoveryType: String? = null
 }

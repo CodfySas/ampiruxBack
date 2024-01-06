@@ -12,4 +12,12 @@ class SchoolRequest {
     var shortName: String? = null
     var periods: Int? = null
     var periodList: List<SchoolPeriodRequest>? = null
+    var actualYear: Int? = null
+    var enabledTeacher: Boolean? = null
+    var enabledStudent: Boolean? = null
+    var maxNote: Int? = null
+    var minNote: Int? = null
+    var toLose: Int? = null
+    var recoveryType: String? = null
+    var enabledFinalRecovery: Boolean? = null
 }

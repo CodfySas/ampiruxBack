@@ -86,6 +86,7 @@ class SchoolServiceImpl(
         schoolPeriodRepository.deleteByUuidSchool(uuid)
         schoolRequest.periodList?.forEach {
             it.uuidSchool = uuid
+            it.actualYear = school.actualYear
         }
         schoolRequest.periodList?.let { schoolPeriodService.saveMultiple(it) }
         return schoolMapper.toDto(schoolRepository.save(school))

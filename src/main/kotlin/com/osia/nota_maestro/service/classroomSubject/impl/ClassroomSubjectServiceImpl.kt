@@ -20,9 +20,11 @@ import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
+import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroomSubject.ClassroomSubjectService
+import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -47,7 +49,8 @@ class ClassroomSubjectServiceImpl(
     private val subjectRepository: SubjectRepository,
     private val userRepository: UserRepository,
     private val userMapper: UserMapper,
-    private val subjectMapper: SubjectMapper
+    private val subjectMapper: SubjectMapper,
+    private val schoolRepository: SchoolService
 ) : ClassroomSubjectService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -180,8 +183,9 @@ class ClassroomSubjectServiceImpl(
     }
 
     override fun getCompleteInfo(school: UUID): List<ClassroomSubjectCompleteDto> {
+        val schoolFound = schoolRepository.getById(school)
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school)))
-        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, LocalDateTime.now().year)
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, schoolFound.actualYear!!)
         val gradeSubjects = gradeSubjectRepository.findAllByUuidGradeIn(allGrades.mapNotNull { it.uuid })
         val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school)))
@@ -219,12 +223,13 @@ class ClassroomSubjectServiceImpl(
     }
 
     override fun getCompleteInfo2(school: UUID): CompleteSubjectsTeachersDto {
+        val schoolFound = schoolRepository.getById(school)
         val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school))).sortedByDescending { it.code }
         val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school).sortedBy { it.name }
         val gradeSubjects = gradeSubjectRepository.findAllByUuidSubjectIn(subjects.mapNotNull { it.uuid })
 
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }
-        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, LocalDateTime.now().year).sortedBy { it.name }
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, schoolFound.actualYear!!).sortedBy { it.name }
         val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
 
         val subjectList = mutableListOf<SubjectTeachersDto>()
@@ -260,11 +265,12 @@ class ClassroomSubjectServiceImpl(
     }
 
     override fun saveCompleteInfo(toSave: CompleteSubjectsTeachersDto, school: UUID): CompleteSubjectsTeachersDto {
+        val schoolFound = schoolRepository.getById(school)
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }
 
         val toUpdate = mutableMapOf<UUID, ClassroomSubjectRequest>()
         val toSaveR = mutableListOf<ClassroomSubjectRequest>()
-        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, LocalDateTime.now().year).sortedBy { it.name }
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, schoolFound.actualYear!!).sortedBy { it.name }
         val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
 
         val inded = mutableListOf<Pair<UUID, UUID>>()

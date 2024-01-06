@@ -26,6 +26,7 @@ import com.osia.nota_maestro.service.classroom.ClassroomService
 import com.osia.nota_maestro.service.classroomStudent.ClassroomStudentService
 import com.osia.nota_maestro.service.grade.GradeService
 import com.osia.nota_maestro.service.gradeSubject.GradeSubjectService
+import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.service.subject.SubjectService
 import com.osia.nota_maestro.service.user.UserService
 import com.osia.nota_maestro.util.CreateSpec
@@ -57,7 +58,8 @@ class GradeServiceImpl(
     private val gradeSubjectService: GradeSubjectService,
     private val gradeSubjectRepository: GradeSubjectRepository,
     private val gradeSubjectMapper: GradeSubjectMapper,
-    private val subjectService: SubjectService
+    private val subjectService: SubjectService,
+    private val schoolService: SchoolService
 ) : GradeService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -90,8 +92,9 @@ class GradeServiceImpl(
     @Transactional(readOnly = true)
     override fun findCompleteInfo(school: UUID): CourseInfoDto {
         log.trace("grade findCompleteInfo -> school: $school")
+        val schoolFound = schoolService.getById(school)
         val grades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete).sortedBy { it.ordered }
-        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, LocalDateTime.now().year).map(classroomMapper::toComplete).sortedBy { it.name }
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, schoolFound.actualYear!!).map(classroomMapper::toComplete).sortedBy { it.name }
 
         val studentsInClassRooms = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val students = userRepository.getAllByUuidIn(studentsInClassRooms.mapNotNull { it.uuidStudent })
@@ -126,6 +129,7 @@ class GradeServiceImpl(
 
     @Transactional
     override fun saveComplete(grades: CourseInfoDto, school: UUID): CourseInfoDto {
+        val schoolFound = schoolService.getById(school)
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
         val gTD = allGrades.filterNot { grades.grades!!.mapNotNull { g -> g.uuid }.contains(it.uuid) }
         val cTD = mutableListOf<ClassroomCompleteDto>()
@@ -144,7 +148,7 @@ class GradeServiceImpl(
             val savedGrade = if (it.uuid == null) {
                 save(r)
             } else {
-                val classroomsInGrade = classroomRepository.findAllByUuidGradeInAndYear(listOf(it.uuid!!), LocalDateTime.now().year).map(classroomMapper::toComplete)
+                val classroomsInGrade = classroomRepository.findAllByUuidGradeInAndYear(listOf(it.uuid!!), schoolFound.actualYear!!).map(classroomMapper::toComplete)
                 cTD.addAll(classroomsInGrade.filterNot { cig -> it.classrooms.mapNotNull { c -> c.uuid }.contains(cig.uuid) })
                 update(it.uuid!!, r)
             }
@@ -152,7 +156,7 @@ class GradeServiceImpl(
                 val rc = ClassroomRequest().apply {
                     this.name = c.name
                     this.uuidSchool = school
-                    this.year = LocalDateTime.now().year
+                    this.year = schoolFound.actualYear!!
                     this.uuidGrade = savedGrade.uuid
                 }
                 val classroom = if (c.uuid == null) {

@@ -12,10 +12,14 @@ import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
+import com.osia.nota_maestro.repository.teacher.TeacherRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.home.HomeService
+import com.osia.nota_maestro.service.school.SchoolService
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -29,16 +33,19 @@ class HomeServiceImpl(
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val studentNoteRepository: StudentNoteRepository,
     private val subjectRepository: SubjectRepository,
-    private val schoolPeriodRepository: SchoolPeriodRepository
+    private val schoolPeriodRepository: SchoolPeriodRepository,
+    private val schoolService: SchoolService,
+
 ) : HomeService {
 
     override fun getByAdmin(school: UUID): HomeAdminDto {
+        val schoolFound = schoolService.getById(school)
         val notesByTeacher = studentNoteRepository.getNotesByTeachers()
         val gradesProm = mutableListOf<ChartDto>()
         val gradesAll = gradeRepository.findAllByUuidSchool(school)
         val classrooms =
-            classroomRepository.findAllByUuidGradeInAndYear(gradesAll.mapNotNull { it.uuid }, LocalDateTime.now().year)
-        val periods = schoolPeriodRepository.findAllByUuidSchool(school).sortedBy { it.number }
+            classroomRepository.findAllByUuidGradeInAndYear(gradesAll.mapNotNull { it.uuid }, schoolFound.actualYear!!)
+        val periods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school, schoolFound.actualYear!!).sortedBy { it.number }
         val studentClass = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val studentNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(studentClass.mapNotNull { it.uuid })
         val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
@@ -138,10 +145,14 @@ class HomeServiceImpl(
     }
 
     override fun getByTeacher(teacher: UUID): HomeAdminDto {
+        val teacherFound = userRepository.getByUuid(teacher).orElseThrow {
+            ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val schoolFound = schoolService.getById(teacherFound.uuidSchool!!)
         val classroomSubjects = classroomSubjectRepository.getAllByUuidTeacher(teacher)
         val classrooms = classroomRepository.findByUuidInAndYear(
             classroomSubjects.mapNotNull { it.uuidClassroom },
-            LocalDateTime.now().year
+            schoolFound.actualYear!!
         )
         val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val studentNotes =
@@ -280,10 +291,14 @@ class HomeServiceImpl(
     }
 
     override fun getByStudent(student: UUID): HomeAdminDto {
+        val studentFound = userRepository.findById(student).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val schoolFound = schoolService.getById(studentFound.uuidSchool!!)
         val classroomStudent = classroomStudentRepository.findAllByUuidStudent(student)
         val classrooms = classroomRepository.findByUuidInAndYear(
             classroomStudent.mapNotNull { it.uuidClassroom },
-            LocalDateTime.now().year
+            schoolFound.actualYear!!
         )
         val validClassroomStudent = classroomStudent.filter { classrooms.map { it.uuid }.contains(it.uuidClassroom) }
         val studentNotes =
@@ -294,7 +309,7 @@ class HomeServiceImpl(
         val charts = mutableListOf<ChartDto>()
         val myNotes = mutableListOf<NoteSubjectsDto>()
         val periods = classrooms.firstOrNull()?.uuidSchool?.let { s ->
-            schoolPeriodRepository.findAllByUuidSchool(s).filter { it.init != null && it.finish != null }
+            schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, schoolFound.actualYear!!).filter { it.init != null && it.finish != null }
         } ?: mutableListOf()
         subjects.forEach {
             val myNotePeriods = mutableListOf<NotePeriodDto>()
@@ -345,5 +360,9 @@ class HomeServiceImpl(
             this.polarStudent = charts
             this.myNotes = myNotes
         }
+    }
+
+    override fun setNewYear(school: UUID) {
+        TODO("Not yet implemented")
     }
 }

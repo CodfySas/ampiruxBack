@@ -8,4 +8,6 @@ class SchoolPeriodRequest {
     var init: LocalDateTime? = null
     var finish: LocalDateTime? = null
     var uuidSchool: UUID? = null
+    var actualYear: Int? = null
+    var recovery: Boolean? = null
 }

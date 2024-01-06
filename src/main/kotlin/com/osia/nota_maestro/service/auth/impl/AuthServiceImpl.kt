@@ -44,7 +44,7 @@ class AuthServiceImpl(
         }
 
         val school = schoolRepository.findById(userFound.uuidSchool!!).get()
-        val periodList = schoolPeriodRepository.findAllByUuidSchool(school.uuid!!)
+        val periodList = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school.uuid!!, school.actualYear!!)
 
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
@@ -54,6 +54,13 @@ class AuthServiceImpl(
             this.shortName = school.shortName
             this.periods = school.periods
             this.periodList = periodList.map(schoolPeriodMapper::toDto).sortedBy { it.number }
+            this.actualYear = school.actualYear
+            this.enabledStudent = school.enabledStudent
+            this.enabledTeacher = school.enabledTeacher
+            this.maxNote = school.maxNote
+            this.minNote = school.minNote
+            this.toLose = school.toLose
+            this.recoveryType = school.recoveryType
         }
     }
 }

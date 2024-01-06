@@ -7,4 +7,5 @@ interface HomeService {
     fun getByAdmin(school: UUID): HomeAdminDto
     fun getByTeacher(teacher: UUID): HomeAdminDto
     fun getByStudent(student: UUID): HomeAdminDto
+    fun setNewYear(school: UUID)
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.time.Year
 import java.util.Optional
 import java.util.UUID
 
@@ -24,6 +25,8 @@ interface SchoolPeriodRepository :
     fun getByUuid(uuid: UUID): Optional<SchoolPeriod>
 
     fun findAllByUuidSchool(uuid: UUID): List<SchoolPeriod>
+
+    fun findAllByUuidSchoolAndActualYear(uuid: UUID, year: Int): List<SchoolPeriod>
 
     @Modifying
     @Transactional

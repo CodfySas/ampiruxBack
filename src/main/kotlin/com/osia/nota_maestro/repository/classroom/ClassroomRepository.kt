@@ -27,6 +27,8 @@ interface ClassroomRepository :
 
     fun findAllByUuidGradeInAndYear(classrooms: List<UUID>, year: Int): List<Classroom>
 
+    fun findAllByUuidGradeIn(grades: List<UUID>): List<Classroom>
+
     fun findAllByYear(year: Int): List<Classroom>
 
     @Modifying
