@@ -11,5 +11,4 @@ class NotePeriodDto : BaseDto() {
     var defi: Double? = null
     var uuidStudentSubject: UUID? = null
     var recovery: Double? = null
-
 }

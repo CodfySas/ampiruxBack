@@ -12,7 +12,6 @@ import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
-import com.osia.nota_maestro.repository.teacher.TeacherRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.home.HomeService
 import com.osia.nota_maestro.service.school.SchoolService
@@ -20,7 +19,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Service("home.crud_service")

@@ -8,7 +8,6 @@ import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.Table
-import javax.validation.constraints.NotNull
 
 @Table(
     name = "student_subjects",

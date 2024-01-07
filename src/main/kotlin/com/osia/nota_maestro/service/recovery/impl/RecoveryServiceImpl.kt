@@ -1,18 +1,11 @@
-package com.osia.nota_maestro.service.note.impl
+package com.osia.nota_maestro.service.recovery.impl
 
-import com.osia.nota_maestro.dto.judgment.v1.JudgmentDto
-import com.osia.nota_maestro.dto.judgment.v1.JudgmentRequest
-import com.osia.nota_maestro.dto.note.v1.NoteClassroomDto
-import com.osia.nota_maestro.dto.note.v1.NoteDetailsDto
-import com.osia.nota_maestro.dto.note.v1.NoteDto
-import com.osia.nota_maestro.dto.note.v1.NoteGradeDto
-import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
-import com.osia.nota_maestro.dto.note.v1.NoteStudentDto
-import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
-import com.osia.nota_maestro.dto.studentNote.v1.StudentNoteDto
-import com.osia.nota_maestro.dto.studentNote.v1.StudentNoteRequest
-import com.osia.nota_maestro.dto.studentSubject.v1.StudentSubjectDto
-import com.osia.nota_maestro.dto.studentSubject.v1.StudentSubjectRequest
+import com.osia.nota_maestro.dto.recovery.v1.RecoveryClassroomDto
+import com.osia.nota_maestro.dto.recovery.v1.RecoveryDto
+import com.osia.nota_maestro.dto.recovery.v1.RecoveryGradeDto
+import com.osia.nota_maestro.dto.recovery.v1.RecoveryPeriodDto
+import com.osia.nota_maestro.dto.recovery.v1.RecoveryStudentDto
+import com.osia.nota_maestro.dto.recovery.v1.RecoverySubjectsDto
 import com.osia.nota_maestro.model.Classroom
 import com.osia.nota_maestro.model.ClassroomSubject
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
@@ -25,21 +18,17 @@ import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
-import com.osia.nota_maestro.service.judgment.JudgmentService
-import com.osia.nota_maestro.service.note.NoteService
+import com.osia.nota_maestro.service.recovery.RecoveryService
 import com.osia.nota_maestro.service.school.SchoolService
-import com.osia.nota_maestro.service.studentNote.StudentNoteService
-import com.osia.nota_maestro.service.studentSubject.StudentSubjectService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.time.LocalDateTime
 import java.util.UUID
 
-@Service("note.crud_service")
+@Service("recovery.crud_service")
 @Transactional
-class NoteServiceImpl(
+class RecoveryServiceImpl(
     private val gradeRepository: GradeRepository,
     private val userRepository: UserRepository,
     private val subjectRepository: SubjectRepository,
@@ -47,16 +36,13 @@ class NoteServiceImpl(
     private val classroomRepository: ClassroomRepository,
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val studentNoteRepository: StudentNoteRepository,
-    private val studentNoteService: StudentNoteService,
     private val judgmentRepository: JudgmentRepository,
-    private val judgmentService: JudgmentService,
     private val schoolPeriodRepository: SchoolPeriodRepository,
-    private val studentSubjectService: StudentSubjectService,
     private val studentSubjectRepository: StudentSubjectRepository,
     private val schoolService: SchoolService
-) : NoteService {
+) : RecoveryService {
 
-    override fun getMyNotes(teacher: UUID): NoteDto {
+    override fun getMyNotes(teacher: UUID): RecoveryDto {
         val teacherFound = userRepository.findById(teacher).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -66,67 +52,37 @@ class NoteServiceImpl(
             classroomSubjects.mapNotNull { it.uuidClassroom },
             schoolFound.actualYear!!
         )
-        return returnNotes(classrooms, classroomSubjects, false, schoolFound.actualYear!!, mutableListOf())
-    }
-
-    override fun getMyNotesArchive(teacher: UUID, year: Int, role: String): NoteDto {
-        val myUser = userRepository.findById(teacher)
-        var classes = listOf<Classroom>()
-        var allYears = listOf<Int>()
-        val classroomSubjects = if (role == "teacher") {
-            val cs = classroomSubjectRepository.getAllByUuidTeacher(teacher)
-            allYears = classroomRepository.findAllById(cs.mapNotNull { it.uuidClassroom }).mapNotNull { it.year }.distinct()
-            classes = classroomRepository.findByUuidInAndYear(cs.mapNotNull { it.uuidClassroom }, year)
-            cs
-        } else {
-            val grades = gradeRepository.findAllByUuidSchool(myUser.get().uuidSchool!!)
-            classes = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, year)
-            allYears = classroomRepository.findAllByUuidGradeIn(grades.mapNotNull { it.uuid }).mapNotNull { it.year }.distinct()
-            classroomSubjectRepository.getAllByUuidClassroomIn(classes.mapNotNull { it.uuid })
-        }
-        return returnNotes(classes, classroomSubjects, true, year, allYears)
+        return returnNotes(classrooms, classroomSubjects, schoolFound.actualYear!!, schoolFound.recoveryType!!)
     }
 
     private fun returnNotes(
         classrooms: List<Classroom>,
         classroomSubjects: List<ClassroomSubject>,
-        includeAllPeriods: Boolean,
         year: Int,
-        allYears: List<Int>
-    ): NoteDto {
+        recoveryType: String
+    ): RecoveryDto {
         val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
         val studentSubjects = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
             classroomStudents.mapNotNull { it.uuid },
             classroomSubjects.mapNotNull { it.uuidSubject }
         )
-        val studentNotes =
-            studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
-        val judgments = judgmentRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
-        val periods = if (!includeAllPeriods) {
-            grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchoolAndActualYear(it, year) }?.filter {
-                it.init != null && it.finish != null && it.init!! <= LocalDateTime.now()
-                    .plusDays(1) && it.finish!!.plusDays(1) >= LocalDateTime.now()
-            } ?: mutableListOf()
-        } else {
-            grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchoolAndActualYear(it, year) }
-                ?.filter { it.init != null && it.finish != null } ?: mutableListOf()
-        }
+        val periods = grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchoolAndActualYear(it, year) }
+            ?.filter { it.init != null && it.finish != null } ?: mutableListOf()
 
-        return NoteDto().apply {
-            this.years = allYears
+        return RecoveryDto().apply {
             this.grades = grades.map { g ->
-                NoteGradeDto().apply {
+                RecoveryGradeDto().apply {
                     this.uuid = g.uuid
                     this.name = g.name
                     this.classrooms = classrooms.filter { c -> c.uuidGrade == g.uuid }.map { c ->
-                        NoteClassroomDto().apply {
+                        RecoveryClassroomDto().apply {
                             this.uuid = c.uuid
                             this.name = c.name
                             this.students = classroomStudents.filter { cs -> cs.uuidClassroom == c.uuid }.map { cs ->
-                                NoteStudentDto().apply {
+                                RecoveryStudentDto().apply {
                                     val student = students.first { it.uuid == cs.uuidStudent }
                                     this.uuid = cs.uuidStudent
                                     this.name = student.name
@@ -135,55 +91,22 @@ class NoteServiceImpl(
                                     this.subjects =
                                         classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }
                                             .map { cx ->
-                                                NoteSubjectsDto().apply {
+                                                RecoverySubjectsDto().apply {
                                                     this.uuid = cx.uuidSubject
                                                     this.name = subjects.first { it.uuid == cx.uuidSubject }.name
-                                                    val studentSubject0Found = studentSubjects.firstOrNull { ss -> ss.uuidSubject == cx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == 0 }
-                                                    this.def = studentSubject0Found?.def.toString().replace(".", ",")
-                                                    this.recovery = studentSubject0Found?.recovery
-                                                    this.uuidStudentSubject = studentSubject0Found?.uuid
+                                                    this.enabled = recoveryType == "at_last"
+                                                    val recoveryFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == cx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == 0 }
+                                                    this.recovery = recoveryFound?.recovery
+                                                    this.def = recoveryFound?.def
+                                                    this.uuidStudentSubject = recoveryFound?.uuid
                                                     this.periods = periods.map { p ->
-                                                        val maxNote = studentNoteRepository.getNoteMAx(
-                                                            classroomStudents.mapNotNull { it.uuid },
-                                                            p.number!!,
-                                                            cx.uuidSubject!!
-                                                        ) ?: 1
-                                                        NotePeriodDto().apply {
-                                                            val judgmentFound = judgments.firstOrNull { j -> j.uuidSubject == cx.uuidSubject && j.uuidClassroomStudent == cs.uuid && j.period == p.number }
-                                                            this.judgment = judgmentFound?.name ?: ""
-                                                            this.uuidJudgment = judgmentFound?.uuid
-
+                                                        RecoveryPeriodDto().apply {
                                                             val studentSubjectFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == cx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == p.number }
-                                                            this.defi = studentSubjectFound?.def
+                                                            this.def = studentSubjectFound?.def
                                                             this.recovery = studentSubjectFound?.recovery
                                                             this.uuidStudentSubject = studentSubjectFound?.uuid
+                                                            this.enabled = recoveryType != "at_last" && p.recovery == true
                                                             this.number = p.number
-                                                            if (studentNotes.none { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }) {
-                                                                val emptyNotes = mutableListOf<NoteDetailsDto>()
-                                                                for (i in 1..maxNote) {
-                                                                    emptyNotes.add(
-                                                                        NoteDetailsDto().apply {
-                                                                            this.number = 0
-                                                                        }
-                                                                    )
-                                                                }
-                                                                this.notes = emptyNotes
-                                                            } else {
-                                                                this.notes =
-                                                                    studentNotes.filter { sn -> sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == cx.uuidSubject && sn.period == p.number }
-                                                                        .sortedBy { sn -> sn.number }.map { sn ->
-                                                                            NoteDetailsDto().apply {
-                                                                                this.uuid = sn.uuid
-                                                                                this.name = sn.noteName
-                                                                                this.note = if (sn.note != null) {
-                                                                                    sn.note.toString().replace(".", ",")
-                                                                                } else {
-                                                                                    ""
-                                                                                }
-                                                                                this.number = sn.number
-                                                                            }
-                                                                        }
-                                                            }
                                                         }
                                                     }
                                                 }
@@ -197,7 +120,9 @@ class NoteServiceImpl(
         }
     }
 
-    override fun submitNotes(noteDto: NoteDto, teacher: UUID): NoteDto {
+    override fun submitNotes(noteDto: RecoveryDto, teacher: UUID): RecoveryDto {
+        return RecoveryDto()
+        /*
         val userFound = userRepository.getByUuid(teacher).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -253,24 +178,6 @@ class NoteServiceImpl(
                 c.students?.forEach { s ->
                     val cs = classroomStudents.first { cst -> cst.uuidStudent == s.uuid && cst.uuidClassroom == c.uuid }
                     s.subjects?.forEach { u ->
-                        val newDef = if (u.def == null || u.def == "" || u.def == "null") {
-                            null
-                        } else {
-                            u.def?.replace(",", ".")?.toDouble()
-                        }
-                        val reqSS0 = StudentSubjectRequest().apply {
-                            this.uuidClassroomStudent = cs.uuid
-                            this.uuidSchool = userFound.uuidSchool
-                            this.uuidSubject = u.uuid
-                            this.uuidStudent = s.uuid
-                            this.period = 0
-                            this.def = newDef
-                        }
-                        if (u.uuidStudentSubject != null) {
-                            toUpdateSS[u.uuidStudentSubject!!] = reqSS0
-                        } else {
-                            toCreateSS.add(reqSS0)
-                        }
                         u.periods?.forEach { p ->
                             val reqSS = StudentSubjectRequest().apply {
                                 this.uuidClassroomStudent = cs.uuid
@@ -372,6 +279,6 @@ class NoteServiceImpl(
             }
         )
         studentNoteRepository.deleteByUuids(toDel.mapNotNull { it.uuid })
-        return noteDto
+        return noteDto*/
     }
 }

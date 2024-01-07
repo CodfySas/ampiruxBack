@@ -20,7 +20,6 @@ import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
-import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroomSubject.ClassroomSubjectService
