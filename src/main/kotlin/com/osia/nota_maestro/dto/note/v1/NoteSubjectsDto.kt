@@ -9,5 +9,5 @@ class NoteSubjectsDto : BaseDto() {
     var judgments: List<String> = mutableListOf()
     var def: String? = null
     var uuidStudentSubject: UUID? = null
-    var recovery: Double? = null
+    var recovery: String? = null
 }

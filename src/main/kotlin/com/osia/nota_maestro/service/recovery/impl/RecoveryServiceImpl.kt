@@ -158,6 +158,20 @@ class RecoveryServiceImpl(
                 c.students?.forEach { s ->
                     val cs = classroomStudents.first { cst -> cst.uuidStudent == s.uuid && cst.uuidClassroom == c.uuid }
                     s.subjects?.forEach { u ->
+                        val reqSS0 = StudentSubjectRequest().apply {
+                            this.uuidClassroomStudent = cs.uuid
+                            this.uuidSchool = userFound.uuidSchool
+                            this.uuidSubject = u.uuid
+                            this.uuidStudent = s.uuid
+                            this.period = 0
+                            this.def = u.def?.replace(",",".")?.toDoubleOrNull()
+                            this.recovery = u.recovery?.replace(",",".")?.toDoubleOrNull()
+                        }
+                        if (u.uuidStudentSubject != null) {
+                            toUpdateSS[u.uuidStudentSubject!!] = reqSS0
+                        } else {
+                            toCreateSS.add(reqSS0)
+                        }
                         u.periods?.forEach { p ->
                             val reqSS = StudentSubjectRequest().apply {
                                 this.uuidClassroomStudent = cs.uuid

@@ -140,7 +140,7 @@ class NoteServiceImpl(
                                                     this.name = subjects.first { it.uuid == cx.uuidSubject }.name
                                                     val studentSubject0Found = studentSubjects.firstOrNull { ss -> ss.uuidSubject == cx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == 0 }
                                                     this.def = studentSubject0Found?.def.toString().replace(".", ",")
-                                                    this.recovery = studentSubject0Found?.recovery
+                                                    this.recovery = studentSubject0Found?.recovery.toString().replace(".", ",")
                                                     this.uuidStudentSubject = studentSubject0Found?.uuid
                                                     this.periods = periods.map { p ->
                                                         val maxNote = studentNoteRepository.getNoteMAx(
@@ -235,7 +235,7 @@ class NoteServiceImpl(
             this.number = 0
             this.uuidStudentSubject = it.uuidStudentSubject
             this.defi = it.def?.replace(",",".")?.toDoubleOrNull()
-            this.recovery = it.recovery
+            this.recovery = it.recovery?.replace(",",".")?.toDoubleOrNull()
         } }
 
         allStudentSubjects+=studentSubject0
@@ -267,6 +267,11 @@ class NoteServiceImpl(
                         } else {
                             u.def?.replace(",", ".")?.toDouble()
                         }
+                        val newR = if (u.recovery == null || u.recovery == "" || u.recovery == "null") {
+                            null
+                        } else {
+                            u.recovery?.replace(",", ".")?.toDouble()
+                        }
                         val reqSS0 = StudentSubjectRequest().apply {
                             this.uuidClassroomStudent = cs.uuid
                             this.uuidSchool = userFound.uuidSchool
@@ -274,6 +279,7 @@ class NoteServiceImpl(
                             this.uuidStudent = s.uuid
                             this.period = 0
                             this.def = newDef
+                            this.recovery = newR
                         }
                         if (u.uuidStudentSubject != null) {
                             toUpdateSS[u.uuidStudentSubject!!] = reqSS0
@@ -291,7 +297,7 @@ class NoteServiceImpl(
                                 this.recovery = p.recovery
                             }
                             if (p.uuidStudentSubject != null) {
-                                toUpdateSS[p.uuidStudentSubject!!] = reqSS
+                                toUpdateSS[u.uuidStudentSubject!!] = reqSS
                             } else {
                                 toCreateSS.add(reqSS)
                             }

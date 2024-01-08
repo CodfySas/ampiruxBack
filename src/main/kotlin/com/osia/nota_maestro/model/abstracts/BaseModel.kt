@@ -26,7 +26,6 @@ abstract class BaseModel {
 
     var code: String? = null
 
-    @Version
     var version: Long? = null
 
     @Column(name = "created_at")
@@ -37,6 +36,7 @@ abstract class BaseModel {
     @LastModifiedDate
     var lastModifiedAt: LocalDateTime? = LocalDateTime.now()
 
+    @Column(name = "deleted_at",)
     var deletedAt: LocalDateTime? = null
 
     var deleted: Boolean = false

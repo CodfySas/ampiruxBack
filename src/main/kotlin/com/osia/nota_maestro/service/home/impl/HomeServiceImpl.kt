@@ -339,15 +339,16 @@ class HomeServiceImpl(
         val myNotes = mutableListOf<NoteSubjectsDto>()
         val periods = classrooms.firstOrNull()?.uuidSchool?.let { s ->
             schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, schoolFound.actualYear!!).filter { it.init != null && it.finish != null }
-        } ?: mutableListOf()
+        }?.sortedBy { it.number } ?: mutableListOf()
         subjects.forEach {
             val myNotePeriods = mutableListOf<NotePeriodDto>()
             var finalValue = 0.0
+            var recoveryF: Double? = null
             val notes = studentNotes.filter { sn -> sn.uuidSubject == it.uuid }
             val studentSubject0Found = studentSubject.firstOrNull { ss -> ss.uuidSubject == it.uuid && ss.period == 0 }
             if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
-                finalValue = studentSubject0Found.recovery!!
-            }else{
+                recoveryF = studentSubject0Found.recovery
+            }
                 if (notes.isNotEmpty()) {
                     var vpp = 0.0
                     var npp = 0
@@ -382,18 +383,18 @@ class HomeServiceImpl(
                         finalValue = vpp / npp
                     }
                 }
-            }
+
             charts.add(
                 ChartDto().apply {
                     this.name = it.name ?: ""
-                    this.value = finalValue
+                    this.value = recoveryF ?: finalValue
                 }
             )
             myNotes.add(
                 NoteSubjectsDto().apply {
                     this.name = it.name
                     this.periods = myNotePeriods
-                    this.recovery = finalValue
+                    this.recovery = recoveryF.toString()
                 }
             )
         }
