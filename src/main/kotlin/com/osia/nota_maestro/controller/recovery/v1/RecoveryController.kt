@@ -22,11 +22,11 @@ class RecoveryController(
 ) {
     @GetMapping("/{teacher}")
     fun getById(@PathVariable teacher: UUID): ResponseEntity<RecoveryDto> {
-        return ResponseEntity.ok().body(recoveryService.getMyNotes(teacher))
+        return ResponseEntity.ok().body(recoveryService.getMyRecovery(teacher))
     }
 
     @PostMapping("/submit/{teacher}")
     fun submitNotes(@PathVariable teacher: UUID, @RequestBody notes: RecoveryDto): ResponseEntity<RecoveryDto> {
-        return ResponseEntity.ok().body(recoveryService.submitNotes(notes, teacher))
+        return ResponseEntity.ok().body(recoveryService.submitRecovery(notes, teacher))
     }
 }

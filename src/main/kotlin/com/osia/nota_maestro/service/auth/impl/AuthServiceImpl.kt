@@ -61,6 +61,7 @@ class AuthServiceImpl(
             this.minNote = school.minNote
             this.toLose = school.toLose
             this.recoveryType = school.recoveryType
+            this.enabledFinalRecovery = school.enabledFinalRecovery
         }
     }
 }

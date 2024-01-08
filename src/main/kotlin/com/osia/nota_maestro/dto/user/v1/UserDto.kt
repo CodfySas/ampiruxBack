@@ -31,4 +31,5 @@ class UserDto : BaseDto() {
     var minNote: Int? = null
     var toLose: Int? = null
     var recoveryType: String? = null
+    var enabledFinalRecovery: Boolean? = null
 }

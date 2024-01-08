@@ -5,8 +5,8 @@ import java.util.UUID
 
 class RecoveryPeriodDto : BaseDto() {
     var number: Int? = null
-    var def: Double? = null
+    var def: String? = null
     var uuidStudentSubject: UUID? = null
-    var recovery: Double? = null
+    var recovery: String? = null
     var enabled: Boolean = false
 }

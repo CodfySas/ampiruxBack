@@ -109,10 +109,10 @@ class NoteServiceImpl(
             grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchoolAndActualYear(it, year) }?.filter {
                 it.init != null && it.finish != null && it.init!! <= LocalDateTime.now()
                     .plusDays(1) && it.finish!!.plusDays(1) >= LocalDateTime.now()
-            } ?: mutableListOf()
+            }?.sortedBy { it.number } ?: mutableListOf()
         } else {
             grades.firstOrNull()?.uuidSchool?.let { schoolPeriodRepository.findAllByUuidSchoolAndActualYear(it, year) }
-                ?.filter { it.init != null && it.finish != null } ?: mutableListOf()
+                ?.filter { it.init != null && it.finish != null }?.sortedBy { it.number } ?: mutableListOf()
         }
 
         return NoteDto().apply {
@@ -229,7 +229,16 @@ class NoteServiceImpl(
             noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }
                 .flatMap { it.periods!! }
         val allStudentSubjects = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }
-            .flatMap { it.periods!! }
+            .flatMap { it.periods!! }.toMutableList()
+
+        val studentSubject0 = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.map { NotePeriodDto().apply {
+            this.number = 0
+            this.uuidStudentSubject = it.uuidStudentSubject
+            this.defi = it.def?.replace(",",".")?.toDoubleOrNull()
+            this.recovery = it.recovery
+        } }
+
+        allStudentSubjects+=studentSubject0
 
         val toDel = (
             studentNotes.filterNot { sn -> allNotes.mapNotNull { it.uuid }.contains(sn.uuid) }

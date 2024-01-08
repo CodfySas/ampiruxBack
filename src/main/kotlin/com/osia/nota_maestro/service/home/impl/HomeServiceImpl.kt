@@ -11,6 +11,7 @@ import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectReposit
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
+import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.home.HomeService
@@ -33,7 +34,7 @@ class HomeServiceImpl(
     private val subjectRepository: SubjectRepository,
     private val schoolPeriodRepository: SchoolPeriodRepository,
     private val schoolService: SchoolService,
-
+    private val studentSubjectRepository: StudentSubjectRepository
 ) : HomeService {
 
     override fun getByAdmin(school: UUID): HomeAdminDto {
@@ -47,6 +48,10 @@ class HomeServiceImpl(
         val studentClass = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val studentNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(studentClass.mapNotNull { it.uuid })
         val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        val studentSubjects = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
+            studentClass.mapNotNull { it.uuid },
+            classroomSubjects.mapNotNull { it.uuidSubject }
+        )
         val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school)
 
         gradesAll.forEach { g ->
@@ -57,11 +62,11 @@ class HomeServiceImpl(
             gradeClasses.forEach { c ->
                 val mySubjects = classroomSubjects.filter { it.uuidClassroom == c.uuid }
                 val myStudentInClass = studentClass.filter { it.uuidClassroom == c.uuid }
-                var promByClass: Double?
+                val promByClass: Double?
                 var sumByClass = 0.0
                 var notesByClass = 0
                 periods.forEach { p ->
-                    var promByPeriod: Double?
+                    val promByPeriod: Double?
                     var sumByPeriod = 0.0
                     var notesByPeriod = 0
                     myStudentInClass.forEach { s ->
@@ -70,21 +75,32 @@ class HomeServiceImpl(
                         var sumByStudent = 0.0
                         var notesByStudent = 0
                         mySubjects.forEach { sx ->
-                            val notesInSubjectPerPersonInPeriod =
-                                myNotes.filter { mn -> mn.uuidSubject == sx.uuidSubject }
-                            var promBySubject: Double? = null
-                            var sumBySubject = 0.0
-                            var notesInSubject = 0
-                            notesInSubjectPerPersonInPeriod.forEach { n ->
-                                if (n.note != null) {
-                                    sumBySubject += n.note!!
-                                    notesInSubject++
-                                }
-                            }
-                            if (sumBySubject != 0.0) {
-                                promBySubject = sumBySubject / notesInSubject
-                                sumByStudent += promBySubject
+                            val studentSubject0Found = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx.uuidSubject && ss.uuidClassroomStudent == s.uuid && ss.period == 0 }
+                            if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
+                                sumByStudent += studentSubject0Found.recovery!!
                                 notesByStudent++
+                            }else{
+                                val studentSubjectFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx.uuidSubject && ss.uuidClassroomStudent == s.uuid && ss.period == p.number }
+                                val notesInSubjectPerPersonInPeriod =
+                                    myNotes.filter { mn -> mn.uuidSubject == sx.uuidSubject }
+                                var promBySubject: Double? = null
+                                var sumBySubject = 0.0
+                                var notesInSubject = 0
+                                notesInSubjectPerPersonInPeriod.forEach { n ->
+                                    if (n.note != null) {
+                                        sumBySubject += n.note!!
+                                        notesInSubject++
+                                    }
+                                }
+                                if (sumBySubject != 0.0) {
+                                    promBySubject = if(studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last"){
+                                        studentSubjectFound.recovery!!
+                                    }else{
+                                        sumBySubject / notesInSubject
+                                    }
+                                    sumByStudent += promBySubject
+                                    notesByStudent++
+                                }
                             }
                         }
                         if (sumByStudent != 0.0) {
@@ -153,6 +169,10 @@ class HomeServiceImpl(
             schoolFound.actualYear!!
         )
         val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        val studentSubjects = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
+            classroomStudents.mapNotNull { it.uuid },
+            classroomSubjects.mapNotNull { it.uuidSubject }
+        )
         val studentNotes =
             studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
         val byClass = classroomStudents.groupBy { it.uuidClassroom }
@@ -179,23 +199,30 @@ class HomeServiceImpl(
                     } else {
                         var indP = 0.0
                         var indN = 0.0
-                        notesOfStudent.groupBy { it.uuidSubject }.forEach { (ss, nns) ->
-                            var inSP = 0.0
-                            var inSN = 0.0
-                            nns.forEach { nn ->
-                                if (nn.note != null) {
-                                    inSP += nn.note!!
-                                    inSN++
-                                }
-                            }
-                            val promBySubject = if (inSP == 0.0) {
-                                null
-                            } else {
-                                inSP / inSN
-                            }
-                            if (promBySubject != null) {
-                                indP += promBySubject
+                        notesOfStudent.groupBy { it.uuidSubject }.forEach { (sx, nns) ->
+                            val studentSubject0Found = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx && ss.uuidClassroomStudent == s.uuid && ss.period == 0 }
+                            if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
+                                indP += studentSubject0Found.recovery!!
                                 indN++
+                            }else{
+                                val studentSubjectFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx && ss.uuidClassroomStudent == s.uuid && ss.period == p }
+                                var inSP = 0.0
+                                var inSN = 0.0
+                                nns.forEach { nn ->
+                                    if (nn.note != null) {
+                                        inSP += nn.note!!
+                                        inSN++
+                                    }
+                                }
+                                if(inSP != 0.0){
+                                    val promBySubject = if(studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last"){
+                                        studentSubjectFound.recovery!!
+                                    }else{
+                                        inSP / inSN
+                                    }
+                                    indP += promBySubject
+                                    indN++
+                                }
                             }
                         }
                         if (indP == 0.0) {
@@ -304,6 +331,10 @@ class HomeServiceImpl(
         val classroomSubjects =
             classroomSubjectRepository.getAllByUuidClassroomIn(validClassroomStudent.mapNotNull { it.uuidClassroom })
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
+        val studentSubject = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
+            classroomStudent.mapNotNull { it.uuid },
+            classroomSubjects.mapNotNull { it.uuidSubject }
+        )
         val charts = mutableListOf<ChartDto>()
         val myNotes = mutableListOf<NoteSubjectsDto>()
         val periods = classrooms.firstOrNull()?.uuidSchool?.let { s ->
@@ -313,32 +344,43 @@ class HomeServiceImpl(
             val myNotePeriods = mutableListOf<NotePeriodDto>()
             var finalValue = 0.0
             val notes = studentNotes.filter { sn -> sn.uuidSubject == it.uuid }
-            if (notes.isNotEmpty()) {
-                var vpp = 0.0
-                var npp = 0
-                periods.sortedBy { it.number }.forEach { p ->
-                    val v = notes.filter { it.period == p.number }
-                    var sum = 0.0
-                    var nums = 0
-                    var defi: Double? = null
-                    v.forEach { n ->
-                        sum += (n.note ?: 0.0)
-                        nums++
-                    }
-                    if (sum != 0.0) {
-                        vpp += (sum / nums)
-                        npp++
-                        defi = (sum / nums)
-                    }
-                    myNotePeriods.add(
-                        NotePeriodDto().apply {
-                            this.number = p.number
-                            this.defi = defi
+            val studentSubject0Found = studentSubject.firstOrNull { ss -> ss.uuidSubject == it.uuid && ss.period == 0 }
+            if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
+                finalValue = studentSubject0Found.recovery!!
+            }else{
+                if (notes.isNotEmpty()) {
+                    var vpp = 0.0
+                    var npp = 0
+                    periods.sortedBy { it.number }.forEach { p ->
+                        val studentSubjectFound = studentSubject.firstOrNull { ss -> ss.uuidSubject == it.uuid && ss.period == p.number }
+                        val v = notes.filter { it.period == p.number }
+                        var sum = 0.0
+                        var nums = 0
+                        var defi: Double? = null
+                        v.forEach { n ->
+                            sum += (n.note ?: 0.0)
+                            nums++
                         }
-                    )
-                }
-                if (vpp != 0.0) {
-                    finalValue = vpp / npp
+                        if (sum != 0.0) {
+                            val promBySubject = if(studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last"){
+                                studentSubjectFound.recovery!!
+                            }else{
+                                sum / nums
+                            }
+                            vpp += promBySubject
+                            npp++
+                            defi = promBySubject
+                        }
+                        myNotePeriods.add(
+                            NotePeriodDto().apply {
+                                this.number = p.number
+                                this.defi = defi
+                            }
+                        )
+                    }
+                    if (vpp != 0.0) {
+                        finalValue = vpp / npp
+                    }
                 }
             }
             charts.add(
@@ -351,6 +393,7 @@ class HomeServiceImpl(
                 NoteSubjectsDto().apply {
                     this.name = it.name
                     this.periods = myNotePeriods
+                    this.recovery = finalValue
                 }
             )
         }
