@@ -32,4 +32,9 @@ class UserDto : BaseDto() {
     var toLose: Int? = null
     var recoveryType: String? = null
     var enabledFinalRecovery: Boolean? = null
+    var parentName: String? = null
+    var parentPhone: String? = null
+    var parentEmail: String? = null
+    var parentAddress: String? = null
+    var parentVulnerability: String? = null
 }

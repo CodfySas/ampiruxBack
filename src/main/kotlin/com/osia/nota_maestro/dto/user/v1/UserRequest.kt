@@ -17,4 +17,10 @@ class UserRequest {
     var email: String? = null
     var address: String? = null
     var actualGrade: UUID? = null
+
+    var parentName: String? = null
+    var parentPhone: String? = null
+    var parentEmail: String? = null
+    var parentAddress: String? = null
+    var parentVulnerability: String? = null
 }
