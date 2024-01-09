@@ -29,6 +29,6 @@ interface SchoolPeriodRepository :
 
     @Modifying
     @Transactional
-    @Query("UPDATE SchoolPeriod SET deleted = true WHERE uuidSchool = :uuid AND year = :year1 ")
+    @Query("UPDATE SchoolPeriod SET deleted = true WHERE uuidSchool = :uuid AND actualYear = :year1 ")
     fun deleteByUuidSchoolAndActualYear(uuid: UUID, year1: Int)
 }

@@ -59,7 +59,8 @@ class HomeServiceImpl(
         val schoolFound = schoolService.getById(school)
         val losesByStudent = mutableListOf<ChartDto>()
         val gradesProm = mutableListOf<ChartDto>()
-        val gradesAll = gradeRepository.findAllByUuidSchool(school)
+        val classesProm = mutableListOf<ChartDto>()
+        val gradesAll = gradeRepository.findAllByUuidSchool(school).sortedBy { it.ordered }
         val classrooms =
             classroomRepository.findAllByUuidGradeInAndYear(gradesAll.mapNotNull { it.uuid }, schoolFound.actualYear!!)
         val periods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school, schoolFound.actualYear!!)
@@ -71,7 +72,6 @@ class HomeServiceImpl(
             studentClass.mapNotNull { it.uuid },
             classroomSubjects.mapNotNull { it.uuidSubject }
         )
-        val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school)
 
         gradesAll.forEach { g ->
             var promFinal = 0.0
@@ -81,7 +81,7 @@ class HomeServiceImpl(
             gradeClasses.forEach { c ->
                 val mySubjects = classroomSubjects.filter { it.uuidClassroom == c.uuid }
                 val myStudentInClass = studentClass.filter { it.uuidClassroom == c.uuid }
-                val promByClass: Double?
+                var promByClass = 0.0
                 var sumByClass = 0.0
                 var notesByClass = 0
                 periods.forEach { p ->
@@ -148,6 +148,12 @@ class HomeServiceImpl(
                     sumFinal += promByClass
                     numbsF++
                 }
+                classesProm.add(
+                    ChartDto().apply {
+                        this.name = g.name + c.name
+                        this.value = promByClass
+                    }
+                )
             }
             if (sumFinal != 0.0) {
                 promFinal = sumFinal / numbsF
@@ -174,32 +180,11 @@ class HomeServiceImpl(
                     )
             )
         }
-        val horizontal = mutableListOf<ChartDto>()
-        losesByStudent.groupBy { it.name }.forEach { (k, v) ->
-            var sum = 0.0
-            var notes = 0
-            v.forEach {
-                if (it.value != null) {
-                    sum += it.value ?: 0.0
-                    notes++
-                }
-            }
-            if (sum != 0.0) {
-                val prom = sum / notes
-                if (prom < schoolFound.minNote!!) {
-                    horizontal.add(
-                        ChartDto().apply {
-                            val userFound = users.firstOrNull { u -> u.uuid == UUID.fromString(k) }
-                            this.name = userFound?.name + " " + userFound?.lastname
-                            this.value = 0.0
-                        }
-                    )
-                }
-            }
-        }
+
         return HomeAdminDto().apply {
             this.studentsByGrade = chartDto
             this.promPerGrade = gradesProm
+            this.horizontalTeachers = classesProm
         }
     }
 
