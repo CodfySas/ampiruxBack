@@ -44,6 +44,11 @@ class AuthServiceImpl(
         }
 
         val school = schoolRepository.findById(userFound.uuidSchool!!).get()
+        if(userFound.role != "admin"){
+            if((userFound.role == "student" && school.enabledStudent == false) || (userFound.role=="teacher" && school.enabledTeacher==false)){
+                throw ResponseStatusException(HttpStatus.LOCKED, "Invalid credentials")
+            }
+        }
         val periodList = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school.uuid!!, school.actualYear!!)
 
         return userMapper.toDto(userFound).apply {
