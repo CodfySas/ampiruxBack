@@ -83,10 +83,12 @@ class SchoolServiceImpl(
         log.trace("school update -> uuid: $uuid, request: $schoolRequest")
         val school = getById(uuid)
         schoolMapper.update(schoolRequest, school)
-        schoolPeriodRepository.deleteByUuidSchool(uuid)
-        schoolRequest.periodList?.forEach {
-            it.uuidSchool = uuid
-            it.actualYear = school.actualYear
+        if (!schoolRequest.periodList.isNullOrEmpty()) {
+            schoolPeriodRepository.deleteByUuidSchoolAndActualYear(uuid, school.actualYear!!)
+            schoolRequest.periodList?.forEach {
+                it.uuidSchool = uuid
+                it.actualYear = school.actualYear
+            }
         }
         schoolRequest.periodList?.let { schoolPeriodService.saveMultiple(it) }
         return schoolMapper.toDto(schoolRepository.save(school))

@@ -26,8 +26,9 @@ class HomeController(
     }
 
     @PostMapping("/new-year")
-    fun setNewYear(@RequestHeader school: UUID) {
+    fun setNewYear(@RequestHeader school: UUID): ResponseEntity<Boolean> {
         homeService.setNewYear(school)
+        return ResponseEntity.ok(true)
     }
 
     @GetMapping("/teacher/{uuid}")

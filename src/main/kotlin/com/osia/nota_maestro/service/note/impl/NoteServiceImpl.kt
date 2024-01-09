@@ -95,7 +95,7 @@ class NoteServiceImpl(
         allYears: List<Int>
     ): NoteDto {
         val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
-        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
+        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }).sortedBy { it.ordered }
         val studentSubjects = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
             classroomStudents.mapNotNull { it.uuid },
             classroomSubjects.mapNotNull { it.uuidSubject }
@@ -231,14 +231,16 @@ class NoteServiceImpl(
         val allStudentSubjects = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }
             .flatMap { it.periods!! }.toMutableList()
 
-        val studentSubject0 = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.map { NotePeriodDto().apply {
-            this.number = 0
-            this.uuidStudentSubject = it.uuidStudentSubject
-            this.defi = it.def?.replace(",",".")?.toDoubleOrNull()
-            this.recovery = it.recovery?.replace(",",".")?.toDoubleOrNull()
-        } }
+        val studentSubject0 = noteDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.map {
+            NotePeriodDto().apply {
+                this.number = 0
+                this.uuidStudentSubject = it.uuidStudentSubject
+                this.defi = it.def?.replace(",", ".")?.toDoubleOrNull()
+                this.recovery = it.recovery?.replace(",", ".")?.toDoubleOrNull()
+            }
+        }
 
-        allStudentSubjects+=studentSubject0
+        allStudentSubjects += studentSubject0
 
         val toDel = (
             studentNotes.filterNot { sn -> allNotes.mapNotNull { it.uuid }.contains(sn.uuid) }

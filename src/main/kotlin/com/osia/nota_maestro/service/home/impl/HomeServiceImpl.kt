@@ -1,10 +1,17 @@
 package com.osia.nota_maestro.service.home.impl
 
+import com.osia.nota_maestro.dto.classroom.v1.ClassroomRequest
+import com.osia.nota_maestro.dto.classroomStudent.v1.ClassroomStudentRequest
+import com.osia.nota_maestro.dto.classroomSubject.v1.ClassroomSubjectRequest
 import com.osia.nota_maestro.dto.home.v1.ChartDto
 import com.osia.nota_maestro.dto.home.v1.ChartSeriesDto
 import com.osia.nota_maestro.dto.home.v1.HomeAdminDto
 import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
+import com.osia.nota_maestro.dto.school.v1.SchoolRequest
+import com.osia.nota_maestro.dto.schoolPeriod.v1.SchoolPeriodRequest
+import com.osia.nota_maestro.dto.user.v1.UserDto
+import com.osia.nota_maestro.dto.user.v1.UserRequest
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
@@ -14,12 +21,18 @@ import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
+import com.osia.nota_maestro.service.classroom.ClassroomService
+import com.osia.nota_maestro.service.classroomStudent.ClassroomStudentService
+import com.osia.nota_maestro.service.classroomSubject.ClassroomSubjectService
 import com.osia.nota_maestro.service.home.HomeService
 import com.osia.nota_maestro.service.school.SchoolService
+import com.osia.nota_maestro.service.schoolPeriod.SchoolPeriodService
+import com.osia.nota_maestro.service.user.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.text.DecimalFormat
 import java.util.UUID
 
 @Service("home.crud_service")
@@ -28,23 +41,29 @@ class HomeServiceImpl(
     private val gradeRepository: GradeRepository,
     private val userRepository: UserRepository,
     private val classroomSubjectRepository: ClassroomSubjectRepository,
+    private val classroomService: ClassroomService,
     private val classroomRepository: ClassroomRepository,
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val studentNoteRepository: StudentNoteRepository,
     private val subjectRepository: SubjectRepository,
     private val schoolPeriodRepository: SchoolPeriodRepository,
     private val schoolService: SchoolService,
-    private val studentSubjectRepository: StudentSubjectRepository
+    private val studentSubjectRepository: StudentSubjectRepository,
+    private val classroomSubjectService: ClassroomSubjectService,
+    private val schoolPeriodService: SchoolPeriodService,
+    private val classroomStudentService: ClassroomStudentService,
+    private val userService: UserService
 ) : HomeService {
 
     override fun getByAdmin(school: UUID): HomeAdminDto {
         val schoolFound = schoolService.getById(school)
-        val notesByTeacher = studentNoteRepository.getNotesByTeachers()
+        val losesByStudent = mutableListOf<ChartDto>()
         val gradesProm = mutableListOf<ChartDto>()
         val gradesAll = gradeRepository.findAllByUuidSchool(school)
         val classrooms =
             classroomRepository.findAllByUuidGradeInAndYear(gradesAll.mapNotNull { it.uuid }, schoolFound.actualYear!!)
-        val periods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school, schoolFound.actualYear!!).sortedBy { it.number }
+        val periods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school, schoolFound.actualYear!!)
+            .sortedBy { it.number }
         val studentClass = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         val studentNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(studentClass.mapNotNull { it.uuid })
         val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
@@ -75,12 +94,14 @@ class HomeServiceImpl(
                         var sumByStudent = 0.0
                         var notesByStudent = 0
                         mySubjects.forEach { sx ->
-                            val studentSubject0Found = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx.uuidSubject && ss.uuidClassroomStudent == s.uuid && ss.period == 0 }
-                            if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
+                            val studentSubject0Found =
+                                studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx.uuidSubject && ss.uuidClassroomStudent == s.uuid && ss.period == 0 }
+                            if (studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
                                 sumByStudent += studentSubject0Found.recovery!!
                                 notesByStudent++
-                            }else{
-                                val studentSubjectFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx.uuidSubject && ss.uuidClassroomStudent == s.uuid && ss.period == p.number }
+                            } else {
+                                val studentSubjectFound =
+                                    studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx.uuidSubject && ss.uuidClassroomStudent == s.uuid && ss.period == p.number }
                                 val notesInSubjectPerPersonInPeriod =
                                     myNotes.filter { mn -> mn.uuidSubject == sx.uuidSubject }
                                 var promBySubject: Double? = null
@@ -93,11 +114,12 @@ class HomeServiceImpl(
                                     }
                                 }
                                 if (sumBySubject != 0.0) {
-                                    promBySubject = if(studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last"){
-                                        studentSubjectFound.recovery!!
-                                    }else{
-                                        sumBySubject / notesInSubject
-                                    }
+                                    promBySubject =
+                                        if (studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last") {
+                                            studentSubjectFound.recovery!!
+                                        } else {
+                                            sumBySubject / notesInSubject
+                                        }
                                     sumByStudent += promBySubject
                                     notesByStudent++
                                 }
@@ -107,6 +129,12 @@ class HomeServiceImpl(
                             promByStudent = sumByStudent / notesByStudent
                             sumByPeriod += promByStudent
                             notesByPeriod++
+                            losesByStudent.add(
+                                ChartDto().apply {
+                                    this.name = s.uuidStudent.toString()
+                                    this.value = sumByPeriod
+                                }
+                            )
                         }
                     }
                     if (sumByPeriod != 0.0) {
@@ -146,15 +174,32 @@ class HomeServiceImpl(
                     )
             )
         }
+        val horizontal = mutableListOf<ChartDto>()
+        losesByStudent.groupBy { it.name }.forEach { (k, v) ->
+            var sum = 0.0
+            var notes = 0
+            v.forEach {
+                if (it.value != null) {
+                    sum += it.value ?: 0.0
+                    notes++
+                }
+            }
+            if (sum != 0.0) {
+                val prom = sum / notes
+                if (prom < schoolFound.minNote!!) {
+                    horizontal.add(
+                        ChartDto().apply {
+                            val userFound = users.firstOrNull { u -> u.uuid == UUID.fromString(k) }
+                            this.name = userFound?.name + " " + userFound?.lastname
+                            this.value = 0.0
+                        }
+                    )
+                }
+            }
+        }
         return HomeAdminDto().apply {
             this.studentsByGrade = chartDto
             this.promPerGrade = gradesProm
-            this.horizontalTeachers = notesByTeacher.map {
-                ChartDto().apply {
-                    this.name = teachers.firstOrNull { t -> t.uuid == it.uuid }?.name ?: ""
-                    this.value = it.note ?: 0.0
-                }
-            }
         }
     }
 
@@ -200,12 +245,14 @@ class HomeServiceImpl(
                         var indP = 0.0
                         var indN = 0.0
                         notesOfStudent.groupBy { it.uuidSubject }.forEach { (sx, nns) ->
-                            val studentSubject0Found = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx && ss.uuidClassroomStudent == s.uuid && ss.period == 0 }
-                            if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
+                            val studentSubject0Found =
+                                studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx && ss.uuidClassroomStudent == s.uuid && ss.period == 0 }
+                            if (studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
                                 indP += studentSubject0Found.recovery!!
                                 indN++
-                            }else{
-                                val studentSubjectFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx && ss.uuidClassroomStudent == s.uuid && ss.period == p }
+                            } else {
+                                val studentSubjectFound =
+                                    studentSubjects.firstOrNull { ss -> ss.uuidSubject == sx && ss.uuidClassroomStudent == s.uuid && ss.period == p }
                                 var inSP = 0.0
                                 var inSN = 0.0
                                 nns.forEach { nn ->
@@ -214,12 +261,13 @@ class HomeServiceImpl(
                                         inSN++
                                     }
                                 }
-                                if(inSP != 0.0){
-                                    val promBySubject = if(studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last"){
-                                        studentSubjectFound.recovery!!
-                                    }else{
-                                        inSP / inSN
-                                    }
+                                if (inSP != 0.0) {
+                                    val promBySubject =
+                                        if (studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last") {
+                                            studentSubjectFound.recovery!!
+                                        } else {
+                                            inSP / inSN
+                                        }
                                     indP += promBySubject
                                     indN++
                                 }
@@ -338,7 +386,8 @@ class HomeServiceImpl(
         val charts = mutableListOf<ChartDto>()
         val myNotes = mutableListOf<NoteSubjectsDto>()
         val periods = classrooms.firstOrNull()?.uuidSchool?.let { s ->
-            schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, schoolFound.actualYear!!).filter { it.init != null && it.finish != null }
+            schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, schoolFound.actualYear!!)
+                .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
         subjects.forEach {
             val myNotePeriods = mutableListOf<NotePeriodDto>()
@@ -346,43 +395,47 @@ class HomeServiceImpl(
             var recoveryF: Double? = null
             val notes = studentNotes.filter { sn -> sn.uuidSubject == it.uuid }
             val studentSubject0Found = studentSubject.firstOrNull { ss -> ss.uuidSubject == it.uuid && ss.period == 0 }
-            if(studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last"){
+            if (studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
                 recoveryF = studentSubject0Found.recovery
             }
-                if (notes.isNotEmpty()) {
-                    var vpp = 0.0
-                    var npp = 0
-                    periods.sortedBy { it.number }.forEach { p ->
-                        val studentSubjectFound = studentSubject.firstOrNull { ss -> ss.uuidSubject == it.uuid && ss.period == p.number }
-                        val v = notes.filter { it.period == p.number }
-                        var sum = 0.0
-                        var nums = 0
-                        var defi: Double? = null
-                        v.forEach { n ->
+            if (notes.isNotEmpty()) {
+                var vpp = 0.0
+                var npp = 0
+                periods.sortedBy { it.number }.forEach { p ->
+                    val studentSubjectFound =
+                        studentSubject.firstOrNull { ss -> ss.uuidSubject == it.uuid && ss.period == p.number }
+                    val v = notes.filter { it.period == p.number }
+                    var sum = 0.0
+                    var nums = 0
+                    var defi: Double? = null
+                    v.forEach { n ->
+                        if (n.note != null) {
                             sum += (n.note ?: 0.0)
                             nums++
                         }
-                        if (sum != 0.0) {
-                            val promBySubject = if(studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last"){
+                    }
+                    if (sum != 0.0) {
+                        val promBySubject =
+                            if (studentSubjectFound?.recovery != null && schoolFound.recoveryType != "at_last") {
                                 studentSubjectFound.recovery!!
-                            }else{
+                            } else {
                                 sum / nums
                             }
-                            vpp += promBySubject
-                            npp++
-                            defi = promBySubject
+                        vpp += promBySubject
+                        npp++
+                        defi = promBySubject
+                    }
+                    myNotePeriods.add(
+                        NotePeriodDto().apply {
+                            this.number = p.number
+                            this.defi = defi
                         }
-                        myNotePeriods.add(
-                            NotePeriodDto().apply {
-                                this.number = p.number
-                                this.defi = defi
-                            }
-                        )
-                    }
-                    if (vpp != 0.0) {
-                        finalValue = vpp / npp
-                    }
+                    )
                 }
+                if (vpp != 0.0) {
+                    finalValue = vpp / npp
+                }
+            }
 
             charts.add(
                 ChartDto().apply {
@@ -405,6 +458,138 @@ class HomeServiceImpl(
     }
 
     override fun setNewYear(school: UUID) {
-        TODO("Not yet implemented")
+        val schoolFound = schoolService.getById(school)
+        val thisYear = schoolFound.actualYear!!
+        val newYear = schoolFound.actualYear!! + 1
+        val toLose = schoolFound.toLose!!
+        val minNote = schoolFound.minNote!!
+        val grades = gradeRepository.findAllByUuidSchool(school).sortedBy { it.ordered }
+        val classrooms = classroomRepository.findAllByUuidGradeInAndYear(grades.mapNotNull { it.uuid }, schoolFound.actualYear!!)
+        val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        val periods = classrooms.firstOrNull()?.uuidSchool?.let { s ->
+            schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, thisYear).filter { it.init != null && it.finish != null }
+        }?.sortedBy { it.number } ?: mutableListOf()
+        val users = userRepository.findAllById(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
+        val studentSubject = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
+            classroomStudents.mapNotNull { it.uuid },
+            classroomSubjects.mapNotNull { it.uuidSubject }.distinct()
+        )
+
+        val periodsToCreate = periods.map {
+            SchoolPeriodRequest().apply {
+                this.uuidSchool = school
+                this.actualYear = newYear
+                this.number = it.number
+                this.recovery = false
+                this.finish = it.finish
+                this.init = it.init
+            }
+        }
+
+        val newPeriods = schoolPeriodService.saveMultiple(periodsToCreate)
+
+        val classroomsToCreate = classrooms.map {
+            ClassroomRequest().apply {
+                this.uuidSchool = school
+                this.year = newYear
+                this.name = it.name
+                this.uuidGrade = it.uuidGrade
+            }
+        }
+        val newClassrooms = classroomService.saveMultiple(classroomsToCreate)
+
+        val classSubToCreate = classroomSubjects.map {
+            ClassroomSubjectRequest().apply {
+                val antClass = classrooms.firstOrNull { a -> a.uuid == it.uuidClassroom }
+                val newClass = newClassrooms.firstOrNull { n -> n.name == antClass?.name && n.uuidGrade == antClass?.uuidGrade }
+                this.uuidSubject = it.uuidSubject
+                this.uuidTeacher = it.uuidTeacher
+                this.uuidClassroom = newClass?.uuid
+            }
+        }
+        val formato = DecimalFormat("#.#")
+
+        classroomSubjectService.saveMultiple(classSubToCreate)
+
+        val classroomStudentsToModify = mutableListOf<ClassroomStudentRequest>()
+        val usersToUpdateGrade = mutableMapOf<UUID, UserRequest>()
+
+        classroomStudents.forEach { s ->
+            val mySubjects = studentSubject.filter { ss -> ss.uuidStudent == s.uuidStudent }
+            var loses = 0.0
+            mySubjects.groupBy { it.uuidSubject }.forEach { (idSubject, subjectPeriods) ->
+                var def = schoolFound.maxNote!!
+                var sum = 0.0
+                var notes = 0
+                val ss0F = subjectPeriods.firstOrNull { sp -> sp.period == 0 }
+                if (schoolFound.recoveryType == "at_last" && ss0F?.recovery != null) {
+                    def = ss0F.recovery!!
+                } else {
+                    periods.forEach { p ->
+                        val ssF = subjectPeriods.firstOrNull { sp -> sp.period == p.number }
+                        if (ssF != null) {
+                            val newed = if (schoolFound.recoveryType != "at_last") {
+                                (ssF.recovery ?: ssF.def) ?: 0.0
+                            } else {
+                                ssF.def ?: 0.0
+                            }
+                            if (newed != 0.0) {
+                                sum += formato.format(newed).replace(",", ".").toDouble()
+                                notes++
+                            }
+                        }
+                    }
+                    if (sum != 0.0) {
+                        def = formato.format(sum / notes).replace(",", ".").toDouble()
+                    }
+                }
+                if (def < minNote) {
+                    loses++
+                }
+            }
+            val antClass = classrooms.firstOrNull { a -> a.uuid == s.uuidClassroom }
+
+            if (loses >= toLose) {
+                // Pierde el año
+                classroomStudentsToModify.add(
+                    ClassroomStudentRequest().apply {
+                        val newClass = newClassrooms.firstOrNull { n -> n.name == antClass?.name && n.uuidGrade == antClass?.uuidGrade }
+                        this.uuidClassroom = newClass?.uuid
+                        this.uuidStudent = s.uuidStudent
+                    }
+                )
+            } else {
+                val gradeAnt = grades.firstOrNull { g -> g.uuid == antClass?.uuidGrade }
+                val gradeNew = grades.firstOrNull { g -> g.ordered == gradeAnt?.ordered!! + 1 }
+                if (gradeNew != null) {
+                    val newClass = newClassrooms.firstOrNull { n -> n.name == antClass?.name && n.uuidGrade == gradeNew.uuid }
+                    usersToUpdateGrade[s.uuidStudent!!] = UserRequest().apply { this.actualGrade = gradeNew.uuid }
+                    classroomStudentsToModify.add(
+                        ClassroomStudentRequest().apply {
+                            this.uuidStudent = s.uuidStudent
+                            this.uuidClassroom = newClass?.uuid
+                        }
+                    )
+                }
+            }
+        }
+
+        classroomStudentService.saveMultiple(classroomStudentsToModify)
+        userService.updateMultiple(
+            usersToUpdateGrade.map {
+                UserDto().apply {
+                    this.uuid = it.key
+                    this.actualGrade = it.value.actualGrade
+                }
+            }
+        )
+
+        schoolService.update(
+            school,
+            SchoolRequest().apply {
+                this.actualYear = newYear
+            }
+        )
     }
 }

@@ -10,7 +10,6 @@ import javax.persistence.Column
 import javax.persistence.EntityListeners
 import javax.persistence.Id
 import javax.persistence.MappedSuperclass
-import javax.persistence.Version
 
 @MappedSuperclass
 

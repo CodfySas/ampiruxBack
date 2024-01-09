@@ -97,14 +97,14 @@ class RecoveryServiceImpl(
                                                     this.name = subjects.first { it.uuid == cx.uuidSubject }.name
                                                     this.enabled = (recoveryType == "at_last" && enabledFinalRecovery)
                                                     val recoveryFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == cx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == 0 }
-                                                    this.recovery = recoveryFound?.recovery?.toString()?.replace(".",",")
-                                                    this.def = recoveryFound?.def?.toString()?.replace(".",",")
+                                                    this.recovery = recoveryFound?.recovery?.toString()?.replace(".", ",")
+                                                    this.def = recoveryFound?.def?.toString()?.replace(".", ",")
                                                     this.uuidStudentSubject = recoveryFound?.uuid
                                                     this.periods = periods.map { p ->
                                                         RecoveryPeriodDto().apply {
                                                             val studentSubjectFound = studentSubjects.firstOrNull { ss -> ss.uuidSubject == cx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == p.number }
-                                                            this.def = studentSubjectFound?.def?.toString()?.replace(".",",")
-                                                            this.recovery = studentSubjectFound?.recovery?.toString()?.replace(".",",")
+                                                            this.def = studentSubjectFound?.def?.toString()?.replace(".", ",")
+                                                            this.recovery = studentSubjectFound?.recovery?.toString()?.replace(".", ",")
                                                             this.uuidStudentSubject = studentSubjectFound?.uuid
                                                             this.enabled = recoveryType != "at_last" && p.recovery == true
                                                             this.number = p.number
@@ -141,12 +141,14 @@ class RecoveryServiceImpl(
                 .flatMap { it.periods!! }.map { it.number!! }
         val allStudentSubjects = recoveryDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }
             .flatMap { it.periods!! }.toMutableList()
-        val studentSubject0 = recoveryDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.map { RecoveryPeriodDto().apply {
-            this.uuidStudentSubject = it.uuidStudentSubject
-            this.def = it.def
-            this.recovery = it.recovery
-        } }
-        allStudentSubjects+=studentSubject0
+        val studentSubject0 = recoveryDto.grades!!.flatMap { it.classrooms!! }.flatMap { it.students!! }.flatMap { it.subjects!! }.map {
+            RecoveryPeriodDto().apply {
+                this.uuidStudentSubject = it.uuidStudentSubject
+                this.def = it.def
+                this.recovery = it.recovery
+            }
+        }
+        allStudentSubjects += studentSubject0
 
         val toDelSS = (studentSubjects.filterNot { ss -> allStudentSubjects.map { it.uuidStudentSubject }.contains(ss.uuid) })
             .filter { submitPeriods.contains(it.period) }
@@ -164,8 +166,8 @@ class RecoveryServiceImpl(
                             this.uuidSubject = u.uuid
                             this.uuidStudent = s.uuid
                             this.period = 0
-                            this.def = u.def?.replace(",",".")?.toDoubleOrNull()
-                            this.recovery = u.recovery?.replace(",",".")?.toDoubleOrNull()
+                            this.def = u.def?.replace(",", ".")?.toDoubleOrNull()
+                            this.recovery = u.recovery?.replace(",", ".")?.toDoubleOrNull()
                         }
                         if (u.uuidStudentSubject != null) {
                             toUpdateSS[u.uuidStudentSubject!!] = reqSS0
@@ -179,8 +181,8 @@ class RecoveryServiceImpl(
                                 this.uuidSubject = u.uuid
                                 this.uuidStudent = s.uuid
                                 this.period = p.number
-                                this.def = p.def?.replace(",",".")?.toDoubleOrNull()
-                                this.recovery = p.recovery?.replace(",",".")?.toDoubleOrNull()
+                                this.def = p.def?.replace(",", ".")?.toDoubleOrNull()
+                                this.recovery = p.recovery?.replace(",", ".")?.toDoubleOrNull()
                             }
                             if (p.uuidStudentSubject != null) {
                                 toUpdateSS[p.uuidStudentSubject!!] = reqSS

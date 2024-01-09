@@ -31,8 +31,8 @@ data class School(
     var actualYear: Int? = null,
     var enabledTeacher: Boolean? = null,
     var enabledStudent: Boolean? = null,
-    var maxNote: Int? = null,
-    var minNote: Int? = null,
+    var maxNote: Double? = null,
+    var minNote: Double? = null,
     var toLose: Int? = null,
     var recoveryType: String? = null,
     var enabledFinalRecovery: Boolean? = null
