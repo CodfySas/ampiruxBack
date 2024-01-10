@@ -15,5 +15,5 @@ interface WorkerRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM workers", nativeQuery = true)
-    override fun count(schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID?): Long
 }

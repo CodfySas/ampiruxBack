@@ -17,7 +17,7 @@ interface StudentSubjectRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM student_subjects", nativeQuery = true)
-    override fun count(schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID?): Long
 
     fun findAllByUuidClassroomStudentInAndUuidSubjectIn(uuids: List<UUID>, uuidSubjects: List<UUID>): List<StudentSubject>
 

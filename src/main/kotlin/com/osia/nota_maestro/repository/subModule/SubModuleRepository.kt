@@ -15,7 +15,7 @@ interface SubModuleRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM sub_modules", nativeQuery = true)
-    override fun count(schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID?): Long
 
     fun findAllByUuidInOrderByOrdered(list: List<UUID>): List<SubModule>
 }

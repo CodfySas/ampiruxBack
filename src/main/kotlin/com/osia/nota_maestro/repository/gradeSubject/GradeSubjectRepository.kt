@@ -18,7 +18,7 @@ interface GradeSubjectRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM grade_subjects", nativeQuery = true)
-    override fun count(schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID?): Long
 
     @Query(value = "SELECT * FROM grade_subjects where uuid = ?1", nativeQuery = true)
     fun getByUuid(uuid: UUID): Optional<GradeSubject>

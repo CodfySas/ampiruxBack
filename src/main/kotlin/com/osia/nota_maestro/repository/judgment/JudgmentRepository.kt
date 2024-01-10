@@ -18,7 +18,7 @@ interface JudgmentRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM judgments", nativeQuery = true)
-    override fun count(schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID?): Long
 
     @Query(value = "SELECT * FROM judgments where uuid = ?1", nativeQuery = true)
     fun getByUuid(uuid: UUID): Optional<Judgment>

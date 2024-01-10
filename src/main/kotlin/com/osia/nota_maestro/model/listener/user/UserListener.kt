@@ -21,6 +21,6 @@ class UserListener : CodeSetter() {
 
     @PrePersist
     fun prePersist(user: User) {
-        this.setCode(userRepository, user)
+        this.setCode(userRepository, user, user.uuidSchool)
     }
 }

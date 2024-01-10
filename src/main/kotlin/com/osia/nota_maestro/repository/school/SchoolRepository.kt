@@ -15,5 +15,5 @@ interface SchoolRepository :
     BaseRepository {
 
     @Query(value = "SELECT COUNT(*) FROM schools", nativeQuery = true)
-    override fun count(schoolUuid: UUID): Long
+    override fun count(schoolUuid: UUID?): Long
 }
