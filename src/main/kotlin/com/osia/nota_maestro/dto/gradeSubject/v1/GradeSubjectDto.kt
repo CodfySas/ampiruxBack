@@ -7,4 +7,5 @@ class GradeSubjectDto : BaseDto() {
     var uuidGrade: UUID? = null
     var uuidSubject: UUID? = null
     var uuidTeacher: UUID? = null
+    var children: List<GradeSubjectDto>? = null
 }

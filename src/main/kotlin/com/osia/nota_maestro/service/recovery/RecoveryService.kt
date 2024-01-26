@@ -1,9 +1,9 @@
 package com.osia.nota_maestro.service.recovery
 
 import com.osia.nota_maestro.dto.recovery.v1.RecoveryDto
-import java.util.UUID
+import com.osia.nota_maestro.dto.resources.v1.ResourceRequest
 
 interface RecoveryService {
-    fun getMyRecovery(teacher: UUID): RecoveryDto
-    fun submitRecovery(recoveryDto: RecoveryDto, teacher: UUID): RecoveryDto
+    fun getMyRecovery(request: ResourceRequest): RecoveryDto
+    fun submitRecovery(recoveriesDto: List<RecoveryDto>): List<RecoveryDto>
 }

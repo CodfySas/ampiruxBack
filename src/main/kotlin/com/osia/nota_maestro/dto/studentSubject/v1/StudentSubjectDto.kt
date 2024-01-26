@@ -11,4 +11,5 @@ class StudentSubjectDto : BaseDto() {
     var uuidSchool: UUID? = null
     var def: Double? = null
     var recovery: Double? = null
+    var judgment: String? = null
 }

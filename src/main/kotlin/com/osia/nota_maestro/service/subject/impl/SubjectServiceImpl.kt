@@ -10,6 +10,7 @@ import com.osia.nota_maestro.service.subject.SubjectService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.http.HttpStatus
@@ -51,7 +52,22 @@ class SubjectServiceImpl(
     @Transactional(readOnly = true)
     override fun findAll(pageable: Pageable, school: UUID): Page<SubjectDto> {
         log.trace("subject findAll -> pageable: $pageable")
-        return subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school)), pageable).map(subjectMapper::toDto)
+        val pages = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school)), pageable).map(subjectMapper::toDto)
+        val map = mutableMapOf<UUID, List<SubjectDto>>()
+        val new = mutableListOf<SubjectDto>()
+        pages.content.forEach {
+            if (it.uuidParent != null) {
+                val list = map.getOrPut(it.uuidParent!!) { mutableListOf() }.toMutableList()
+                list.add(it)
+                map[it.uuidParent!!] = list
+            } else {
+                new.add(it)
+            }
+        }
+        new.forEach {
+            it.childs = map[it.uuid] ?: mutableListOf()
+        }
+        return PageImpl(new, pageable, pages.totalElements)
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +80,16 @@ class SubjectServiceImpl(
     override fun save(subjectRequest: SubjectRequest, school: UUID, replace: Boolean): SubjectDto {
         log.trace("subject save -> request: $subjectRequest")
         subjectRequest.uuidSchool = school
-        return subjectMapper.toDto(subjectRepository.save(subjectMapper.toModel(subjectRequest)))
+        val saved = subjectMapper.toDto(subjectRepository.save(subjectMapper.toModel(subjectRequest)))
+        if (subjectRequest.isParent == true) {
+            subjectRequest.childs.forEach {
+                it.uuidSchool = school
+                it.isParent = false
+                it.uuidParent = saved.uuid
+            }
+            saveMultiple(subjectRequest.childs)
+        }
+        return saved
     }
 
     @Transactional

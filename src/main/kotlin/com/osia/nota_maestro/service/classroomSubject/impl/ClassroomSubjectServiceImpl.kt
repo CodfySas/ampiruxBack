@@ -187,7 +187,7 @@ class ClassroomSubjectServiceImpl(
         val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, schoolFound.actualYear!!)
         val gradeSubjects = gradeSubjectRepository.findAllByUuidGradeIn(allGrades.mapNotNull { it.uuid })
         val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
-        val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school)))
+        val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school))).filter { it.isParent != true }
         val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school).sortedBy { it.name }
 
         val final = mutableListOf<ClassroomSubjectCompleteDto>()
@@ -200,7 +200,7 @@ class ClassroomSubjectServiceImpl(
                         ClassroomSubjectClassDto().apply {
                             this.name = c.name ?: ""
                             this.uuid = c.uuid
-                            this.subjects = gradeSubjects.filter { it.uuidGrade == g.uuid }.map { s ->
+                            this.subjects = gradeSubjects.filter { it.uuidGrade == g.uuid && subjects.mapNotNull { sd -> sd.uuid }.contains(it.uuidSubject) }.map { s ->
                                 ClassroomSubjectByTeacherDto().apply {
                                     this.uuid = s.uuidSubject
                                     this.name = subjects.first { it.uuid == s.uuidSubject }.name ?: ""
@@ -223,7 +223,7 @@ class ClassroomSubjectServiceImpl(
 
     override fun getCompleteInfo2(school: UUID): CompleteSubjectsTeachersDto {
         val schoolFound = schoolRepository.getById(school)
-        val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school))).sortedByDescending { it.code }
+        val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school))).sortedByDescending { it.code }.filter { it.isParent != true }
         val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school).sortedBy { it.name }
 
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }

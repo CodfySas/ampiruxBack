@@ -8,4 +8,7 @@ class SubjectDto : BaseDto() {
     var name: String? = null
     @NotNull
     var uuidSchool: UUID? = null
+    var uuidParent: UUID? = null
+    var isParent: Boolean? = false
+    var childs: List<SubjectDto> = mutableListOf()
 }
