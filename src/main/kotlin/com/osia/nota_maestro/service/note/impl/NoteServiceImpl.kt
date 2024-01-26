@@ -471,25 +471,7 @@ class NoteServiceImpl(
                                 notesFinal++
                             }
                         }
-                        gs.children?.forEach { chx ->
-                            var defCh0: Double? = null
-                            val children0 = studentSubjects.firstOrNull { ss ->
-                                ss.uuidSubject == chx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == 0
-                            }
-                            val childrenNote = ss0Children[chx.uuidSubject]
-                            if (childrenNote != null && childrenNote.first > 0.0) {
-                                defCh0 = childrenNote.first / childrenNote.second
-                            }
-                            if (children0 == null) {
-                                ssToCreate.add(newR(cs, 0, schoolUUID, defCh0, chx))
-                            } else {
-                                ssToUpdate.add(
-                                    studentSubjectMapper.toDto(children0).apply {
-                                        this.def = defCh0
-                                    }
-                                )
-                            }
-                        }
+
                         val ss = myStudentSubjects.firstOrNull { ss -> ss.period == p.number }
                         if (ss == null) {
                             ssToCreate.add(newR(cs, p.number, schoolUUID, defFinal, gs))
@@ -498,6 +480,25 @@ class NoteServiceImpl(
                                 studentSubjectMapper.toDto(ss).apply {
                                     this.def = defFinal
                                 }
+                            )
+                        }
+                    }
+                    gs.children?.forEach { chx ->
+                        var defCh0: Double? = null
+                        val children0 = studentSubjects.firstOrNull { ss ->
+                            ss.uuidSubject == chx.uuidSubject && ss.uuidClassroomStudent == cs.uuid && ss.period == 0
+                        }
+                        val childrenNote = ss0Children[chx.uuidSubject]
+                        if (childrenNote != null && childrenNote.first > 0.0) {
+                            defCh0 = childrenNote.first / childrenNote.second
+                        }
+                        if (children0 == null) {
+                            ssToCreate.add(newR(cs, 0, schoolUUID, defCh0, chx))
+                        } else {
+                            ssToUpdate.add(
+                                    studentSubjectMapper.toDto(children0).apply {
+                                        this.def = defCh0
+                                    }
                             )
                         }
                     }
