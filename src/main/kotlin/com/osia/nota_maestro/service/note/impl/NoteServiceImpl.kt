@@ -94,7 +94,11 @@ class NoteServiceImpl(
         year: Int,
         allYears: List<Int>
     ): NoteDto {
-        val classroomStudents = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+
+        val classroomStudentAll = classroomStudentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        val students = userRepository.getAllByUuidIn(classroomStudentAll.mapNotNull { it.uuidStudent }.distinct())
+        val classroomStudents = classroomStudentAll.filter { students.mapNotNull { it.uuid }.contains(it.uuidStudent) }
+
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }).sortedBy { it.ordered }
         val studentSubjects = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
             classroomStudents.mapNotNull { it.uuid },
@@ -102,7 +106,6 @@ class NoteServiceImpl(
         )
         val studentNotes =
             studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
-        val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
         val judgments = judgmentRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
         val periods = if (!includeAllPeriods) {
@@ -127,11 +130,11 @@ class NoteServiceImpl(
                             this.name = c.name
                             this.students = classroomStudents.filter { cs -> cs.uuidClassroom == c.uuid }.map { cs ->
                                 NoteStudentDto().apply {
-                                    val student = students.first { it.uuid == cs.uuidStudent }
+                                    val student = students.firstOrNull { it.uuid == cs.uuidStudent }
                                     this.uuid = cs.uuidStudent
-                                    this.name = student.name
-                                    this.lastname = student.lastname
-                                    this.code = student.code
+                                    this.name = student?.name
+                                    this.lastname = student?.lastname
+                                    this.code = student?.code
                                     this.subjects =
                                         classroomSubjects.filter { cx -> cx.uuidClassroom == cs.uuidClassroom }
                                             .map { cx ->
@@ -299,7 +302,7 @@ class NoteServiceImpl(
                                 this.recovery = p.recovery
                             }
                             if (p.uuidStudentSubject != null) {
-                                toUpdateSS[u.uuidStudentSubject!!] = reqSS
+                                toUpdateSS[p.uuidStudentSubject!!] = reqSS
                             } else {
                                 toCreateSS.add(reqSS)
                             }

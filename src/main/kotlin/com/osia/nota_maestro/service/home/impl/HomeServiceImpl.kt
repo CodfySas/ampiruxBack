@@ -205,9 +205,17 @@ class HomeServiceImpl(
         )
         val studentNotes =
             studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
-        val byClass = classroomStudents.groupBy { it.uuidClassroom }
         val periods = studentNotes.sortedBy { it.period }.groupBy { it.period }
-        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
+        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }).sortedBy { it.ordered }
+        val sortedClassrooms = classroomRepository.findByUuidInAndYear(
+                classroomSubjects.mapNotNull { it.uuidClassroom },
+                schoolFound.actualYear!!
+        ).sortedBy { classr ->
+            grades.indexOfFirst { it.uuid == classr.uuidGrade }
+        }
+        val byClass = classroomStudents.sortedBy { classr ->
+            sortedClassrooms.indexOfFirst { it.uuid == classr.uuidClassroom }
+        }.groupBy { it.uuidClassroom }
 
         var valueSuperior = 0.0
         var valueAlto = 0.0

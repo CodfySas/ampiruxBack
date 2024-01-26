@@ -183,7 +183,7 @@ class ClassroomSubjectServiceImpl(
 
     override fun getCompleteInfo(school: UUID): List<ClassroomSubjectCompleteDto> {
         val schoolFound = schoolRepository.getById(school)
-        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school)))
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }
         val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, schoolFound.actualYear!!)
         val gradeSubjects = gradeSubjectRepository.findAllByUuidGradeIn(allGrades.mapNotNull { it.uuid })
         val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
@@ -225,9 +225,11 @@ class ClassroomSubjectServiceImpl(
         val schoolFound = schoolRepository.getById(school)
         val subjects = subjectRepository.findAll(Specification.where(CreateSpec<Subject>().createSpec("", school))).sortedByDescending { it.code }
         val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", school).sortedBy { it.name }
-        val gradeSubjects = gradeSubjectRepository.findAllByUuidSubjectIn(subjects.mapNotNull { it.uuid })
 
         val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).sortedBy { it.ordered }
+        val gradeSubjects = gradeSubjectRepository.findAllByUuidSubjectIn(subjects.mapNotNull { it.uuid }).sortedBy { subject ->
+            allGrades.indexOfFirst { it.uuid == subject.uuidGrade }
+        }
         val classrooms = classroomRepository.findAllByUuidGradeInAndYear(allGrades.mapNotNull { it.uuid }, schoolFound.actualYear!!).sortedBy { it.name }
         val subjectsInClassrooms = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
 
