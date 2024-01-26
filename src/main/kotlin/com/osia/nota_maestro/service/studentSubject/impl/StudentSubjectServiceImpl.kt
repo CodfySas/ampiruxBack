@@ -93,6 +93,18 @@ class StudentSubjectServiceImpl(
     }
 
     @Transactional
+    override fun updateMultipleAndNullRecovery(studentSubjectDtoList: List<StudentSubjectDto>): List<StudentSubjectDto> {
+        log.trace("studentSubject updateMultiple -> studentSubjectDtoList: ${objectMapper.writeValueAsString(studentSubjectDtoList)}")
+        val studentSubjects = studentSubjectRepository.findAllById(studentSubjectDtoList.mapNotNull { it.uuid })
+        studentSubjects.forEach { studentSubject ->
+            val req = studentSubjectMapper.toRequest(studentSubjectDtoList.first { it.uuid == studentSubject.uuid })
+            studentSubjectMapper.update(req, studentSubject)
+            studentSubject.recovery = req.recovery
+        }
+        return studentSubjectRepository.saveAll(studentSubjects).map(studentSubjectMapper::toDto)
+    }
+
+    @Transactional
     override fun delete(uuid: UUID) {
         log.trace("studentSubject delete -> uuid: $uuid")
         val studentSubject = getById(uuid)

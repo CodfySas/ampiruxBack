@@ -27,5 +27,6 @@ data class StudentSubject(
     var period: Int? = null,
     var uuidSchool: UUID? = null,
     var def: Double? = null,
-    var recovery: Double? = null
+    var recovery: Double? = null,
+    var judgment: String = ""
 ) : BaseModel()

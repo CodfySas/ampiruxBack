@@ -25,6 +25,8 @@ interface GradeSubjectRepository :
 
     fun findAllByUuidGradeIn(grades: List<UUID>): List<GradeSubject>
 
+    fun findAllByUuidGrade(grade: UUID): List<GradeSubject>
+
     fun findAllByUuidSubjectIn(subjects: List<UUID>): List<GradeSubject>
 
     @Modifying

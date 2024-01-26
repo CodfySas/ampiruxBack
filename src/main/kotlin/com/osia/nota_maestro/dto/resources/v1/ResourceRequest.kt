@@ -1,10 +1,10 @@
-package com.osia.nota_maestro.dto.recovery.v1
+package com.osia.nota_maestro.dto.resources.v1
 
 import com.osia.nota_maestro.dto.BaseDto
 import java.util.UUID
 
-class RecoveryDto : BaseDto() {
-    var students: List<RecoveryStudentDto>? = null
+class ResourceRequest : BaseDto() {
+    var period: Int = 0
     var subject: UUID = UUID.randomUUID()
     var grade: UUID = UUID.randomUUID()
     var classroom: UUID = UUID.randomUUID()

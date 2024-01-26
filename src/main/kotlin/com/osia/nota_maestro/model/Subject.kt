@@ -24,5 +24,7 @@ import javax.validation.constraints.NotNull
 data class Subject(
     var name: String? = null,
     @NotNull
-    var uuidSchool: UUID? = null
+    var uuidSchool: UUID? = null,
+    var uuidParent: UUID? = null,
+    var isParent: Boolean? = false
 ) : BaseModel()

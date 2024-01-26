@@ -30,5 +30,7 @@ interface ClassroomSubjectRepository :
 
     fun getAllByUuidClassroomIn(classrooms: List<UUID>): List<ClassroomSubject>
 
+    fun getAllByUuidClassroom(classroom: UUID): List<ClassroomSubject>
+
     fun getAllByUuidTeacher(uuidTeacher: UUID): List<ClassroomSubject>
 }

@@ -20,6 +20,7 @@ interface StudentSubjectService {
     // Update
     fun update(uuid: UUID, studentSubjectRequest: StudentSubjectRequest): StudentSubjectDto
     fun updateMultiple(studentSubjectDtoList: List<StudentSubjectDto>): List<StudentSubjectDto>
+    fun updateMultipleAndNullRecovery(studentSubjectDtoList: List<StudentSubjectDto>): List<StudentSubjectDto>
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)

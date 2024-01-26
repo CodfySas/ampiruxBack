@@ -6,8 +6,13 @@ import java.util.UUID
 class NoteSubjectsDto : BaseDto() {
     var name: String? = null
     var periods: List<NotePeriodDto>? = mutableListOf()
+    var children: List<NoteSubjectsDto>? = mutableListOf()
     var judgments: List<String> = mutableListOf()
-    var def: String? = null
+    var def: String = ""
+    var basic: String = ""
+    var color: String = ""
     var uuidStudentSubject: UUID? = null
     var recovery: String? = null
+    var isParent: Boolean? = false
+    var uuidParent: UUID? = null
 }

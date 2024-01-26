@@ -31,6 +31,8 @@ interface ClassroomRepository :
 
     fun findAllByYear(year: Int): List<Classroom>
 
+    fun findAllByUuidSchoolAndYear(uuid: UUID, year: Int): List<Classroom>
+
     @Modifying
     @Transactional
     @Query("UPDATE Classroom SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")

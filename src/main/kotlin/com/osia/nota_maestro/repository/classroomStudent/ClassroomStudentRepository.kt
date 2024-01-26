@@ -43,4 +43,10 @@ interface ClassroomStudentRepository :
     fun deleteByUuidClassroom(uuids: List<UUID>)
 
     fun findAllByUuidStudent(uuid: UUID): List<ClassroomStudent>
+
+    fun findAllByUuidClassroom(uuid: UUID): List<ClassroomStudent>
+
+    fun findAllByUuidClassroomIn(uuids: List<UUID>): List<ClassroomStudent>
+
+    fun findFirstByUuidClassroomAndUuidStudent(uuidClassroom: UUID, uuidStudent: UUID): Optional<ClassroomStudent>
 }

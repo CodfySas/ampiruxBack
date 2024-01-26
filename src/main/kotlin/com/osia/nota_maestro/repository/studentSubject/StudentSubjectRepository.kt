@@ -21,6 +21,16 @@ interface StudentSubjectRepository :
 
     fun findAllByUuidClassroomStudentInAndUuidSubjectIn(uuids: List<UUID>, uuidSubjects: List<UUID>): List<StudentSubject>
 
+    fun findAllByUuidClassroomStudentAndUuidSubjectIn(uuid: UUID, uuidSubjects: List<UUID>): List<StudentSubject>
+
+    fun findAllByUuidClassroomStudentInAndUuidSubject(uuids: List<UUID>, uuidSubject: UUID): List<StudentSubject>
+
+    fun findAllByUuidClassroomStudentInAndUuidSubjectAndPeriod(classroomStudents: List<UUID>, uuidSubject: UUID, period: Int): List<StudentSubject>
+
+    fun findAllByUuidClassroomStudentInAndUuidSubjectInAndPeriodIn(classroomStudents: List<UUID>, uuidSubjects: List<UUID>, periods: List<Int>): List<StudentSubject>
+
+    fun findAllByUuidClassroomStudentIn(classroomStudents: List<UUID>): List<StudentSubject>
+
     @Modifying
     @Transactional
     @Query("UPDATE StudentSubject SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
