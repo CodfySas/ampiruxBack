@@ -5,10 +5,13 @@ import com.osia.nota_maestro.dto.schoolPeriod.v1.SchoolPeriodMapper
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.dto.user.v1.UserRequest
+import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.auth.AuthUseCase
+import com.osia.nota_maestro.service.classroom.ClassroomService
+import com.osia.nota_maestro.service.grade.GradeService
 import com.osia.nota_maestro.service.jwt.JwtGenerator
 import com.osia.nota_maestro.util.Md5Hash
 import org.slf4j.LoggerFactory
@@ -24,7 +27,10 @@ class AuthServiceImpl(
     private val userMapper: UserMapper,
     private val schoolRepository: SchoolRepository,
     private val schoolPeriodRepository: SchoolPeriodRepository,
-    private val schoolPeriodMapper: SchoolPeriodMapper
+    private val schoolPeriodMapper: SchoolPeriodMapper,
+    private val classroomStudentRepository: ClassroomStudentRepository,
+    private val gradeService: GradeService,
+    private val classroomService: ClassroomService
 ) : AuthUseCase {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -51,6 +57,10 @@ class AuthServiceImpl(
         }
         val periodList = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school.uuid!!, school.actualYear!!)
 
+        val cs = classroomStudentRepository.findAllByUuidStudent(userFound.uuid!!)
+        val classrooms = classroomService.findByMultiple(cs.mapNotNull { it.uuidClassroom }.distinct())
+        val grades = gradeService.findByMultiple(classrooms.mapNotNull { it.uuidGrade }.distinct())
+
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
             this.schoolName = school.name
@@ -67,6 +77,7 @@ class AuthServiceImpl(
             this.toLose = school.toLose
             this.recoveryType = school.recoveryType
             this.enabledFinalRecovery = school.enabledFinalRecovery
+            this.classroom = "${grades.firstOrNull()?.name}-${classrooms.firstOrNull()?.name}"
         }
     }
 }

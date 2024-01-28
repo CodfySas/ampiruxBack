@@ -37,4 +37,6 @@ class UserDto : BaseDto() {
     var parentEmail: String? = null
     var parentAddress: String? = null
     var parentVulnerability: String? = null
+    var grade: String? = null
+    var classroom: String? = null
 }

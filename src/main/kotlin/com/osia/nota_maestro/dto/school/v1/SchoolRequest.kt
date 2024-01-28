@@ -20,4 +20,10 @@ class SchoolRequest {
     var toLose: Int? = null
     var recoveryType: String? = null
     var enabledFinalRecovery: Boolean? = null
+    var directorName: String? = null
+    var directorDni: String? = null
+    var directorRole: String? = null
+    var signReportType: String? = null
+    var certificates: String? = null
+    var periodAvailable: String? = null
 }

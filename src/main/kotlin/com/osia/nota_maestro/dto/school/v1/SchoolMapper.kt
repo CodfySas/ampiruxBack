@@ -23,6 +23,9 @@ interface SchoolMapper : BaseMapper<SchoolRequest, School, SchoolDto> {
     override fun toDto(m: School): SchoolDto
 
     @Mappings
+    fun toMin(m: School): SchoolMinDto
+
+    @Mappings
     override fun toRequest(d: SchoolDto): SchoolRequest
 
     override fun update(r: SchoolRequest, @MappingTarget m: School)

@@ -263,7 +263,9 @@ class UserServiceImpl(
             saveSubModuleUsers(user.uuid!!, listOf("Boletin"))
         }
         if (role == "admin") {
-            saveSubModuleUsers(user.uuid!!, listOf("Usuarios", "Administradores", "Estudiantes", "Docentes", "Cursos", "Asignaturas", "Asignar Docentes", "Archivo De Notas", "Aula y Recursos"))
+            saveSubModuleUsers(user.uuid!!, listOf("Usuarios", "Administradores", "Estudiantes",
+                "Docentes", "Cursos", "Asignaturas", "Asignar Docentes", "Archivo De Notas",
+                "Aula y Recursos", "Documentacion"))
         }
     }
 
