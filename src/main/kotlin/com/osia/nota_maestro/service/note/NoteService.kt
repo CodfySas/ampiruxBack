@@ -1,7 +1,7 @@
 package com.osia.nota_maestro.service.note
 
 import com.osia.nota_maestro.dto.note.v1.NoteDto
-import com.osia.nota_maestro.dto.resources.v1.ResourceDto
+import com.osia.nota_maestro.dto.resources.v1.MyAssignmentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceRequest
 import com.osia.nota_maestro.dto.studentSubject.v1.StudentSubjectDto
 import com.osia.nota_maestro.model.Classroom
@@ -13,5 +13,5 @@ interface NoteService {
     fun submitNotes(notesDto: List<NoteDto>, teacher: UUID): List<NoteDto>
     fun getYears(schoolUUID: UUID): List<Int>
     fun setNotes(classrooms: List<Classroom>, schoolUUID: UUID, judgmentsSubmited: List<StudentSubjectDto>)
-    fun getMyResources(teacher: UUID, year: Int): ResourceDto
+    fun getMyResources(teacher: UUID, year: Int): MyAssignmentDto
 }

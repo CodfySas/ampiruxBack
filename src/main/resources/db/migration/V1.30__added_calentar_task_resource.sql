@@ -1,0 +1,1 @@
+ALTER TABLE public.calendar_tasks ADD if not exists uuid_resource uuid NULL;

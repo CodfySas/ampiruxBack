@@ -20,7 +20,7 @@ spring:
     password: ${FAMILY_POSTGRES_PASSWORD:admin}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    generate-ddl: true
+    generate-ddl: false
     hibernate:
       ddl-auto: none #change in time to none
     properties:

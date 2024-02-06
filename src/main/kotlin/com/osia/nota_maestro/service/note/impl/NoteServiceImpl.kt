@@ -8,7 +8,7 @@ import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteStudentDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
-import com.osia.nota_maestro.dto.resources.v1.ResourceDto
+import com.osia.nota_maestro.dto.resources.v1.MyAssignmentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourcePeriodDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceRequest
@@ -69,7 +69,7 @@ class NoteServiceImpl(
         return periods.distinct()
     }
 
-    override fun getMyResources(teacher: UUID, year: Int): ResourceDto {
+    override fun getMyResources(teacher: UUID, year: Int): MyAssignmentDto {
         val teacherFound = userRepository.findById(teacher).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -105,7 +105,7 @@ class NoteServiceImpl(
             }
         }
 
-        return ResourceDto().apply {
+        return MyAssignmentDto().apply {
             this.periods = periods.map { p ->
                 ResourcePeriodDto().apply {
                     this.uuid = p.uuid

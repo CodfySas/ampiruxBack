@@ -8,5 +8,6 @@ enum class TaskTypeEnum {
     payments,
     lends,
     settlements,
-    promotions
+    promotions,
+    reservation
 }

@@ -1,7 +1,7 @@
 package com.osia.nota_maestro.controller.note.v1
 
 import com.osia.nota_maestro.dto.note.v1.NoteDto
-import com.osia.nota_maestro.dto.resources.v1.ResourceDto
+import com.osia.nota_maestro.dto.resources.v1.MyAssignmentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceRequest
 import com.osia.nota_maestro.service.note.NoteService
 import org.springframework.http.ResponseEntity
@@ -34,7 +34,7 @@ class NoteController(
     }
 
     @GetMapping("/resources/{teacher}/{year}")
-    fun getMyResources(@PathVariable teacher: UUID, @PathVariable year: Int): ResponseEntity<ResourceDto> {
+    fun getMyResources(@PathVariable teacher: UUID, @PathVariable year: Int): ResponseEntity<MyAssignmentDto> {
         return ResponseEntity.ok().body(noteService.getMyResources(teacher, year))
     }
 

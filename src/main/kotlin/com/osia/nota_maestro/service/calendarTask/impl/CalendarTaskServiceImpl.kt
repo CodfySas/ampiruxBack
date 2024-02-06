@@ -1,29 +1,34 @@
 package com.osia.nota_maestro.service.calendarTask.impl
 
 import com.osia.nota_maestro.dto.calendar.v1.CalendarDto
+import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskDto
 import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskMapper
+import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskRequest
 import com.osia.nota_maestro.repository.calendar.CalendarRepository
 import com.osia.nota_maestro.service.calendarTask.CalendarTaskService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
+import java.util.UUID
 
 @Service("calendar.crud_service")
 @Transactional
 class CalendarTaskServiceImpl(
     private val calendarMapper: CalendarTaskMapper,
-    private val calendarRepository: CalendarRepository
+    private val calendarRepository: CalendarRepository,
 ) : CalendarTaskService {
 
-    override fun getCalendarMonth(year: Int, month: Int): List<List<CalendarDto>> {
+    override fun getCalendarMonth(year: Int, month: Int, school: UUID): List<List<CalendarDto>> {
         val maxDays = Month.of(month).length(Year.isLeap(year.toLong()))
-        val dateInit = LocalDateTime.of(year, month, 1, 0, 0, 0)
-        val dateFinish = LocalDateTime.of(year, month, maxDays, 23, 59, 59)
+        val dateInit = LocalDate.of(year, month, 1)
+        val dateFinish = LocalDate.of(year, month, maxDays)
 
-        val tasks = calendarRepository.findAllByScheduleInitAfterAndScheduleFinishBeforeOrderByScheduleInitAsc(dateInit, dateFinish)
+        val tasks = calendarRepository.findAllByDayBetweenAndUuidSchoolOrderByDayAsc(dateInit, dateFinish, school)
+        val resourceTasks = tasks.filter { it.uuidResource != null }
         val finalList = mutableListOf<CalendarDto>()
 
         if (dateInit.dayOfWeek != DayOfWeek.MONDAY) {
@@ -35,7 +40,7 @@ class CalendarTaskServiceImpl(
                         this.outOfMonth = true
                         this.dayOfWeek = dayExtraMinus.dayOfWeek
                         this.dayNumber = dayExtraMinus.dayOfMonth
-                        this.totalDay = dayExtraMinus.toLocalDate()
+                        this.totalDay = dayExtraMinus
                         this.tasks = mutableListOf()
                     }
                 )
@@ -43,7 +48,7 @@ class CalendarTaskServiceImpl(
         }
 
         for (day in 1..maxDays) {
-            val dayTasks = tasks.filter { it.scheduleInit?.dayOfMonth == day }
+            val dayTasks = resourceTasks.filter { it.day?.dayOfMonth == day }
             val actualDate = dateInit.plusDays((day - 1).toLong())
 
             finalList.add(
@@ -51,7 +56,7 @@ class CalendarTaskServiceImpl(
                     this.dayNumber = day
                     this.dayOfWeek = DayOfWeek.from(actualDate)
                     this.outOfMonth = false
-                    this.totalDay = actualDate.toLocalDate()
+                    this.totalDay = actualDate
                     this.tasks = dayTasks.map(calendarMapper::toDto)
                 }
             )
@@ -66,7 +71,7 @@ class CalendarTaskServiceImpl(
                         this.outOfMonth = true
                         this.dayOfWeek = dayExtraPlus.dayOfWeek
                         this.dayNumber = dayExtraPlus.dayOfMonth
-                        this.totalDay = dayExtraPlus.toLocalDate()
+                        this.totalDay = dayExtraPlus
                         this.tasks = mutableListOf()
                     }
                 )
@@ -84,17 +89,23 @@ class CalendarTaskServiceImpl(
         return groupedByFileList
     }
 
-    override fun getCalendarDay(year: Int, month: Int, day: Int): CalendarDto {
-        val dateInit = LocalDateTime.of(year, month, day, 0, 0, 0)
-        val dateFinish = LocalDateTime.of(year, month, day, 23, 59, 59)
+    override fun getCalendarDay(year: Int, month: Int, day: Int, school: UUID): CalendarDto {
+        val dateInit = LocalDate.of(year, month, day)
+        val dateFinish = LocalDate.of(year, month, day)
 
-        val tasks = calendarRepository.findAllByScheduleInitAfterAndScheduleFinishBeforeOrderByScheduleInitAsc(dateInit, dateFinish)
+        val tasks = calendarRepository.findAllByDayBetweenAndUuidSchoolOrderByDayAsc(dateInit, dateFinish, school)
+        val resourceTask = tasks.filter { it.uuidResource != null }
         return CalendarDto().apply {
             this.dayNumber = day
             this.dayOfWeek = DayOfWeek.from(dateInit)
             this.outOfMonth = false
-            this.totalDay = dateInit.toLocalDate()
-            this.tasks = tasks.map(calendarMapper::toDto)
+            this.totalDay = dateInit
+            this.tasks = resourceTask.map(calendarMapper::toDto)
         }
+    }
+
+    override fun submitTask(school: UUID, calendarTaskRequest: CalendarTaskRequest): CalendarTaskDto {
+        calendarTaskRequest.uuidSchool = school
+        return calendarMapper.toDto(calendarRepository.save(calendarMapper.toModel(calendarTaskRequest)))
     }
 }
