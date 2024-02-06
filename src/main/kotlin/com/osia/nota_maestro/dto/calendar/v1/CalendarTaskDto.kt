@@ -15,4 +15,5 @@ class CalendarTaskDto : BaseDto() {
     var description: String? = null
     var assignedTo: UUID? = null
     var uuidResource: UUID? = null
+    var name: String? = null
 }

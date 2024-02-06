@@ -5,6 +5,7 @@ import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskDto
 import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskMapper
 import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskRequest
 import com.osia.nota_maestro.repository.calendar.CalendarRepository
+import com.osia.nota_maestro.repository.resource.ResourceRepository
 import com.osia.nota_maestro.service.calendarTask.CalendarTaskService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,6 +20,7 @@ import java.util.UUID
 @Transactional
 class CalendarTaskServiceImpl(
     private val calendarMapper: CalendarTaskMapper,
+    private val resourceRepository: ResourceRepository,
     private val calendarRepository: CalendarRepository,
 ) : CalendarTaskService {
 
@@ -29,6 +31,7 @@ class CalendarTaskServiceImpl(
 
         val tasks = calendarRepository.findAllByDayBetweenAndUuidSchoolOrderByDayAsc(dateInit, dateFinish, school)
         val resourceTasks = tasks.filter { it.uuidResource != null }
+        val resources = resourceRepository.findAllById(resourceTasks.mapNotNull { it.uuidResource })
         val finalList = mutableListOf<CalendarDto>()
 
         if (dateInit.dayOfWeek != DayOfWeek.MONDAY) {
@@ -48,7 +51,12 @@ class CalendarTaskServiceImpl(
         }
 
         for (day in 1..maxDays) {
-            val dayTasks = resourceTasks.filter { it.day?.dayOfMonth == day }
+            val dayTasks = resourceTasks.filter { it.day?.dayOfMonth == day }.map(calendarMapper::toDto).sortedBy { it.hourInit }
+            dayTasks.forEach {
+                it.name = resources.firstOrNull{
+                    resource -> resource.uuid == it.uuidResource
+                }?.name
+            }
             val actualDate = dateInit.plusDays((day - 1).toLong())
 
             finalList.add(
@@ -57,7 +65,7 @@ class CalendarTaskServiceImpl(
                     this.dayOfWeek = DayOfWeek.from(actualDate)
                     this.outOfMonth = false
                     this.totalDay = actualDate
-                    this.tasks = dayTasks.map(calendarMapper::toDto)
+                    this.tasks = dayTasks
                 }
             )
         }
