@@ -27,7 +27,7 @@ interface StudentSubjectRepository :
 
     fun findAllByUuidClassroomStudentInAndUuidSubjectAndPeriod(classroomStudents: List<UUID>, uuidSubject: UUID, period: Int): List<StudentSubject>
 
-    fun findAllByUuidClassroomStudentInAndUuidSubjectInAndPeriodIn(classroomStudents: List<UUID>, uuidSubjects: List<UUID>, periods: List<Int>): List<StudentSubject>
+    fun findAllByUuidClassroomStudentInAndUuidSubjectAndPeriodIn(classroomStudents: List<UUID>, uuidSubject: UUID, periods: List<Int>): List<StudentSubject>
 
     fun findAllByUuidClassroomStudentIn(classroomStudents: List<UUID>): List<StudentSubject>
 

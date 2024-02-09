@@ -136,6 +136,9 @@ class NoteServiceImpl(
     }
 
     override fun getMyNotes(teacher: UUID, request: ResourceRequest): NoteDto {
+        val user = userRepository.findById(teacher)
+        var periods = schoolPeriodRepository.findAllByUuidSchool(user.get().uuidSchool!!)
+
         val classroomStudents = classroomStudentRepository.findAllByUuidClassroom(request.classroom)
         val studentSubjects = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectAndPeriod(
             classroomStudents.mapNotNull { it.uuid },
@@ -146,7 +149,14 @@ class NoteServiceImpl(
             studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
 
+        val studentSubjectAll = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectAndPeriodIn(
+            classroomStudents.mapNotNull { it.uuid },
+            request.subject,
+            periods.mapNotNull { it.number }
+        )
+
         return NoteDto().apply {
+            this.judgments = studentSubjectAll.map { it.judgment }.filter { it != "" }.distinct()
             this.students = classroomStudents.map { cs ->
                 NoteStudentDto().apply {
                     val student = students.firstOrNull { it.uuid == cs.uuidStudent }

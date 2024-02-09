@@ -7,11 +7,12 @@ import com.osia.nota_maestro.dto.calendar.v1.CalendarTaskRequest
 import com.osia.nota_maestro.repository.calendar.CalendarRepository
 import com.osia.nota_maestro.repository.resource.ResourceRepository
 import com.osia.nota_maestro.service.calendarTask.CalendarTaskService
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 import java.util.UUID
@@ -115,5 +116,14 @@ class CalendarTaskServiceImpl(
     override fun submitTask(school: UUID, calendarTaskRequest: CalendarTaskRequest): CalendarTaskDto {
         calendarTaskRequest.uuidSchool = school
         return calendarMapper.toDto(calendarRepository.save(calendarMapper.toModel(calendarTaskRequest)))
+    }
+
+    override fun updateTask(school: UUID, uuid: UUID, calendarTaskRequest: CalendarTaskRequest): CalendarTaskDto {
+        calendarTaskRequest.uuidSchool = school
+        val calendarToUpdate = calendarRepository.findById(uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        calendarMapper.update(calendarTaskRequest, calendarToUpdate)
+        return calendarMapper.toDto(calendarRepository.save(calendarToUpdate))
     }
 }

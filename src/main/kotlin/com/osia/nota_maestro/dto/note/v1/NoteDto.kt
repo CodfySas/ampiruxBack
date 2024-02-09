@@ -11,4 +11,5 @@ class NoteDto : BaseDto() {
     var subject: UUID = UUID.randomUUID()
     var grade: UUID = UUID.randomUUID()
     var classroom: UUID = UUID.randomUUID()
+    var judgments: List<String>? = null
 }
