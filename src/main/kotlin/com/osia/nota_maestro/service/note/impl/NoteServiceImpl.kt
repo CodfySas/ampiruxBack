@@ -86,7 +86,7 @@ class NoteServiceImpl(
         if (teacherFound.role != "teacher") {
             classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         }
-        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }.distinct())
+        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }.distinct()).sortedBy { it.ordered }
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
         var periods = grades.firstOrNull()?.uuidSchool?.let {
             schoolPeriodRepository.findAllByUuidSchoolAndActualYear(
