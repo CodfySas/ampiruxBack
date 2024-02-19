@@ -30,4 +30,5 @@ interface DirectorService {
 
     fun getMyGroups(uuid: UUID, school: UUID): List<DirectorCompleteDto>
     fun getByClassroom(uuid: UUID, period: Int): List<DirectorStudentDto>
+    fun submit(uuid: UUID, period: Int, req: List<DirectorStudentDto>): List<DirectorStudentDto>
 }

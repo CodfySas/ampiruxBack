@@ -6,6 +6,7 @@ import com.osia.nota_maestro.dto.director.v1.DirectorDto
 import com.osia.nota_maestro.dto.director.v1.DirectorMapper
 import com.osia.nota_maestro.dto.director.v1.DirectorRequest
 import com.osia.nota_maestro.dto.directorStudent.v1.DirectorStudentDto
+import com.osia.nota_maestro.dto.directorStudent.v1.DirectorStudentRequest
 import com.osia.nota_maestro.dto.directorStudent.v1.DirectorStudentSubjectDto
 import com.osia.nota_maestro.model.Director
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
@@ -17,6 +18,7 @@ import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.director.DirectorService
+import com.osia.nota_maestro.service.directorStudent.DirectorStudentService
 import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
@@ -44,6 +46,7 @@ class DirectorServiceImpl(
     private val studentSubjectRepository: StudentSubjectRepository,
     private val subjectRepository: SubjectRepository,
     private val userRepository: UserRepository,
+    private val directorStudentService: DirectorStudentService
 ) : DirectorService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -223,6 +226,7 @@ class DirectorServiceImpl(
                 this.name = myUser?.name
                 this.lastname = myUser?.lastname
                 this.period = period
+                this.uuidClassroomStudent = cs.uuid
                 this.uuidStudent = cs.uuidStudent
                 this.studentSubjects = studentSubjectsInPeriod.filter { ss-> ss.uuidClassroomStudent == cs.uuid }.map{ ss-> DirectorStudentSubjectDto().apply {
                     val subjectFound = subjects.firstOrNull { s-> s.uuid == ss.uuidSubject }
@@ -234,6 +238,36 @@ class DirectorServiceImpl(
                 } }
             }
         }
+    }
+
+    override fun submit(uuid: UUID, period: Int, req: List<DirectorStudentDto>): List<DirectorStudentDto> {
+        val toSave = mutableListOf<DirectorStudentRequest>()
+        val toUpdate = mutableListOf<DirectorStudentDto>()
+        req.forEach {
+            if(it.uuid == null){
+                toSave.add(DirectorStudentRequest().apply {
+                    this.uuidClassroomStudent = it.uuidClassroomStudent
+                    this.description = it.description ?: ""
+                    this.period = period
+                    this.uuidStudent = it.uuidStudent
+                })
+            }else{
+                toUpdate.add(DirectorStudentDto().apply {
+                    this.uuidClassroomStudent = it.uuidClassroomStudent
+                    this.description = it.description
+                    this.period = period
+                    this.uuidStudent = it.uuidStudent
+                    this.uuid = it.uuid
+                })
+            }
+        }
+        if(toSave.isNotEmpty()){
+            directorStudentService.saveMultiple(toSave)
+        }
+        if(toUpdate.isNotEmpty()){
+            directorStudentService.updateMultiple(toUpdate)
+        }
+        return req
     }
 
 }

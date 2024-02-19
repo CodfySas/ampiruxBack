@@ -24,5 +24,5 @@ data class DirectorStudent(
     var uuidClassroomStudent: UUID? = null,
     var uuidStudent: UUID? = null,
     var period: Int? = null,
-    var description: Int? = null
+    var description: String? = null
 ) : BaseModel()

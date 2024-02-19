@@ -58,6 +58,11 @@ class DirectorController(
         return directorService.getByClassroom(classroom, period)
     }
 
+    @PostMapping("/detail/{classroom}/{period}")
+    fun submit(@PathVariable classroom: UUID, @PathVariable period: Int, @RequestBody req: List<DirectorStudentDto>): List<DirectorStudentDto>{
+        return directorService.submit(classroom, period, req)
+    }
+
     @GetMapping("/filter/{where}")
     fun findAllByFilter(pageable: Pageable, @PathVariable where: String, @RequestHeader school: UUID): Page<DirectorDto> {
         return directorService.findAllByFilter(pageable, where, school)
