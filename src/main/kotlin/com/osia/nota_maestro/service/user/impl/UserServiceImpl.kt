@@ -257,7 +257,8 @@ class UserServiceImpl(
         user: User,
     ) {
         if (role == "teacher") {
-            saveSubModuleUsers(user.uuid!!, listOf("Notas", "Archivo De Notas", "Asistencias", "Aula y Recursos", "Recuperaciones", "Malla curricular", "Evaluaciones", "Biblioteca"))
+            saveSubModuleUsers(user.uuid!!, listOf("Notas", "Archivo De Notas", "Asistencias", "Aula y Recursos", "Recuperaciones", "Malla curricular", "Evaluaciones", "Biblioteca",
+                "Mi Grupo"))
         }
         if (role == "student") {
             saveSubModuleUsers(user.uuid!!, listOf("Boletin","Biblioteca"))
@@ -265,7 +266,7 @@ class UserServiceImpl(
         if (role == "admin") {
             saveSubModuleUsers(user.uuid!!, listOf("Usuarios", "Administradores", "Estudiantes",
                 "Docentes", "Cursos", "Asignaturas", "Asignar Docentes", "Archivo De Notas",
-                "Aula y Recursos", "Documentacion", "Boletines", "Biblioteca"))
+                "Aula y Recursos", "Documentacion", "Boletines", "Biblioteca", "Directores grupo", "Planificacion", "Horarios"))
         }
     }
 
