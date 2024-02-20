@@ -193,6 +193,7 @@ class NoteServiceImpl(
     override fun getMyNotesArchive(teacher: UUID, year: Int, type: String, request: ResourceRequest): NoteDto {
         val my = userRepository.findById(teacher)
         val schoolFound = schoolService.getById(my.get().uuidSchool!!)
+        val schoolPeriods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(schoolFound.uuid!!, schoolFound.actualYear!!)
         val classroomStudents = classroomStudentRepository.findAllByUuidClassroom(request.classroom)
         val students0 = studentSubjectRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
         val classroom = classroomRepository.findById(request.classroom)
@@ -270,14 +271,15 @@ class NoteServiceImpl(
                         val ssp = ss.filter { it.period != 0 }.sortedBy { it.period }
                         this.def = (ss0?.def?.toString()?.replace(".", ",") ?: "")
                         this.recovery = (ss0?.recovery?.toString()?.replace(".", ",") ?: "")
-                        this.periods = ssp.map { p ->
+                        this.periods = schoolPeriods.map { sp ->
+                            val fss = ssp.firstOrNull{ sspf-> sspf.period == sp.number }
                             NotePeriodDto().apply {
-                                this.number = p.period
-                                this.def = (p.def?.toString()?.replace(".", ",") ?: "")
-                                this.recovery = (p.recovery?.toString()?.replace(".", ",") ?: "")
+                                this.number = sp.number
+                                this.def = (fss?.def?.toString()?.replace(".", ",") ?: "")
+                                this.recovery = (fss?.recovery?.toString()?.replace(".", ",") ?: "")
                                 val myNotes = allNotes.filter { n ->
-                                    n.period == p.period && n.uuidClassroomStudent == cs.uuid &&
-                                        n.uuidSubject == request.subject
+                                    n.period == fss?.period && n.uuidClassroomStudent == cs.uuid &&
+                                            n.uuidSubject == request.subject
                                 }
                                 this.notes = myNotes.map { n ->
                                     NoteDetailsDto().apply {
@@ -286,7 +288,7 @@ class NoteServiceImpl(
                                         this.name = n.noteName
                                     }
                                 }
-                                this.judgment = p.judgment
+                                this.judgment = fss?.judgment
                             }
                         }
                     }
