@@ -5,6 +5,7 @@ import java.util.UUID
 
 class ReportStudentNote : BaseDto() {
     var report: List<NoteSubjectsDto>? = mutableListOf()
+    var observations: List<ObservationPeriodDto> = mutableListOf()
     var name: String? = null
     var lastname: String? = null
 }

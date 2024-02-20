@@ -29,4 +29,8 @@ interface DirectorStudentRepository :
     fun deleteByUuids(uuids: List<UUID>)
 
     fun getAllByUuidClassroomStudentInAndPeriod(uuids: List<UUID>, period: Int): List<DirectorStudent>
+
+    fun getAllByUuidClassroomStudent(uuid: UUID): List<DirectorStudent>
+
+    fun getAllByUuidClassroomStudentIn(uuids: List<UUID>): List<DirectorStudent>
 }

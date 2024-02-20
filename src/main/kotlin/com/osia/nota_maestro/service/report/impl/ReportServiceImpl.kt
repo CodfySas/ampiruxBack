@@ -2,9 +2,11 @@ package com.osia.nota_maestro.service.report.impl
 
 import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
+import com.osia.nota_maestro.dto.note.v1.ObservationPeriodDto
 import com.osia.nota_maestro.dto.note.v1.ReportStudentNote
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
+import com.osia.nota_maestro.repository.directorStudent.DirectorStudentRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
@@ -29,6 +31,7 @@ class ReportServiceImpl(
     private val schoolPeriodRepository: SchoolPeriodRepository,
     private val schoolService: SchoolService,
     private val studentSubjectRepository: StudentSubjectRepository,
+    private val directorStudentRepository: DirectorStudentRepository
 ) : ReportService {
 
     override fun getByMultipleStudent(list: List<UUID>): List<ReportStudentNote> {
@@ -62,7 +65,10 @@ class ReportServiceImpl(
                 .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
 
+        val directorStudents = directorStudentRepository.getAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
+
         classroomStudents.forEach { cs->
+            val myDirectorStudent = directorStudents.filter { ds-> ds.uuidClassroomStudent == cs.uuid }
             val user = students.firstOrNull { s-> s.uuid == cs.uuidStudent }
             reportStudent.add(ReportStudentNote().apply {
                 this.name = user?.name
@@ -142,12 +148,16 @@ class ReportServiceImpl(
                     )
                 }
                 this.report = myNotes
+                this.observations = myDirectorStudent.map { ds-> ObservationPeriodDto().apply {
+                    this.period = ds.period
+                    this.description = ds.description ?: ""
+                } }
             })
         }
         return reportStudent
     }
 
-    override fun getByStudent(student: UUID): List<NoteSubjectsDto> {
+    override fun getByStudent(student: UUID): ReportStudentNote {
         val studentFound = userRepository.findById(student).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -172,6 +182,7 @@ class ReportServiceImpl(
             myClassStudentActual?.uuid!!,
             gradeSubjects.mapNotNull { it.uuidSubject }
         )
+        val myDirectorStudent = directorStudentRepository.getAllByUuidClassroomStudent(myClassStudentActual.uuid!!)
         val myNotes = mutableListOf<NoteSubjectsDto>()
         val periods = subjectsParents.firstOrNull()?.uuidSchool?.let { s ->
             schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, schoolFound.actualYear!!)
@@ -250,7 +261,15 @@ class ReportServiceImpl(
                 }
             )
         }
-        return myNotes
+        return ReportStudentNote().apply {
+            this.report = myNotes
+            this.observations = myDirectorStudent.map { d -> ObservationPeriodDto().apply {
+                this.period = d.period
+                this.description = d.description ?: ""
+            } }
+            this.name = ""
+            this.lastname = ""
+        }
     }
 
     fun getBasic(number: Double, superior: Double, alto: Double, basic: Double): String {

@@ -22,7 +22,7 @@ class ReportController(
     private val reportService: ReportService,
 ) {
     @GetMapping("/student/{uuid}")
-    fun getByStudent(@PathVariable uuid: UUID): ResponseEntity<List<NoteSubjectsDto>> {
+    fun getByStudent(@PathVariable uuid: UUID): ResponseEntity<ReportStudentNote> {
         return ResponseEntity.ok().body(reportService.getByStudent(uuid))
     }
 
