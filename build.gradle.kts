@@ -57,6 +57,8 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
     testImplementation("com.github.tomakehurst:wiremock-jre8:2.25.1")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("com.github.javafaker:javafaker:1.0.2") {
