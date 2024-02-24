@@ -6,5 +6,4 @@ import java.util.UUID
 class ClassroomStudentDto : BaseDto() {
     var uuidStudent: UUID? = null
     var uuidClassroom: UUID? = null
-    var prom: Double? = null
 }

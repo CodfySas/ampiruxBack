@@ -10,7 +10,7 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "classroom_students",
+    name = "classroom_s.tudents",
 )
 @Entity
 @DynamicUpdate
@@ -22,6 +22,5 @@ import javax.persistence.Table
 @Where(clause = "deleted = false")
 data class ClassroomStudent(
     var uuidStudent: UUID? = null,
-    var uuidClassroom: UUID? = null,
-    var prom: Double? = null
+    var uuidClassroom: UUID? = null
 ) : BaseModel()
