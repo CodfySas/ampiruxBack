@@ -14,7 +14,7 @@ CREATE TABLE if not exists classrooms
     CONSTRAINT classrooms_pkey PRIMARY KEY (uuid)
 );
 
-CREATE TABLE if not exists classrooms
+CREATE TABLE if not exists classroom_students
 (
     uuid             uuid         NOT NULL,
     code             varchar(255) NULL,
