@@ -1,6 +1,8 @@
 package com.osia.nota_maestro.service.auth.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.classroom.v1.ClassroomDto
+import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.schoolPeriod.v1.SchoolPeriodMapper
 import com.osia.nota_maestro.dto.user.v1.UserDto
 import com.osia.nota_maestro.dto.user.v1.UserMapper
@@ -57,9 +59,13 @@ class AuthServiceImpl(
         }
         val periodList = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school.uuid!!, school.actualYear!!)
 
-        val cs = classroomStudentRepository.findAllByUuidStudent(userFound.uuid!!)
-        val classrooms = classroomService.findByMultiple(cs.mapNotNull { it.uuidClassroom }.distinct())
-        val grades = gradeService.findByMultiple(classrooms.mapNotNull { it.uuidGrade }.distinct())
+        var grades = mutableListOf<GradeDto>()
+        var classrooms = mutableListOf<ClassroomDto>()
+        if(userFound.role == "student"){
+            val cs = classroomStudentRepository.findAllByUuidStudent(userFound.uuid!!)
+            classrooms = classroomService.findByMultiple(cs.mapNotNull { it.uuidClassroom }.distinct()).toMutableList()
+            grades = gradeService.findByMultiple(classrooms.mapNotNull { it.uuidGrade }.distinct()).toMutableList()
+        }
 
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
