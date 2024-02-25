@@ -1,6 +1,6 @@
 package com.osia.nota_maestro.controller.schedule.v1
 
-/*import com.osia.nota_maestro.dto.OnCreate
+import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleDto
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleMapper
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleRequest
@@ -8,7 +8,7 @@ import com.osia.nota_maestro.service.schedule.ScheduleService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity*/
+import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -26,12 +26,12 @@ import java.util.UUID
 @CrossOrigin
 @RequestMapping("v1/schedules")
 @Validated
-class ScheduleController(/*
+class ScheduleController(
     private val scheduleService: ScheduleService,
-    private val scheduleMapper: ScheduleMapper*/
+    private val scheduleMapper: ScheduleMapper
 ) {
     // Read
-   /* @GetMapping
+    @GetMapping
     fun findAll(pageable: Pageable, @RequestHeader school: UUID): Page<ScheduleDto> {
         return scheduleService.findAll(pageable, school)
     }
@@ -102,5 +102,10 @@ class ScheduleController(/*
     ): ResponseEntity<HttpStatus> {
         scheduleService.deleteMultiple(uuidList)
         return ResponseEntity(HttpStatus.OK)
-    }*/
+    }
+
+    @GetMapping("/complete/{classroom}")
+    fun getComplete(@PathVariable classroom: UUID, @RequestHeader school: UUID): List<List<ScheduleDto>> {
+        return scheduleService.getCompleteSchedule(school, classroom)
+    }
 }

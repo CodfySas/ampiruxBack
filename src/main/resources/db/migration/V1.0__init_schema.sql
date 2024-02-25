@@ -72,7 +72,7 @@ CREATE TABLE if not exists sub_modules
     deleted          bool         NULL DEFAULT false,
     name             varchar(255) NULL,
     route_name       varchar(255) NULL,
-    uuid_module      uuid         NOT NULL,
+    uuid_module      uuid         NULL,
     ordered            int8         NULL,
     CONSTRAINT sub_modules_pkey PRIMARY KEY (uuid)
 );
