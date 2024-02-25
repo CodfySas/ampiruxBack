@@ -10,7 +10,7 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "classroom_s.tudents",
+    name = "classroom_students",
 )
 @Entity
 @DynamicUpdate
