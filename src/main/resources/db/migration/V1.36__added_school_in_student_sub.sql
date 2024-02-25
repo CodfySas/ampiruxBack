@@ -1,0 +1,1 @@
+ALTER TABLE public.student_subjects ADD if not exists uuid_school uuiddd NULL ;
