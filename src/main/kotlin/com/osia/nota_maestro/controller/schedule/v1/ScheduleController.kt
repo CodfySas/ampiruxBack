@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.controller.schedule.v1
 
 import com.osia.nota_maestro.dto.OnCreate
+import com.osia.nota_maestro.dto.schedule.v1.ScheduleComplete
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleDto
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleMapper
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleRequest
@@ -105,7 +106,7 @@ class ScheduleController(
     }
 
     @GetMapping("/complete/{classroom}")
-    fun getComplete(@PathVariable classroom: UUID, @RequestHeader school: UUID): List<List<ScheduleDto>> {
+    fun getComplete(@PathVariable classroom: UUID, @RequestHeader school: UUID): ScheduleComplete {
         return scheduleService.getCompleteSchedule(school, classroom)
     }
 }

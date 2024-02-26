@@ -1,5 +1,6 @@
 package com.osia.nota_maestro.service.schedule
 
+import com.osia.nota_maestro.dto.schedule.v1.ScheduleComplete
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleDto
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleRequest
 import com.osia.nota_maestro.model.Schedule
@@ -24,5 +25,5 @@ interface ScheduleService {
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
 
-    fun getCompleteSchedule(school: UUID, classroom: UUID): List<List<ScheduleDto>>
+    fun getCompleteSchedule(school: UUID, classroom: UUID): ScheduleComplete
 }

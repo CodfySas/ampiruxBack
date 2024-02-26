@@ -1,10 +1,14 @@
 package com.osia.nota_maestro.service.schedule.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.schedule.v1.ScheduleComplete
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleDto
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleMapper
+import com.osia.nota_maestro.dto.schedule.v1.SchedulePerHourDto
 import com.osia.nota_maestro.dto.schedule.v1.ScheduleRequest
 import com.osia.nota_maestro.model.Schedule
+import com.osia.nota_maestro.repository.classroom.ClassroomRepository
+import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.schedule.ScheduleRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
@@ -28,7 +32,9 @@ class ScheduleServiceImpl(
     private val scheduleMapper: ScheduleMapper,
     private val objectMapper: ObjectMapper,
     private val subjectRepository: SubjectRepository,
-    private val gradeSubjectRepository: GradeSubjectRepository
+    private val gradeSubjectRepository: GradeSubjectRepository,
+    private val gradeRepository: GradeRepository,
+    private val classroomRepository: ClassroomRepository
 ) : ScheduleService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -120,23 +126,37 @@ class ScheduleServiceImpl(
         scheduleRepository.saveAll(schedules)
     }
 
-    override fun getCompleteSchedule(school: UUID, classroom: UUID): List<List<ScheduleDto>> {
+    override fun getCompleteSchedule(school: UUID, classroom: UUID): ScheduleComplete {
         log.trace("schedule getCompleteSchedule -> uuid: $school")
+        val classR = classroomRepository.findById(classroom).
+        orElseThrow{ throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found") }
+        val grade = gradeRepository.findById(classR.uuidGrade!!).
+        orElseThrow{ throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found") }
+
         val schedules = scheduleRepository.findAllByUuidSchoolAndUuidClassroom(school, classroom)
         val gradeSubjects = gradeSubjectRepository.findAllById(schedules.mapNotNull { it.uuidGradeSubject })
         val subjects = subjectRepository.findAllById(gradeSubjects.mapNotNull { it.uuidSubject })
-        val group = schedules.sortedBy { it.dayOfWeek }.groupBy { it.dayOfWeek }
-        val finalList = mutableListOf<List<ScheduleDto>>()
-        group.forEach{ (k,v)->
-            val newList = v.map(scheduleMapper::toDto)
-            newList.forEach {
-                val gs = gradeSubjects.firstOrNull { g-> g.uuid == it.uuidGradeSubject }
-                val sx = subjects.firstOrNull { s-> s.uuid == gs?.uuidSubject }
-                it.uuidSubject = sx?.uuid
-                it.subjectName = sx?.name
-            }
-            finalList.add(newList)
+        val group = schedules.sortedBy { it.dayOfWeek }.groupBy { it.init }
+        return ScheduleComplete().apply {
+            this.duration = grade.duration
+            this.hourFinish = grade.hourFinish
+            this.hourInit = grade.hourInit
+            this.recessInit = grade.recessInit
+            this.recessFinish = grade.recessFinish
+            this.recessaInit = grade.recessaInit
+            this.recessaFinish = grade.recessaFinish
+            this.recess = grade.recess
+            this.hours = group.map { (k, gr)-> SchedulePerHourDto().apply {
+                this.schedules = gr.map(scheduleMapper::toDto)
+                this.schedules?.forEach {
+                    val gs = gradeSubjects.firstOrNull { g-> g.uuid == it.uuidGradeSubject }
+                    val sx = subjects.firstOrNull { s-> s.uuid == gs?.uuidSubject }
+                    it.uuidSubject = sx?.uuid
+                    it.subjectName = sx?.name
+                }
+                this.init = gr.firstOrNull()?.init
+                this.finish = gr.firstOrNull()?.finish
+            } }
         }
-        return finalList
     }
 }

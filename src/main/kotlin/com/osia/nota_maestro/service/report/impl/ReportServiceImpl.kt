@@ -296,7 +296,7 @@ class ReportServiceImpl(
         return when (basic) {
             "Superior" -> { "green" }
             "Bajo" -> { "red" }
-            else -> { "white" }
+            else -> { "" }
         }
     }
 }
