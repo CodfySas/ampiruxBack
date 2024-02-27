@@ -44,7 +44,7 @@ class NotificationServiceImpl(
 
     @Transactional(readOnly = true)
     override fun getByUser(uuid: UUID): List<NotificationDto> {
-        return notificationRepository.findAllByUuidUser(uuid).map(notificationMapper::toDto)
+        return notificationRepository.findAllByUuidUser(uuid).map(notificationMapper::toDto).sortedByDescending { it.datetime }
     }
 
     @Transactional(readOnly = true)
@@ -69,6 +69,7 @@ class NotificationServiceImpl(
     override fun save(notificationRequest: NotificationRequest, replace: Boolean): NotificationDto {
         log.trace("notification save -> request: $notificationRequest")
         val savedNotification = notificationMapper.toModel(notificationRequest)
+        savedNotification.datetime = LocalDateTime.now()
         return notificationMapper.toDto(notificationRepository.save(savedNotification))
     }
 
