@@ -8,7 +8,7 @@ class NotificationDto : BaseDto() {
     var uuidUser: UUID? = null
     var description: String? = null
     var urlLink: String? = null
-    var uuidSchool: String? = null
+    var uuidSchool: UUID? = null
     var viewed: Boolean? = false
     var datetime: LocalDateTime? = null
     var type: String? = null
