@@ -105,17 +105,17 @@ class CertificateController(
     }
 
     @GetMapping("/my/{user}")
-    fun getMy(@PathVariable user: UUID): ResponseEntity<List<CertificateDto>>{
+    fun getMy(@PathVariable user: UUID): ResponseEntity<List<CertificateDto>> {
         return ResponseEntity.ok(certificateService.getMy(user))
     }
 
     @GetMapping("/requested")
-    fun getRequested(@RequestHeader school: UUID): ResponseEntity<List<CertificateDto>>{
+    fun getRequested(@RequestHeader school: UUID): ResponseEntity<List<CertificateDto>> {
         return ResponseEntity.ok(certificateService.getRequested(school))
     }
 
     @PostMapping("/request/{type}/{user}")
-    fun requestCertificate(@PathVariable type: String, @PathVariable user: UUID, @RequestHeader school: UUID): ResponseEntity<CertificateDto>{
+    fun requestCertificate(@PathVariable type: String, @PathVariable user: UUID, @RequestHeader school: UUID): ResponseEntity<CertificateDto> {
         return ResponseEntity.ok(certificateService.request(type, user, school))
     }
 }

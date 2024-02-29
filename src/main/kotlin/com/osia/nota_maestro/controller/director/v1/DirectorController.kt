@@ -49,17 +49,17 @@ class DirectorController(
     }
 
     @GetMapping("/my/{user}")
-    fun getMyGroups(@PathVariable user: UUID, @RequestHeader school: UUID): List<DirectorCompleteDto>{
+    fun getMyGroups(@PathVariable user: UUID, @RequestHeader school: UUID): List<DirectorCompleteDto> {
         return directorService.getMyGroups(user, school)
     }
 
     @GetMapping("/detail/{classroom}/{period}")
-    fun getStudentClassrooms(@PathVariable classroom: UUID, @PathVariable period: Int): List<DirectorStudentDto>{
+    fun getStudentClassrooms(@PathVariable classroom: UUID, @PathVariable period: Int): List<DirectorStudentDto> {
         return directorService.getByClassroom(classroom, period)
     }
 
     @PostMapping("/detail/{classroom}/{period}")
-    fun submit(@PathVariable classroom: UUID, @PathVariable period: Int, @RequestBody req: List<DirectorStudentDto>): List<DirectorStudentDto>{
+    fun submit(@PathVariable classroom: UUID, @PathVariable period: Int, @RequestBody req: List<DirectorStudentDto>): List<DirectorStudentDto> {
         return directorService.submit(classroom, period, req)
     }
 

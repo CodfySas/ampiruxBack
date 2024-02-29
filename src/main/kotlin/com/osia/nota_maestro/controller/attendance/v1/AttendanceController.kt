@@ -112,7 +112,7 @@ class AttendanceController(
         @PathVariable subject: UUID,
         @PathVariable month: Int,
         @RequestHeader school: UUID
-    ): ResponseEntity<List<AttendanceCompleteDto>>{
+    ): ResponseEntity<List<AttendanceCompleteDto>> {
         return ResponseEntity.ok().body(attendanceService.getComplete(classroom, subject, month, school))
     }
 
@@ -123,12 +123,12 @@ class AttendanceController(
         @PathVariable month: Int,
         @RequestHeader school: UUID,
         @RequestBody req: List<AttendanceCompleteDto>
-    ): ResponseEntity<List<AttendanceCompleteDto>>{
+    ): ResponseEntity<List<AttendanceCompleteDto>> {
         return ResponseEntity.ok().body(attendanceService.submit(classroom, subject, month, school, req))
     }
 
     @GetMapping("/resources/{uuid}")
-    fun getResources(@PathVariable uuid: UUID): List<ResourceGradeDto>{
+    fun getResources(@PathVariable uuid: UUID): List<ResourceGradeDto> {
         return attendanceService.getResources(uuid)
     }
 }

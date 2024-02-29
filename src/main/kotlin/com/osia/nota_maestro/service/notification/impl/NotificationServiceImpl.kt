@@ -66,10 +66,11 @@ class NotificationServiceImpl(
     }
 
     @Transactional
-    override fun save(notificationRequest: NotificationRequest, replace: Boolean): NotificationDto {
+    override fun save(notificationRequest: NotificationRequest, school: UUID, replace: Boolean): NotificationDto {
         log.trace("notification save -> request: $notificationRequest")
         val savedNotification = notificationMapper.toModel(notificationRequest)
         savedNotification.datetime = LocalDateTime.now()
+        savedNotification.uuidSchool = school
         return notificationMapper.toDto(notificationRepository.save(savedNotification))
     }
 

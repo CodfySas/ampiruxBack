@@ -16,7 +16,7 @@ interface NotificationService {
     fun findAll(pageable: Pageable, school: UUID): Page<NotificationDto>
     fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<NotificationDto>
     // Create
-    fun save(notificationRequest: NotificationRequest, replace: Boolean = false): NotificationDto
+    fun save(notificationRequest: NotificationRequest,school: UUID,  replace: Boolean = false): NotificationDto
     fun saveMultiple(notificationRequestList: List<NotificationRequest>): List<NotificationDto>
     // Update
     fun update(uuid: UUID, notificationRequest: NotificationRequest, includeDelete: Boolean = false): NotificationDto
