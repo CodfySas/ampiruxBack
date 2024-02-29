@@ -64,9 +64,9 @@ class NotificationController(
     // Create
     @PostMapping
     fun save(
-        @Validated(OnCreate::class) @RequestBody request: NotificationRequest
+        @Validated(OnCreate::class) @RequestBody request: NotificationRequest, @RequestHeader school: UUID
     ): ResponseEntity<NotificationDto> {
-        return ResponseEntity(notificationService.save(request), HttpStatus.CREATED)
+        return ResponseEntity(notificationService.save(request, school), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
