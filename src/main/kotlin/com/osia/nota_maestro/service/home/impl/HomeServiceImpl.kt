@@ -146,7 +146,7 @@ class HomeServiceImpl(
             )
         }
 
-        val users = userRepository.findAll()
+        val users = userRepository.findAll().filter { it.uuidSchool == school }
         val chartDto = mutableListOf<ChartDto>()
         val grades = gradeRepository.findAllById(users.mapNotNull { it.actualGrade }.distinct())
 
