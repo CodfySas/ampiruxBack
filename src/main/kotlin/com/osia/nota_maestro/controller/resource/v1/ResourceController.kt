@@ -59,7 +59,8 @@ class ResourceController(
     // Create
     @PostMapping
     fun save(
-        @Validated(OnCreate::class) @RequestBody request: ResourceRequest, @RequestHeader school: UUID
+        @Validated(OnCreate::class) @RequestBody request: ResourceRequest,
+        @RequestHeader school: UUID
     ): ResponseEntity<ResourceDto> {
         return ResponseEntity(resourceService.save(request, school), HttpStatus.CREATED)
     }

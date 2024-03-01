@@ -6,14 +6,12 @@ import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Table
-import javax.validation.constraints.NotNull
 
 @Table(
     name = "calendar_tasks",

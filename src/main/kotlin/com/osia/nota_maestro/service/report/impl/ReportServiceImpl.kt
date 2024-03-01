@@ -37,7 +37,7 @@ class ReportServiceImpl(
     override fun getByMultipleStudent(list: List<UUID>): List<ReportStudentNote> {
         val classroomStudents = classroomStudentRepository.findAllById(list)
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
-        if(students.isEmpty()){
+        if (students.isEmpty()) {
             return emptyList()
         }
         val schoolFound = schoolService.getById(students.firstOrNull()?.uuidSchool!!)
@@ -67,92 +67,96 @@ class ReportServiceImpl(
 
         val directorStudents = directorStudentRepository.getAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
 
-        classroomStudents.forEach { cs->
-            val myDirectorStudent = directorStudents.filter { ds-> ds.uuidClassroomStudent == cs.uuid }
-            val user = students.firstOrNull { s-> s.uuid == cs.uuidStudent }
-            reportStudent.add(ReportStudentNote().apply {
-                this.name = user?.name
-                this.lastname = user?.lastname
-                val myNotes = mutableListOf<NoteSubjectsDto>()
-                subjectsParents.forEach {
-                    val myNotePeriods = mutableListOf<NotePeriodDto>()
-                    var recoveryF: Double? = null
-                    var defF: String = ""
-                    val studentSubject0Found = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == it.uuid && ss.period == 0 }
-                    if (studentSubject0Found?.def != null) {
-                        defF = (studentSubject0Found.def?.toString()?.replace(".", ",") ?: "")
-                    }
-                    if (studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
-                        recoveryF = studentSubject0Found.recovery
-                    }
-                    periods.sortedBy { it.number }.forEach { p ->
-                        val ssP = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == it.uuid && ss.period == p.number }
-                        myNotePeriods.add(
-                            NotePeriodDto().apply {
-                                this.number = p.number
-                                this.defi = (ssP?.def)
-                                this.def = (ssP?.def.toString().replace(".", ","))
-                                this.basic = (ssP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
-                                this.color = getColor(this.basic)
-                            }
-                        )
-                    }
-
-                    val children = mutableListOf<NoteSubjectsDto>()
-                    val myChildren = subjectsChildren.filter { sc -> sc.uuidParent == it.uuid }
-                    if (myChildren.isNotEmpty()) {
-                        myChildren.forEach { ch ->
-                            val myChPeriods = mutableListOf<NotePeriodDto>()
-                            var recoveryCh: Double? = null
-                            var defCh: String = ""
-                            val studentSubjectCh0Found = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == ch.uuid && ss.period == 0 }
-                            if (studentSubjectCh0Found?.def != null) {
-                                defCh = (studentSubjectCh0Found.def?.toString()?.replace(".", ",") ?: "")
-                            }
-                            if (studentSubjectCh0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
-                                recoveryCh = studentSubjectCh0Found.recovery
-                            }
-                            periods.sortedBy { it.number }.forEach { p ->
-                                val ssChP = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == ch.uuid && ss.period == p.number }
-                                myChPeriods.add(
-                                    NotePeriodDto().apply {
-                                        this.number = p.number
-                                        this.def = ((ssChP?.def?.toString()?.replace(".", ",")) ?: "")
-                                        this.basic = (ssChP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
-                                        this.color = getColor(this.basic)
-                                    }
-                                )
-                            }
-                            children.add(
-                                NoteSubjectsDto().apply {
-                                    this.name = ch.name
-                                    this.def = defCh
-                                    this.periods = myChPeriods
-                                    this.recovery = recoveryCh.toString()
-                                    this.basic = (studentSubjectCh0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
+        classroomStudents.forEach { cs ->
+            val myDirectorStudent = directorStudents.filter { ds -> ds.uuidClassroomStudent == cs.uuid }
+            val user = students.firstOrNull { s -> s.uuid == cs.uuidStudent }
+            reportStudent.add(
+                ReportStudentNote().apply {
+                    this.name = user?.name
+                    this.lastname = user?.lastname
+                    val myNotes = mutableListOf<NoteSubjectsDto>()
+                    subjectsParents.forEach {
+                        val myNotePeriods = mutableListOf<NotePeriodDto>()
+                        var recoveryF: Double? = null
+                        var defF: String = ""
+                        val studentSubject0Found = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == it.uuid && ss.period == 0 }
+                        if (studentSubject0Found?.def != null) {
+                            defF = (studentSubject0Found.def?.toString()?.replace(".", ",") ?: "")
+                        }
+                        if (studentSubject0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
+                            recoveryF = studentSubject0Found.recovery
+                        }
+                        periods.sortedBy { it.number }.forEach { p ->
+                            val ssP = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == it.uuid && ss.period == p.number }
+                            myNotePeriods.add(
+                                NotePeriodDto().apply {
+                                    this.number = p.number
+                                    this.defi = (ssP?.def)
+                                    this.def = (ssP?.def.toString().replace(".", ","))
+                                    this.basic = (ssP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                     this.color = getColor(this.basic)
                                 }
                             )
                         }
-                    }
-                    myNotes.add(
-                        NoteSubjectsDto().apply {
-                            this.name = it.name
-                            this.def = defF
-                            this.children = children
-                            this.periods = myNotePeriods
-                            this.recovery = recoveryF.toString()
-                            this.basic = (studentSubject0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
-                            this.color = getColor(this.basic)
+
+                        val children = mutableListOf<NoteSubjectsDto>()
+                        val myChildren = subjectsChildren.filter { sc -> sc.uuidParent == it.uuid }
+                        if (myChildren.isNotEmpty()) {
+                            myChildren.forEach { ch ->
+                                val myChPeriods = mutableListOf<NotePeriodDto>()
+                                var recoveryCh: Double? = null
+                                var defCh: String = ""
+                                val studentSubjectCh0Found = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == ch.uuid && ss.period == 0 }
+                                if (studentSubjectCh0Found?.def != null) {
+                                    defCh = (studentSubjectCh0Found.def?.toString()?.replace(".", ",") ?: "")
+                                }
+                                if (studentSubjectCh0Found?.recovery != null && schoolFound.recoveryType == "at_last") {
+                                    recoveryCh = studentSubjectCh0Found.recovery
+                                }
+                                periods.sortedBy { it.number }.forEach { p ->
+                                    val ssChP = studentSubject.firstOrNull { ss -> ss.uuidClassroomStudent == cs.uuid && ss.uuidSubject == ch.uuid && ss.period == p.number }
+                                    myChPeriods.add(
+                                        NotePeriodDto().apply {
+                                            this.number = p.number
+                                            this.def = ((ssChP?.def?.toString()?.replace(".", ",")) ?: "")
+                                            this.basic = (ssChP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
+                                            this.color = getColor(this.basic)
+                                        }
+                                    )
+                                }
+                                children.add(
+                                    NoteSubjectsDto().apply {
+                                        this.name = ch.name
+                                        this.def = defCh
+                                        this.periods = myChPeriods
+                                        this.recovery = recoveryCh.toString()
+                                        this.basic = (studentSubjectCh0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
+                                        this.color = getColor(this.basic)
+                                    }
+                                )
+                            }
                         }
-                    )
+                        myNotes.add(
+                            NoteSubjectsDto().apply {
+                                this.name = it.name
+                                this.def = defF
+                                this.children = children
+                                this.periods = myNotePeriods
+                                this.recovery = recoveryF.toString()
+                                this.basic = (studentSubject0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
+                                this.color = getColor(this.basic)
+                            }
+                        )
+                    }
+                    this.report = myNotes
+                    this.observations = myDirectorStudent.map { ds ->
+                        ObservationPeriodDto().apply {
+                            this.period = ds.period
+                            this.description = ds.description ?: ""
+                        }
+                    }
                 }
-                this.report = myNotes
-                this.observations = myDirectorStudent.map { ds-> ObservationPeriodDto().apply {
-                    this.period = ds.period
-                    this.description = ds.description ?: ""
-                } }
-            })
+            )
         }
         return reportStudent
     }
@@ -263,10 +267,12 @@ class ReportServiceImpl(
         }
         return ReportStudentNote().apply {
             this.report = myNotes
-            this.observations = myDirectorStudent.map { d -> ObservationPeriodDto().apply {
-                this.period = d.period
-                this.description = d.description ?: ""
-            } }
+            this.observations = myDirectorStudent.map { d ->
+                ObservationPeriodDto().apply {
+                    this.period = d.period
+                    this.description = d.description ?: ""
+                }
+            }
             this.name = ""
             this.lastname = ""
         }

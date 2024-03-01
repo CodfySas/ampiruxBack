@@ -54,8 +54,9 @@ class CalendarTaskServiceImpl(
         for (day in 1..maxDays) {
             val dayTasks = resourceTasks.filter { it.day?.dayOfMonth == day }.map(calendarMapper::toDto).sortedBy { it.hourInit }
             dayTasks.forEach {
-                it.name = resources.firstOrNull{
-                    resource -> resource.uuid == it.uuidResource
+                it.name = resources.firstOrNull {
+                    resource ->
+                    resource.uuid == it.uuidResource
                 }?.name
             }
             val actualDate = dateInit.plusDays((day - 1).toLong())

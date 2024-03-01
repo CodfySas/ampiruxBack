@@ -145,16 +145,18 @@ class DirectorServiceImpl(
         val directors = directorRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid }.distinct())
         val final = mutableListOf<DirectorCompleteDto>()
         grades.forEach {
-            val myClassrooms = classrooms.filter { c-> c.uuidGrade == it.uuid }
-            myClassrooms.forEach { c->
-                final.add(DirectorCompleteDto().apply {
-                    val directorFound = directors.firstOrNull { d-> d.uuidClassroom == c.uuid }
-                    this.classroomName = c.name
-                    this.gradeName = it.name
-                    this.uuidClassroom = c.uuid
-                    this.uuidTeacher = directorFound?.uuidTeacher
-                    this.uuid = directorFound?.uuid
-                })
+            val myClassrooms = classrooms.filter { c -> c.uuidGrade == it.uuid }
+            myClassrooms.forEach { c ->
+                final.add(
+                    DirectorCompleteDto().apply {
+                        val directorFound = directors.firstOrNull { d -> d.uuidClassroom == c.uuid }
+                        this.classroomName = c.name
+                        this.gradeName = it.name
+                        this.uuidClassroom = c.uuid
+                        this.uuidTeacher = directorFound?.uuidTeacher
+                        this.uuid = directorFound?.uuid
+                    }
+                )
             }
         }
         return final
@@ -165,21 +167,25 @@ class DirectorServiceImpl(
         val toCreate = mutableListOf<DirectorRequest>()
         val toDelete = mutableListOf<UUID>()
         complete.forEach {
-            if(it.uuid != null){
-                if(it.uuidTeacher == null){
+            if (it.uuid != null) {
+                if (it.uuidTeacher == null) {
                     toDelete.add(it.uuid!!)
-                }else {
-                    toUpdate.add(DirectorDto().apply {
-                        this.uuid = it.uuid
+                } else {
+                    toUpdate.add(
+                        DirectorDto().apply {
+                            this.uuid = it.uuid
+                            this.uuidTeacher = it.uuidTeacher
+                            this.uuidClassroom = it.uuidClassroom
+                        }
+                    )
+                }
+            } else {
+                toCreate.add(
+                    DirectorRequest().apply {
                         this.uuidTeacher = it.uuidTeacher
                         this.uuidClassroom = it.uuidClassroom
-                    })
-                }
-            }else{
-                toCreate.add(DirectorRequest().apply {
-                    this.uuidTeacher = it.uuidTeacher
-                    this.uuidClassroom = it.uuidClassroom
-                })
+                    }
+                )
             }
         }
         saveMultiple(toCreate)
@@ -192,20 +198,22 @@ class DirectorServiceImpl(
     override fun getMyGroups(uuid: UUID, school: UUID): List<DirectorCompleteDto> {
         val schoolFound = schoolService.getById(school)
         val directorsByTeacher = directorRepository.getAllByUuidTeacher(uuid)
-        val classrooms = classroomRepository.findAllById(directorsByTeacher.mapNotNull { it.uuidClassroom }).filter { c-> c.year == schoolFound.actualYear!! }
-        val directorsYear = directorsByTeacher.filter { d-> classrooms.mapNotNull { it.uuid }.contains(d.uuidClassroom) }
+        val classrooms = classroomRepository.findAllById(directorsByTeacher.mapNotNull { it.uuidClassroom }).filter { c -> c.year == schoolFound.actualYear!! }
+        val directorsYear = directorsByTeacher.filter { d -> classrooms.mapNotNull { it.uuid }.contains(d.uuidClassroom) }
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
 
         val final = mutableListOf<DirectorCompleteDto>()
         directorsYear.forEach {
-            final.add(DirectorCompleteDto().apply {
-                val classroomFound = classrooms.firstOrNull { c-> c.uuid == it.uuidClassroom }
-                this.uuid = it.uuid
-                this.uuidTeacher = uuid
-                this.uuidClassroom = classroomFound?.uuid
-                this.classroomName = classroomFound?.name
-                this.gradeName = grades.firstOrNull { g-> g.uuid == classroomFound?.uuidGrade }?.name
-            })
+            final.add(
+                DirectorCompleteDto().apply {
+                    val classroomFound = classrooms.firstOrNull { c -> c.uuid == it.uuidClassroom }
+                    this.uuid = it.uuid
+                    this.uuidTeacher = uuid
+                    this.uuidClassroom = classroomFound?.uuid
+                    this.classroomName = classroomFound?.name
+                    this.gradeName = grades.firstOrNull { g -> g.uuid == classroomFound?.uuidGrade }?.name
+                }
+            )
         }
         return final
     }
@@ -217,9 +225,9 @@ class DirectorServiceImpl(
         val users = userRepository.findAllById(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
         val subjects = subjectRepository.findAllById(studentSubjectsInPeriod.mapNotNull { it.uuidSubject }.distinct())
 
-        return classroomStudents.map { cs->
-            val myDirectorStudent = directorStudents.firstOrNull { d-> d.uuidClassroomStudent == cs.uuid }
-            val myUser = users.firstOrNull { u-> u.uuid == cs.uuidStudent }
+        return classroomStudents.map { cs ->
+            val myDirectorStudent = directorStudents.firstOrNull { d -> d.uuidClassroomStudent == cs.uuid }
+            val myUser = users.firstOrNull { u -> u.uuid == cs.uuidStudent }
             DirectorStudentDto().apply {
                 this.description = myDirectorStudent?.description
                 this.uuid = myDirectorStudent?.uuid
@@ -228,14 +236,16 @@ class DirectorServiceImpl(
                 this.period = period
                 this.uuidClassroomStudent = cs.uuid
                 this.uuidStudent = cs.uuidStudent
-                this.studentSubjects = studentSubjectsInPeriod.filter { ss-> ss.uuidClassroomStudent == cs.uuid }.map{ ss-> DirectorStudentSubjectDto().apply {
-                    val subjectFound = subjects.firstOrNull { s-> s.uuid == ss.uuidSubject }
-                    this.name = subjectFound?.name
-                    this.uuid = subjectFound?.uuid
-                    this.def = ss.def
-                    this.recovery = ss.recovery
-                    this.judgment = ss.judgment
-                } }
+                this.studentSubjects = studentSubjectsInPeriod.filter { ss -> ss.uuidClassroomStudent == cs.uuid }.map { ss ->
+                    DirectorStudentSubjectDto().apply {
+                        val subjectFound = subjects.firstOrNull { s -> s.uuid == ss.uuidSubject }
+                        this.name = subjectFound?.name
+                        this.uuid = subjectFound?.uuid
+                        this.def = ss.def
+                        this.recovery = ss.recovery
+                        this.judgment = ss.judgment
+                    }
+                }
             }
         }
     }
@@ -244,30 +254,33 @@ class DirectorServiceImpl(
         val toSave = mutableListOf<DirectorStudentRequest>()
         val toUpdate = mutableListOf<DirectorStudentDto>()
         req.forEach {
-            if(it.uuid == null){
-                toSave.add(DirectorStudentRequest().apply {
-                    this.uuidClassroomStudent = it.uuidClassroomStudent
-                    this.description = it.description ?: ""
-                    this.period = period
-                    this.uuidStudent = it.uuidStudent
-                })
-            }else{
-                toUpdate.add(DirectorStudentDto().apply {
-                    this.uuidClassroomStudent = it.uuidClassroomStudent
-                    this.description = it.description
-                    this.period = period
-                    this.uuidStudent = it.uuidStudent
-                    this.uuid = it.uuid
-                })
+            if (it.uuid == null) {
+                toSave.add(
+                    DirectorStudentRequest().apply {
+                        this.uuidClassroomStudent = it.uuidClassroomStudent
+                        this.description = it.description ?: ""
+                        this.period = period
+                        this.uuidStudent = it.uuidStudent
+                    }
+                )
+            } else {
+                toUpdate.add(
+                    DirectorStudentDto().apply {
+                        this.uuidClassroomStudent = it.uuidClassroomStudent
+                        this.description = it.description
+                        this.period = period
+                        this.uuidStudent = it.uuidStudent
+                        this.uuid = it.uuid
+                    }
+                )
             }
         }
-        if(toSave.isNotEmpty()){
+        if (toSave.isNotEmpty()) {
             directorStudentService.saveMultiple(toSave)
         }
-        if(toUpdate.isNotEmpty()){
+        if (toUpdate.isNotEmpty()) {
             directorStudentService.updateMultiple(toUpdate)
         }
         return req
     }
-
 }

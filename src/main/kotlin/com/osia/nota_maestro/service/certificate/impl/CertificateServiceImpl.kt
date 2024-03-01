@@ -87,7 +87,7 @@ class CertificateServiceImpl(
             certificateRepository.getByUuid(uuid).get()
         }
         certificateMapper.update(certificateRequest, certificate)
-        if(certificateRequest.status == "completed"){
+        if (certificateRequest.status == "completed") {
             certificate.approvedAt = LocalDateTime.now()
         }
         return certificateMapper.toDto(certificateRepository.save(certificate))
@@ -134,12 +134,12 @@ class CertificateServiceImpl(
         val certificates = certificateRepository.findAllByUuidSchoolAndStatus(school, "pending").map(certificateMapper::toDto)
         val users = userRepository.findAllById(certificates.mapNotNull { it.uuidUser }.distinct())
         certificates.forEach {
-            val my = users.firstOrNull{ u-> u.uuid == it.uuidUser}
+            val my = users.firstOrNull { u -> u.uuid == it.uuidUser }
             it.user = my?.name + " " + my?.lastname
-            it.role = when(my?.role){
-                "admin"-> "Administrador"
-                "teacher"-> "Docente"
-                "student"-> "Estudiante"
+            it.role = when (my?.role) {
+                "admin" -> "Administrador"
+                "teacher" -> "Docente"
+                "student" -> "Estudiante"
                 else -> ""
             }
         }
@@ -147,12 +147,14 @@ class CertificateServiceImpl(
     }
 
     override fun request(type: String, user: UUID, school: UUID): CertificateDto {
-        return save(CertificateRequest().apply {
-            this.type = type
-            this.uuidSchool = school
-            this.approved = false
-            this.uuidUser = user
-            this.status = "pending"
-        })
+        return save(
+            CertificateRequest().apply {
+                this.type = type
+                this.uuidSchool = school
+                this.approved = false
+                this.uuidUser = user
+                this.status = "pending"
+            }
+        )
     }
 }

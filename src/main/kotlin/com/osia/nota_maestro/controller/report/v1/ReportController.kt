@@ -1,6 +1,5 @@
 package com.osia.nota_maestro.controller.report.v1
 
-import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
 import com.osia.nota_maestro.dto.note.v1.ReportStudentNote
 import com.osia.nota_maestro.service.report.ReportService
 import org.springframework.http.ResponseEntity

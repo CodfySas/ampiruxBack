@@ -2,13 +2,11 @@ package com.osia.nota_maestro.repository.calendar
 
 import com.osia.nota_maestro.model.CalendarTask
 import com.osia.nota_maestro.repository.BaseRepository
-import net.bytebuddy.asm.Advice.Local
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Repository("calendar.crud_repository")

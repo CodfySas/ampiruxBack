@@ -61,7 +61,7 @@ class AuthServiceImpl(
 
         var grades = mutableListOf<GradeDto>()
         var classrooms = mutableListOf<ClassroomDto>()
-        if(userFound.role == "student"){
+        if (userFound.role == "student") {
             val cs = classroomStudentRepository.findAllByUuidStudent(userFound.uuid!!)
             classrooms = classroomService.findByMultiple(cs.mapNotNull { it.uuidClassroom }.distinct()).toMutableList()
             grades = gradeService.findByMultiple(classrooms.mapNotNull { it.uuidGrade }.distinct()).toMutableList()

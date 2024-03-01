@@ -128,10 +128,10 @@ class ScheduleServiceImpl(
 
     override fun getCompleteSchedule(school: UUID, classroom: UUID): ScheduleComplete {
         log.trace("schedule getCompleteSchedule -> uuid: $school")
-        val classR = classroomRepository.findById(classroom).
-        orElseThrow{ throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found") }
-        val grade = gradeRepository.findById(classR.uuidGrade!!).
-        orElseThrow{ throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found") }
+        val classR = classroomRepository.findById(classroom)
+            .orElseThrow { throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found") }
+        val grade = gradeRepository.findById(classR.uuidGrade!!)
+            .orElseThrow { throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found") }
 
         val schedules = scheduleRepository.findAllByUuidSchoolAndUuidClassroom(school, classroom)
         val gradeSubjects = gradeSubjectRepository.findAllById(schedules.mapNotNull { it.uuidGradeSubject })
@@ -146,17 +146,19 @@ class ScheduleServiceImpl(
             this.recessaInit = grade.recessaInit
             this.recessaFinish = grade.recessaFinish
             this.recess = grade.recess
-            this.hours = group.map { (k, gr)-> SchedulePerHourDto().apply {
-                this.schedules = gr.map(scheduleMapper::toDto)
-                this.schedules?.forEach {
-                    val gs = gradeSubjects.firstOrNull { g-> g.uuid == it.uuidGradeSubject }
-                    val sx = subjects.firstOrNull { s-> s.uuid == gs?.uuidSubject }
-                    it.uuidSubject = sx?.uuid
-                    it.subjectName = sx?.name
+            this.hours = group.map { (k, gr) ->
+                SchedulePerHourDto().apply {
+                    this.schedules = gr.map(scheduleMapper::toDto)
+                    this.schedules?.forEach {
+                        val gs = gradeSubjects.firstOrNull { g -> g.uuid == it.uuidGradeSubject }
+                        val sx = subjects.firstOrNull { s -> s.uuid == gs?.uuidSubject }
+                        it.uuidSubject = sx?.uuid
+                        it.subjectName = sx?.name
+                    }
+                    this.init = gr.firstOrNull()?.init
+                    this.finish = gr.firstOrNull()?.finish
                 }
-                this.init = gr.firstOrNull()?.init
-                this.finish = gr.firstOrNull()?.finish
-            } }
+            }
         }
     }
 }

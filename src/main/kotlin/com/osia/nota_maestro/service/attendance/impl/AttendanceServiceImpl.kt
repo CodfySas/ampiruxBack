@@ -7,13 +7,10 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceMapper
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceFailDto
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceFailRequest
-import com.osia.nota_maestro.dto.resources.v1.MyAssignmentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
-import com.osia.nota_maestro.dto.resources.v1.ResourcePeriodDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.model.Attendance
-import com.osia.nota_maestro.model.AttendanceFail
 import com.osia.nota_maestro.repository.attendance.AttendanceRepository
 import com.osia.nota_maestro.repository.attendanceFail.AttendanceFailRepository
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
@@ -34,7 +31,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -171,28 +167,30 @@ class AttendanceServiceImpl(
                 val user = users.firstOrNull { u -> u.uuid == cs.uuidStudent }
                 val attendanceList = mutableListOf<AttendanceDto>()
                 for (i in 1..yearMonth.lengthOfMonth()) {
-                    attendanceList.add(AttendanceDto().apply {
-                        val found = attendances.firstOrNull { a ->
-                            a.uuidClassroom == classroom && a.uuidSubject == subject
-                                    && a.day == i && a.month == month
-                        }
-                        val fail =
-                            found?.let { fails.firstOrNull { f -> f.uuidAttendance == it.uuid && f.uuidStudent == cs.uuidStudent } }
-                        this.day = i
-                        this.uuid = found?.uuid
-                        this.month = month
-                        this.uuidClassroom = classroom
-                        this.uuidSubject = subject
-                        this.week =
-                            LocalDate.of(schoolF.actualYear!!, month, i).dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es", "ES"))
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-                        this.uuidSchool = school
-                        this.enabled = found != null
+                    attendanceList.add(
+                        AttendanceDto().apply {
+                            val found = attendances.firstOrNull { a ->
+                                a.uuidClassroom == classroom && a.uuidSubject == subject &&
+                                    a.day == i && a.month == month
+                            }
+                            val fail =
+                                found?.let { fails.firstOrNull { f -> f.uuidAttendance == it.uuid && f.uuidStudent == cs.uuidStudent } }
+                            this.day = i
+                            this.uuid = found?.uuid
+                            this.month = month
+                            this.uuidClassroom = classroom
+                            this.uuidSubject = subject
+                            this.week =
+                                LocalDate.of(schoolF.actualYear!!, month, i).dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es", "ES"))
+                                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                            this.uuidSchool = school
+                            this.enabled = found != null
 
-                        this.failed = (fail != null)
-                        this.reason = fail?.reason
-                        this.failUuid = fail?.uuid
-                    })
+                            this.failed = (fail != null)
+                            this.reason = fail?.reason
+                            this.failUuid = fail?.uuid
+                        }
+                    )
                 }
                 this.name = user?.name
                 this.uuid = user?.uuid
@@ -212,28 +210,32 @@ class AttendanceServiceImpl(
         val toSave = mutableListOf<AttendanceRequest>()
         val toUpdate = mutableListOf<AttendanceDto>()
         val toDelete = mutableListOf<UUID>()
-        req.firstOrNull()?.attendances?.forEach { fd->
-            if(fd.enabled == true){
-                if(fd.uuid != null){
-                    toUpdate.add(AttendanceDto().apply {
-                        this.uuid = fd.uuid
-                        this.day = fd.day
-                        this.month = month
-                        this.uuidClassroom = classroom
-                        this.uuidSubject = subject
-                        this.uuidSchool = school
-                    })
-                }else{
-                    toSave.add(AttendanceRequest().apply {
-                        this.day = fd.day
-                        this.month = month
-                        this.uuidClassroom = classroom
-                        this.uuidSubject = subject
-                        this.uuidSchool = school
-                    })
+        req.firstOrNull()?.attendances?.forEach { fd ->
+            if (fd.enabled == true) {
+                if (fd.uuid != null) {
+                    toUpdate.add(
+                        AttendanceDto().apply {
+                            this.uuid = fd.uuid
+                            this.day = fd.day
+                            this.month = month
+                            this.uuidClassroom = classroom
+                            this.uuidSubject = subject
+                            this.uuidSchool = school
+                        }
+                    )
+                } else {
+                    toSave.add(
+                        AttendanceRequest().apply {
+                            this.day = fd.day
+                            this.month = month
+                            this.uuidClassroom = classroom
+                            this.uuidSubject = subject
+                            this.uuidSchool = school
+                        }
+                    )
                 }
-            }else{
-                if(fd.uuid != null){
+            } else {
+                if (fd.uuid != null) {
                     toDelete.add(fd.uuid!!)
                 }
             }
@@ -247,29 +249,33 @@ class AttendanceServiceImpl(
         val toSaveFail = mutableListOf<AttendanceFailRequest>()
         val toUpdateFail = mutableListOf<AttendanceFailDto>()
         val toDeleteFail = mutableListOf<UUID>()
-        req.forEach { student->
-            student.attendances.forEach { day->
-                if(day.failed == true){
-                    if(day.failUuid == null){
-                        toSaveFail.add(AttendanceFailRequest().apply {
-                            this.reason = day.reason
-                            this.uuidStudent = student.uuid
-                            this.uuidAttendance = fullAttendances.firstOrNull {
-                                it.day == day.day
-                            }?.uuid
-                        })
-                    }else{
-                        toUpdateFail.add(AttendanceFailDto().apply {
-                            this.uuid = day.failUuid
-                            this.reason = day.reason
-                            this.uuidStudent = student.uuid
-                            this.uuidAttendance = fullAttendances.firstOrNull {
-                                it.day == day.day
-                            }?.uuid
-                        })
+        req.forEach { student ->
+            student.attendances.forEach { day ->
+                if (day.failed == true) {
+                    if (day.failUuid == null) {
+                        toSaveFail.add(
+                            AttendanceFailRequest().apply {
+                                this.reason = day.reason
+                                this.uuidStudent = student.uuid
+                                this.uuidAttendance = fullAttendances.firstOrNull {
+                                    it.day == day.day
+                                }?.uuid
+                            }
+                        )
+                    } else {
+                        toUpdateFail.add(
+                            AttendanceFailDto().apply {
+                                this.uuid = day.failUuid
+                                this.reason = day.reason
+                                this.uuidStudent = student.uuid
+                                this.uuidAttendance = fullAttendances.firstOrNull {
+                                    it.day == day.day
+                                }?.uuid
+                            }
+                        )
                     }
-                }else{
-                    if(day.failUuid != null){
+                } else {
+                    if (day.failUuid != null) {
                         toDeleteFail.add(day.failUuid!!)
                     }
                 }

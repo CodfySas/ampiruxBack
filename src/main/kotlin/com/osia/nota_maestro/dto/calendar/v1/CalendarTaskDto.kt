@@ -3,7 +3,6 @@ package com.osia.nota_maestro.dto.calendar.v1
 import com.osia.nota_maestro.dto.BaseDto
 import com.osia.nota_maestro.model.enums.TaskTypeEnum
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class CalendarTaskDto : BaseDto() {

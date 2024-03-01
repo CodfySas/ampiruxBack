@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.dto.school.v1
 
 import com.osia.nota_maestro.dto.BaseDto
-import java.time.LocalDateTime
 
 class SchoolMinDto : BaseDto() {
     var directorName: String? = null

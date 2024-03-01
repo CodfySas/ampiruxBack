@@ -7,8 +7,8 @@ import com.osia.nota_maestro.dto.note.v1.NoteDto
 import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteStudentDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
-import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.MyAssignmentDto
+import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourcePeriodDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceRequest
@@ -272,14 +272,14 @@ class NoteServiceImpl(
                         this.def = (ss0?.def?.toString()?.replace(".", ",") ?: "")
                         this.recovery = (ss0?.recovery?.toString()?.replace(".", ",") ?: "")
                         this.periods = schoolPeriods.map { sp ->
-                            val fss = ssp.firstOrNull{ sspf-> sspf.period == sp.number }
+                            val fss = ssp.firstOrNull { sspf -> sspf.period == sp.number }
                             NotePeriodDto().apply {
                                 this.number = sp.number
                                 this.def = (fss?.def?.toString()?.replace(".", ",") ?: "")
                                 this.recovery = (fss?.recovery?.toString()?.replace(".", ",") ?: "")
                                 val myNotes = allNotes.filter { n ->
                                     n.period == fss?.period && n.uuidClassroomStudent == cs.uuid &&
-                                            n.uuidSubject == request.subject
+                                        n.uuidSubject == request.subject
                                 }
                                 this.notes = myNotes.map { n ->
                                     NoteDetailsDto().apply {
@@ -508,9 +508,9 @@ class NoteServiceImpl(
                             ssToCreate.add(newR(cs, 0, schoolUUID, defCh0, chx))
                         } else {
                             ssToUpdate.add(
-                                    studentSubjectMapper.toDto(children0).apply {
-                                        this.def = defCh0
-                                    }
+                                studentSubjectMapper.toDto(children0).apply {
+                                    this.def = defCh0
+                                }
                             )
                         }
                     }

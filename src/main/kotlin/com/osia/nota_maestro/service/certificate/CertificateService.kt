@@ -5,8 +5,6 @@ import com.osia.nota_maestro.dto.certificate.v1.CertificateRequest
 import com.osia.nota_maestro.model.Certificate
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestHeader
 import java.util.UUID
 
 interface CertificateService {
