@@ -6,6 +6,7 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceMapper
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
+import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.service.attendance.AttendanceService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -130,5 +131,10 @@ class AttendanceController(
     @GetMapping("/resources/{uuid}")
     fun getResources(@PathVariable uuid: UUID): List<ResourceGradeDto> {
         return attendanceService.getResources(uuid)
+    }
+
+    @GetMapping("/resources-student/{uuid}")
+    fun getResourcesStudent(@PathVariable uuid: UUID): List<ResourceSubjectDto> {
+        return attendanceService.getResourcesStudent(uuid)
     }
 }

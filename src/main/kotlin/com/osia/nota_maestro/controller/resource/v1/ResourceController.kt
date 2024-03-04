@@ -4,6 +4,7 @@ import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.resource.v1.ResourceDto
 import com.osia.nota_maestro.dto.resource.v1.ResourceMapper
 import com.osia.nota_maestro.dto.resource.v1.ResourceRequest
+import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.service.resource.ResourceService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -103,5 +104,10 @@ class ResourceController(
     ): ResponseEntity<HttpStatus> {
         resourceService.deleteMultiple(uuidList)
         return ResponseEntity(HttpStatus.OK)
+    }
+
+    @GetMapping("/my/{uuid}")
+    fun getResources(@PathVariable uuid: UUID): List<ResourceGradeDto> {
+        return resourceService.my(uuid)
     }
 }

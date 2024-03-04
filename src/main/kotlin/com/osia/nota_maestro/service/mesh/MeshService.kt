@@ -24,4 +24,5 @@ interface MeshService {
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
     fun getBy(classroom: UUID, subject: UUID, period: Int): MeshDto
+    fun getByMy(uuid: UUID, subject: UUID, period: Int): MeshDto
 }

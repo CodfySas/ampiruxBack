@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.model.listener.user
 
 import com.osia.nota_maestro.model.User
+import com.osia.nota_maestro.model.abstracts.BaseModel
 import com.osia.nota_maestro.model.abstracts.CodeSetter
 import com.osia.nota_maestro.repository.user.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,6 +22,20 @@ class UserListener : CodeSetter() {
 
     @PrePersist
     fun prePersist(user: User) {
-        this.setCode(userRepository, user, user.uuidSchool)
+        var counter = userRepository.countByUser(user.uuidSchool, user.role)
+        when(user.role){
+            "admin"->{
+                user.code = user.getCode(++counter, "US")
+            }
+            "teacher"->{
+                user.code = user.getCode(++counter, "TH")
+            }
+            "student"->{
+                user.code = user.getCode(++counter, "ES")
+            }
+            else->{
+                user.code = user.getCode(++counter)
+            }
+        }
     }
 }

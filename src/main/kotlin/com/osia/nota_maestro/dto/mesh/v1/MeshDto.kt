@@ -13,4 +13,7 @@ class MeshDto : BaseDto() {
     var classroom: UUID? = null
     var subject: UUID? = null
     var period: Int? = null
+    var observation: String? = null
+    var status: String? = null
+    var userReview: UUID? = null
 }

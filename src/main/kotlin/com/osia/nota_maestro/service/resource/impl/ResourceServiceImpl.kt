@@ -4,9 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.resource.v1.ResourceDto
 import com.osia.nota_maestro.dto.resource.v1.ResourceMapper
 import com.osia.nota_maestro.dto.resource.v1.ResourceRequest
+import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
+import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
+import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.model.Resource
+import com.osia.nota_maestro.repository.classroom.ClassroomRepository
+import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
+import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
+import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.resource.ResourceRepository
+import com.osia.nota_maestro.repository.subject.SubjectRepository
+import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.resource.ResourceService
+import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -24,7 +34,14 @@ import java.util.UUID
 class ResourceServiceImpl(
     private val resourceRepository: ResourceRepository,
     private val resourceMapper: ResourceMapper,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val userRepository: UserRepository,
+    private val classroomSubjectRepository: ClassroomSubjectRepository,
+    private val classroomRepository: ClassroomRepository,
+    private val gradeRepository: GradeRepository,
+    private val subjectRepository: SubjectRepository,
+    private val classroomStudentRepository: ClassroomStudentRepository,
+    private val schoolService: SchoolService,
 ) : ResourceService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -114,5 +131,37 @@ class ResourceServiceImpl(
             it.deletedAt = LocalDateTime.now()
         }
         resourceRepository.saveAll(resources)
+    }
+
+    override fun my(uuid: UUID): List<ResourceGradeDto> {
+        val userFound = userRepository.findById(uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val schoolFound = schoolService.getById(userFound.uuidSchool!!)
+        val grades = gradeRepository.findAllByUuidSchool(schoolFound.uuid!!).sortedBy { it.ordered }
+        val classrooms = classroomRepository.findAllByUuidGradeIn(grades.mapNotNull { it.uuid }.distinct())
+        val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid }.distinct())
+        val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
+
+        return grades.map { g ->
+            ResourceGradeDto().apply {
+                this.uuid = g.uuid
+                this.name = g.name
+                this.classrooms = classrooms.filter { c -> c.uuidGrade == g.uuid }.map { c ->
+                    ResourceClassroomDto().apply {
+                        this.uuid = c.uuid
+                        this.name = c.name
+                        this.subjects =
+                            classroomSubjects.filter { cs -> cs.uuidClassroom == c.uuid }.map { cs ->
+                                ResourceSubjectDto().apply {
+                                    val subject = subjects.firstOrNull { s -> s.uuid == cs.uuidSubject }
+                                    this.uuid = subject?.uuid
+                                    this.name = subject?.name
+                                }
+                            }
+                    }
+                }
+            }
+        }
     }
 }

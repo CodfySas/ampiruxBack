@@ -49,4 +49,6 @@ interface ClassroomStudentRepository :
     fun findAllByUuidClassroomIn(uuids: List<UUID>): List<ClassroomStudent>
 
     fun findFirstByUuidClassroomAndUuidStudent(uuidClassroom: UUID, uuidStudent: UUID): Optional<ClassroomStudent>
+
+    fun findFirstByUuidClassroomInAndUuidStudent(classrooms: List<UUID>, uuidStudent: UUID): Optional<ClassroomStudent>
 }

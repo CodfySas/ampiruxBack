@@ -29,6 +29,8 @@ data class User(
     var documentType: String? = null,
     var lastname: String? = null,
     var role: String? = null,
+    var active: Boolean? = true,
+    var superUser: Boolean? = false,
     @NotNull
     var uuidSchool: UUID? = null,
     var uuidRole: UUID? = null,

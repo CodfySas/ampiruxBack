@@ -4,6 +4,7 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceCompleteDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
+import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.model.Attendance
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -30,4 +31,5 @@ interface AttendanceService {
     fun submit(classroom: UUID, subject: UUID, month: Int, school: UUID, req: List<AttendanceCompleteDto>): List<AttendanceCompleteDto>
 
     fun getResources(uuid: UUID): List<ResourceGradeDto>
+    fun getResourcesStudent(uuid: UUID): List<ResourceSubjectDto>
 }

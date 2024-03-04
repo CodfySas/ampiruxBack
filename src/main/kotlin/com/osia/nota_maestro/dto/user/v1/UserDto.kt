@@ -39,4 +39,6 @@ class UserDto : BaseDto() {
     var parentVulnerability: String? = null
     var grade: String? = null
     var classroom: String? = null
+    var active: Boolean? = null
+    var superUser: Boolean? = null
 }

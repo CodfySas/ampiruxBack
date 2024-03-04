@@ -108,4 +108,9 @@ class MeshController(
     fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int): MeshDto {
         return meshService.getBy(classroom,subject,period)
     }
+
+    @GetMapping("/get-my/{uuid}/{subject}/{period}")
+    fun getByMy(@PathVariable uuid: UUID, @PathVariable subject: UUID, @PathVariable period: Int): MeshDto {
+        return meshService.getByMy(uuid, subject, period)
+    }
 }

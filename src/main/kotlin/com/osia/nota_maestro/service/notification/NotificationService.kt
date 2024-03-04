@@ -24,4 +24,6 @@ interface NotificationService {
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
+
+    fun generateToRole(notificationRequest: NotificationRequest, school: UUID, role: String): List<NotificationDto>
 }

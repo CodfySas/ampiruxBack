@@ -5,7 +5,11 @@ import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshMapper
 import com.osia.nota_maestro.dto.mesh.v1.MeshRequest
 import com.osia.nota_maestro.model.Mesh
+import com.osia.nota_maestro.repository.classroom.ClassroomRepository
+import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.mesh.MeshRepository
+import com.osia.nota_maestro.repository.school.SchoolRepository
+import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.mesh.MeshService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
@@ -24,7 +28,11 @@ import java.util.UUID
 class MeshServiceImpl(
     private val meshRepository: MeshRepository,
     private val meshMapper: MeshMapper,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val userRepository: UserRepository,
+    private val classroomRepository: ClassroomRepository,
+    private val classroomStudentRepository: ClassroomStudentRepository,
+    private val schoolRepository: SchoolRepository
 ) : MeshService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -128,5 +136,19 @@ class MeshServiceImpl(
                 this.strategies = ""
             }
         ))
+    }
+
+    override fun getByMy(uuid: UUID, subject: UUID, period: Int): MeshDto {
+        val user = userRepository.findById(uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val school = schoolRepository.findById(user.uuidSchool!!).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val classrooms = classroomRepository.findAllByUuidSchoolAndYear(user.uuidSchool!!, school.actualYear!!)
+        val classroomStudent = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }.distinct(), uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        return getBy(classroomStudent.uuidClassroom!!, subject, period)
     }
 }

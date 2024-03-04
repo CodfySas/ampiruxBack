@@ -29,5 +29,8 @@ data class Mesh(
     var skills: String? = null,
     var classroom: UUID? = null,
     var subject: UUID? = null,
-    var period: Int? = null
+    var period: Int? = null,
+    var observation: String? = "",
+    var status: String? = "pending",
+    var userReview: UUID? = null
 ) : BaseModel()

@@ -23,4 +23,7 @@ class UserRequest {
     var parentEmail: String? = null
     var parentAddress: String? = null
     var parentVulnerability: String? = null
+
+    var active: Boolean? = null
+    var superUser: Boolean? = null
 }

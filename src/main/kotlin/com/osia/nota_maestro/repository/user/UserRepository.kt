@@ -19,6 +19,9 @@ interface UserRepository :
     @Query(value = "SELECT COUNT(*) FROM users WHERE uuid_school = :schoolUuid", nativeQuery = true)
     override fun count(@Param("schoolUuid") schoolUuid: UUID?): Long
 
+    @Query(value = "SELECT COUNT(*) FROM users WHERE uuid_school = :schoolUuid AND role = :role", nativeQuery = true)
+    fun countByUser(@Param("schoolUuid") schoolUuid: UUID?, @Param("role") role: String?): Long
+
     fun getFirstByUsernameAndPassword(username: String, password: String): Optional<User>
 
     fun getFirstByUsernameOrDni(username: String, dni: String): Optional<User>

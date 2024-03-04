@@ -2,6 +2,7 @@ package com.osia.nota_maestro.service.resource
 
 import com.osia.nota_maestro.dto.resource.v1.ResourceDto
 import com.osia.nota_maestro.dto.resource.v1.ResourceRequest
+import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.model.Resource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -23,4 +24,5 @@ interface ResourceService {
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
+    fun my(uuid: UUID): List<ResourceGradeDto>
 }

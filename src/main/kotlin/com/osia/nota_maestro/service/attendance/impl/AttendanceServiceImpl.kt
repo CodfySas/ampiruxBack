@@ -171,7 +171,7 @@ class AttendanceServiceImpl(
                         AttendanceDto().apply {
                             val found = attendances.firstOrNull { a ->
                                 a.uuidClassroom == classroom && a.uuidSubject == subject &&
-                                    a.day == i && a.month == month
+                                        a.day == i && a.month == month
                             }
                             val fail =
                                 found?.let { fails.firstOrNull { f -> f.uuidAttendance == it.uuid && f.uuidStudent == cs.uuidStudent } }
@@ -181,7 +181,10 @@ class AttendanceServiceImpl(
                             this.uuidClassroom = classroom
                             this.uuidSubject = subject
                             this.week =
-                                LocalDate.of(schoolF.actualYear!!, month, i).dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es", "ES"))
+                                LocalDate.of(schoolF.actualYear!!, month, i).dayOfWeek.getDisplayName(
+                                    TextStyle.FULL,
+                                    Locale("es", "ES")
+                                )
                                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                             this.uuidSchool = school
                             this.enabled = found != null
@@ -326,6 +329,26 @@ class AttendanceServiceImpl(
                             }
                     }
                 }
+            }
+        }
+    }
+
+    override fun getResourcesStudent(uuid: UUID): List<ResourceSubjectDto> {
+        val student = userRepository.findById(uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val schoolFound = schoolService.getById(student.uuidSchool!!)
+        val classrooms = classroomRepository.findAllByUuidSchoolAndYear(schoolFound.uuid!!, schoolFound.actualYear!!)
+        val classroomStudent =
+            classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, uuid)
+        val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroom(classroomStudent.get().uuidClassroom!!)
+        val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
+
+        return classroomSubjects.map { cs ->
+            ResourceSubjectDto().apply {
+                val subject = subjects.firstOrNull { s -> s.uuid == cs.uuidSubject }
+                this.uuid = subject?.uuid
+                this.name = subject?.name
             }
         }
     }
