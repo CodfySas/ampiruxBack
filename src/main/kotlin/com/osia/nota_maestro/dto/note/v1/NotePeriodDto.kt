@@ -13,5 +13,6 @@ class NotePeriodDto : BaseDto() {
     var recovery: String? = null
     var def: String = ""
     var basic: String = ""
+    var recoveryBasic: String = ""
     var color: String = ""
 }

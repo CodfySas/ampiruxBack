@@ -262,7 +262,7 @@ class UserServiceImpl(
                 listOf(
                     "Notas", "Archivo De Notas", "Asistencias", "Aula y Recursos",
                     "Recuperaciones", "Malla academica", "Evaluaciones",
-                    "Mi Grupo", "Certificados"
+                    "Mi Grupo", "Certificados", "Acompañamientos"
                 )
             )
         }
@@ -276,7 +276,7 @@ class UserServiceImpl(
                     "Usuarios", "Administradores", "Estudiantes",
                     "Docentes", "Cursos", "Asignaturas", "Asignar Docentes", "Archivo De Notas",
                     "Aula y Recursos", "Documentacion", "Boletines", "Directores grupo",
-                    "Planificacion", "Horarios", "Certificados", "Malla academica"
+                    "Planificacion", "Horarios", "Certificados", "Malla academica", "Acompañantes"
                 )
             )
         }

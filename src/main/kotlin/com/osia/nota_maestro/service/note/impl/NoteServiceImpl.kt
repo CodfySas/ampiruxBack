@@ -553,10 +553,41 @@ class NoteServiceImpl(
             }
         }
 
-        studentSubjectService.saveMultiple(ssToCreate)
-        studentSubjectService.updateMultiple(ssToUpdate)
+        val created = studentSubjectService.saveMultiple(ssToCreate)
+        val updated = studentSubjectService.updateMultiple(ssToUpdate)
 
+        val allSs = created + updated
         studentSubjectRepository.deleteByUuids(ssTd.mapNotNull { it.uuid })
+
+        setPositions(classroomStudents, allSs)
+    }
+
+    @Async
+    override fun setPositions(classroomStudents: List<ClassroomStudent>, allSs: List<StudentSubjectDto>) {
+        val classes = classroomStudents.groupBy { it.uuidClassroom }
+        classes.forEach { (classroom, csList)->
+            csList.forEach { cs->
+                val my = allSs.filter { ss-> ss.period == 0 && ss.uuidClassroomStudent == cs.uuid }
+                var sum = 0.0
+                var count = 0
+                my.forEach {
+                    val note = it.recovery ?: it.def
+                    if(note != null){
+                        sum += note
+                        count++;
+                    }
+                }
+                if(sum > 0.0){
+                    cs.prom = sum/count
+                }
+            }
+            var i = 1
+            csList.sortedByDescending { it.prom }.forEach { cs->
+                cs.position = i
+                i++;
+            }
+        }
+        classroomStudentRepository.saveAll(classroomStudents)
     }
 
     private fun newR(

@@ -1,0 +1,1 @@
+ALTER TABLE public.schools ADD if not exists report_type varchar(255) NOT NULL DEFAULT 'default';

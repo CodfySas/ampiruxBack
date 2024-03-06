@@ -41,5 +41,6 @@ data class School(
     var directorRole: String? = null,
     var signReportType: String? = null,
     var certificates: String? = null,
-    var periodAvailable: String? = null
+    var periodAvailable: String? = null,
+    var reportType: String? = null
 ) : BaseModel()

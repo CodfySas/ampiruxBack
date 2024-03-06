@@ -10,6 +10,7 @@ class NoteSubjectsDto : BaseDto() {
     var judgments: List<String> = mutableListOf()
     var def: String = ""
     var basic: String = ""
+    var recoveryBasic: String = ""
     var color: String = ""
     var uuidStudentSubject: UUID? = null
     var recovery: String? = null

@@ -31,4 +31,6 @@ interface DirectorRepository :
     fun getAllByUuidClassroomIn(classrooms: List<UUID>): List<Director>
 
     fun getAllByUuidTeacher(uuid: UUID): List<Director>
+
+    fun findFirstByUuidClassroom(uuid: UUID): Optional<Director>
 }

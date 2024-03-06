@@ -26,4 +26,5 @@ class SchoolRequest {
     var signReportType: String? = null
     var certificates: String? = null
     var periodAvailable: String? = null
+    var reportType: String? = null
 }

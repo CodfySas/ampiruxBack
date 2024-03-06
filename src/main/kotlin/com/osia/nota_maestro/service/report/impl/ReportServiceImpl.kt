@@ -1,16 +1,21 @@
 package com.osia.nota_maestro.service.report.impl
 
+import com.osia.nota_maestro.dto.note.v1.AccompanimentPeriodDto
 import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
 import com.osia.nota_maestro.dto.note.v1.ObservationPeriodDto
 import com.osia.nota_maestro.dto.note.v1.ReportStudentNote
+import com.osia.nota_maestro.repository.accompanimentStudent.AccompanimentStudentRepository
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
+import com.osia.nota_maestro.repository.director.DirectorRepository
 import com.osia.nota_maestro.repository.directorStudent.DirectorStudentRepository
+import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
+import com.osia.nota_maestro.repository.teacher.TeacherRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.report.ReportService
 import com.osia.nota_maestro.service.school.SchoolService
@@ -31,7 +36,11 @@ class ReportServiceImpl(
     private val schoolPeriodRepository: SchoolPeriodRepository,
     private val schoolService: SchoolService,
     private val studentSubjectRepository: StudentSubjectRepository,
-    private val directorStudentRepository: DirectorStudentRepository
+    private val directorStudentRepository: DirectorStudentRepository,
+    private val accompanimentStudentRepository: AccompanimentStudentRepository,
+    private val directorRepository: DirectorRepository,
+    private val teacherRepository: TeacherRepository,
+    private val gradeRepository: GradeRepository
 ) : ReportService {
 
     override fun getByMultipleStudent(list: List<UUID>): List<ReportStudentNote> {
@@ -65,10 +74,19 @@ class ReportServiceImpl(
                 .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
 
+        val classrooms = classroomRepository.findAllById(classroomStudents.mapNotNull { it.uuidClassroom }.distinct())
+        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuid })
+
         val directorStudents = directorStudentRepository.getAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
+        val accompanimentStudents = accompanimentStudentRepository.getAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
+
+        val directors = directorRepository.getAllByUuidClassroomIn(classroomStudents.mapNotNull { it.uuidClassroom })
+        val teachers = userRepository.findAllById(directors.mapNotNull { it.uuidTeacher })
 
         classroomStudents.forEach { cs ->
+            val promByPeriod = mutableMapOf<String, List<Pair<Double?, Double?>>>()
             val myDirectorStudent = directorStudents.filter { ds -> ds.uuidClassroomStudent == cs.uuid }
+            val myAccompanimentStudent = accompanimentStudents.filter { ds -> ds.uuidClassroomStudent == cs.uuid }
             val user = students.firstOrNull { s -> s.uuid == cs.uuidStudent }
             reportStudent.add(
                 ReportStudentNote().apply {
@@ -92,9 +110,15 @@ class ReportServiceImpl(
                                 NotePeriodDto().apply {
                                     this.number = p.number
                                     this.defi = (ssP?.def)
+                                    this.judgment = ssP?.judgment ?: ""
                                     this.def = (ssP?.def.toString().replace(".", ","))
                                     this.basic = (ssP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                     this.color = getColor(this.basic)
+                                    this.recovery = (ssP?.recovery.toString().replace(".", ","))
+                                    this.recoveryBasic = (ssP?.recovery?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
+                                    val prom = promByPeriod.getOrPut("${cs.uuid}-${p.number}") { mutableListOf() }.toMutableList()
+                                    prom.add(Pair(ssP?.def, ssP?.recovery))
+                                    promByPeriod["${cs.uuid}-${p.number}"] = prom
                                 }
                             )
                         }
@@ -118,9 +142,12 @@ class ReportServiceImpl(
                                     myChPeriods.add(
                                         NotePeriodDto().apply {
                                             this.number = p.number
+                                            this.judgment = ssChP?.judgment ?: ""
                                             this.def = ((ssChP?.def?.toString()?.replace(".", ",")) ?: "")
                                             this.basic = (ssChP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                             this.color = getColor(this.basic)
+                                            this.recovery = (ssChP?.recovery.toString().replace(".", ","))
+                                            this.recoveryBasic = (ssChP?.recovery?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                         }
                                     )
                                 }
@@ -132,6 +159,7 @@ class ReportServiceImpl(
                                         this.recovery = recoveryCh.toString()
                                         this.basic = (studentSubjectCh0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                         this.color = getColor(this.basic)
+                                        this.recoveryBasic = (recoveryCh?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                     }
                                 )
                             }
@@ -145,14 +173,65 @@ class ReportServiceImpl(
                                 this.recovery = recoveryF.toString()
                                 this.basic = (studentSubject0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                 this.color = getColor(this.basic)
+                                this.recoveryBasic = (recoveryF?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                             }
                         )
                     }
                     this.report = myNotes
+                    val myDirector = directors.firstOrNull { it.uuidClassroom == cs.uuidClassroom }
+                    val myTeacher = teachers.firstOrNull { it.uuid == myDirector?.uuidTeacher }
+                    this.director = myTeacher?.name + ' ' + myTeacher?.lastname
+                    this.position = cs.position
+                    this.prom = cs.prom.toString().replace(".",",")
+                    this.promBasic = cs.prom?.let { getBasic(it, superior, alto, minNote) } ?: ""
+                    val myCl = classrooms.firstOrNull { it.uuid == cs.uuidClassroom }
+                    val myGr = grades.firstOrNull { it.uuid == myCl?.uuidGrade }
+                    this.classroom = myCl?.name + '-' + myGr?.name
                     this.observations = myDirectorStudent.map { ds ->
                         ObservationPeriodDto().apply {
                             this.period = ds.period
                             this.description = ds.description ?: ""
+                        }
+                    }
+                    this.accompaniments = myAccompanimentStudent.map { ds ->
+                        AccompanimentPeriodDto().apply {
+                            this.period = ds.period
+                            this.description = ds.description ?: ""
+                        }
+                    }
+                    this.periodDef = periods.map { p->
+                        NotePeriodDto().apply {
+                            this.number = p.number
+                            val founds = promByPeriod["${cs.uuid}-${p.number}"]
+                            var sum = 0.0
+                            var count = 0
+                            if(schoolFound.recoveryType == "at_last"){
+                                founds?.forEach {
+                                    if(it.first != null){
+                                        sum += it.first!!
+                                        count++;
+                                    }
+                                }
+                            }else{
+                                founds?.forEach {
+                                    if(it.second != null){
+                                        sum += it.second!!
+                                        count++;
+                                    }else{
+                                        if(it.first != null){
+                                            sum += it.first!!
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                            if(count > 0){
+                                this.def = (sum/count).toString().replace(".",",")
+                                this.basic = getBasic(sum/count, superior, alto, minNote)
+                            }else{
+                                this.def = ""
+                                this.basic = ""
+                            }
                         }
                     }
                 }
@@ -187,11 +266,14 @@ class ReportServiceImpl(
             gradeSubjects.mapNotNull { it.uuidSubject }
         )
         val myDirectorStudent = directorStudentRepository.getAllByUuidClassroomStudent(myClassStudentActual.uuid!!)
+        val myAccompanimentStudent = accompanimentStudentRepository.getAllByUuidClassroomStudent(myClassStudentActual.uuid!!)
+
         val myNotes = mutableListOf<NoteSubjectsDto>()
         val periods = subjectsParents.firstOrNull()?.uuidSchool?.let { s ->
             schoolPeriodRepository.findAllByUuidSchoolAndActualYear(s, schoolFound.actualYear!!)
                 .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
+        val promByPeriod = mutableMapOf<String, List<Pair<Double?, Double?>>>()
         subjectsParents.forEach {
             val myNotePeriods = mutableListOf<NotePeriodDto>()
             var recoveryF: Double? = null
@@ -209,9 +291,15 @@ class ReportServiceImpl(
                     NotePeriodDto().apply {
                         this.number = p.number
                         this.defi = (ssP?.def)
+                        this.judgment = ssP?.judgment ?: ""
                         this.def = (ssP?.def.toString().replace(".", ","))
                         this.basic = (ssP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                         this.color = getColor(this.basic)
+                        this.recovery = (ssP?.recovery.toString().replace(".", ","))
+                        this.recoveryBasic = (ssP?.recovery?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
+                        val prom = promByPeriod.getOrPut("${myClassStudentActual.uuid}-${p.number}") { mutableListOf() }.toMutableList()
+                        prom.add(Pair(ssP?.def, ssP?.recovery))
+                        promByPeriod["${myClassStudentActual.uuid}-${p.number}"] = prom
                     }
                 )
             }
@@ -235,9 +323,12 @@ class ReportServiceImpl(
                         myChPeriods.add(
                             NotePeriodDto().apply {
                                 this.number = p.number
+                                this.judgment = ssChP?.judgment ?: ""
                                 this.def = ((ssChP?.def?.toString()?.replace(".", ",")) ?: "")
                                 this.basic = (ssChP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                 this.color = getColor(this.basic)
+                                this.recovery = (ssChP?.recovery.toString().replace(".", ","))
+                                this.recoveryBasic = (ssChP?.recovery?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                             }
                         )
                     }
@@ -249,6 +340,7 @@ class ReportServiceImpl(
                             this.recovery = recoveryCh.toString()
                             this.basic = (studentSubjectCh0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                             this.color = getColor(this.basic)
+                            this.recoveryBasic = (recoveryCh?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                         }
                     )
                 }
@@ -262,9 +354,14 @@ class ReportServiceImpl(
                     this.recovery = recoveryF.toString()
                     this.basic = (studentSubject0Found?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                     this.color = getColor(this.basic)
+                    this.recoveryBasic = (recoveryF?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                 }
             )
         }
+        val director = myClassStudentActual.uuidClassroom?.let { directorRepository.findFirstByUuidClassroom(it).orElse(null) }
+        val teacher = director?.uuidTeacher?.let { userRepository.getByUuid(it).orElseGet(null) }
+        val classroom = myClassStudentActual.uuidClassroom?.let { classroomRepository.getByUuid(it).orElseGet(null) }
+        val grade = classroom?.uuidGrade?.let { gradeRepository.getByUuid(it).orElse(null) }
         return ReportStudentNote().apply {
             this.report = myNotes
             this.observations = myDirectorStudent.map { d ->
@@ -273,8 +370,54 @@ class ReportServiceImpl(
                     this.description = d.description ?: ""
                 }
             }
-            this.name = ""
-            this.lastname = ""
+            this.accompaniments = myAccompanimentStudent.map { ds ->
+                AccompanimentPeriodDto().apply {
+                    this.period = ds.period
+                    this.description = ds.description ?: ""
+                }
+            }
+            this.name = studentFound.name
+            this.lastname = studentFound.lastname
+            this.director = teacher?.name + ' ' + teacher?.lastname
+            this.position = myClassStudentActual.position
+            this.prom = myClassStudentActual.prom.toString().replace(".",",")
+            this.promBasic = myClassStudentActual.prom?.let { getBasic(it, superior, alto, minNote) } ?: ""
+            this.classroom = grade?.name + '-' + classroom?.name
+            this.periodDef = periods.map { p->
+                NotePeriodDto().apply {
+                    this.number = p.number
+                    val founds = promByPeriod["${myClassStudentActual.uuid}-${p.number}"]
+                    var sum = 0.0
+                    var count = 0
+                    if(schoolFound.recoveryType == "at_last"){
+                        founds?.forEach {
+                            if(it.first != null){
+                                sum += it.first!!
+                                count++;
+                            }
+                        }
+                    }else{
+                        founds?.forEach {
+                            if(it.second != null){
+                                sum += it.second!!
+                                count++;
+                            }else{
+                                if(it.first != null){
+                                    sum += it.first!!
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+                    if(count > 0){
+                        this.def = (sum/count).toString().replace(".",",")
+                        this.basic = getBasic(sum/count, superior, alto, minNote)
+                    }else{
+                        this.def = ""
+                        this.basic = ""
+                    }
+                }
+            }
         }
     }
 

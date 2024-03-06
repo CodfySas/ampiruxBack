@@ -41,4 +41,5 @@ class UserDto : BaseDto() {
     var classroom: String? = null
     var active: Boolean? = null
     var superUser: Boolean? = null
+    var reportType: String? = null
 }

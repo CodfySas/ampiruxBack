@@ -88,6 +88,7 @@ class AuthServiceImpl(
             this.recoveryType = school.recoveryType
             this.enabledFinalRecovery = school.enabledFinalRecovery
             this.classroom = "${grades.firstOrNull()?.name}-${classrooms.firstOrNull()?.name}"
+            this.reportType = school.reportType
         }
     }
 }
