@@ -7,6 +7,7 @@ import com.osia.nota_maestro.dto.note.v1.NoteDto
 import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteStudentDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
+import com.osia.nota_maestro.dto.notification.v1.NotificationRequest
 import com.osia.nota_maestro.dto.resources.v1.MyAssignmentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
@@ -32,6 +33,7 @@ import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.note.NoteService
+import com.osia.nota_maestro.service.notification.NotificationService
 import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.service.studentNote.StudentNoteService
 import com.osia.nota_maestro.service.studentSubject.StudentSubjectService
@@ -41,6 +43,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @Service("note.crud_service")
@@ -61,7 +64,8 @@ class NoteServiceImpl(
     private val schoolService: SchoolService,
     private val gradeSubjectRepository: GradeSubjectRepository,
     private val studentSubjectMapper: StudentSubjectMapper,
-    private val gradeSubjectMapper: GradeSubjectMapper
+    private val gradeSubjectMapper: GradeSubjectMapper,
+    private val notificationService: NotificationService
 ) : NoteService {
 
     override fun getYears(schoolUUID: UUID): List<Int> {
@@ -315,8 +319,24 @@ class NoteServiceImpl(
         val toCreate = mutableListOf<StudentNoteRequest>()
         val judgmentsToSave = mutableListOf<StudentSubjectDto>()
 
+        val users = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent })
+        val subjects = subjectRepository.findAllById(notesDto.mapNotNull { it.subject })
+
+        val notificationRequests = mutableListOf<NotificationRequest>()
+
         notesDto.forEach { nDto ->
             nDto.students?.forEach { s ->
+                val myCs = classroomStudents.firstOrNull{ myCs-> myCs.uuid == s.uuid }
+                val myUser = users.firstOrNull { u-> u.uuid == myCs?.uuidStudent }
+                val subject = subjects.firstOrNull { sx-> sx.uuid == nDto.subject }
+                notificationRequests.add(NotificationRequest().apply {
+                    this.uuidUser = myUser?.uuid
+                    this.type = "note"
+                    this.description = "El docente ${userFound?.name} ${userFound?.lastname} ha subido las notas de ${subject?.name}"
+                    this.urlLink = "/reports"
+                    this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                    this.uuidSchool = userFound?.uuidSchool
+                })
                 judgmentsToSave.add(
                     StudentSubjectDto().apply {
                         this.uuidClassroomStudent = s.uuid
@@ -347,6 +367,7 @@ class NoteServiceImpl(
             }
         }
 
+        notificationService.saveMultiple(notificationRequests)
         studentNoteService.saveMultiple(toCreate)
         studentNoteService.updateMultiple(
             toUpdate.map {
