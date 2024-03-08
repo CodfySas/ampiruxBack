@@ -29,4 +29,6 @@ interface AttendanceFailRepository :
     fun deleteByUuids(uuids: List<UUID>)
 
     fun getAllByUuidAttendanceIn(attendances: List<UUID>): List<AttendanceFail>
+
+    fun getAllByUuidAttendanceInAndUuidStudent(attendances: List<UUID>, student: UUID): List<AttendanceFail>
 }

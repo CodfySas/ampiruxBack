@@ -7,6 +7,8 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceMapper
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceFailDto
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceFailRequest
+import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceStudentDto
+import com.osia.nota_maestro.dto.calendar.v1.CalendarDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
@@ -31,8 +33,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month
+import java.time.Year
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
@@ -151,6 +156,91 @@ class AttendanceServiceImpl(
             it.deletedAt = LocalDateTime.now()
         }
         attendanceRepository.saveAll(attendances)
+    }
+
+    override fun getByStudent(uuid: UUID, subject: UUID, month: Int): List<List<AttendanceStudentDto>> {
+        val user = userRepository.findById(uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val school = schoolService.getById(user.uuidSchool!!)
+        val classrooms = classroomRepository.findAllByUuidSchoolAndYear(user.uuidSchool!!, school.actualYear!!)
+        val classroomStudent = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, user.uuid!!).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val attendances = attendanceRepository.getAllByUuidClassroomAndUuidSubjectAndMonth(classroomStudent.uuidClassroom!!, subject, month)
+            .sortedBy { it.day }
+        val fails = attendanceFailRepository.getAllByUuidAttendanceInAndUuidStudent(attendances.mapNotNull { it.uuid }, user.uuid!!)
+
+        val maxDays = Month.of(month).length(Year.isLeap(school.actualYear!!.toLong()))
+
+        val dateInit = LocalDate.of(school.actualYear!!, month, 1)
+        val dateFinish = LocalDate.of(school.actualYear!!, month, maxDays)
+
+        val finalList = mutableListOf<AttendanceStudentDto>()
+
+        if (dateInit.dayOfWeek != DayOfWeek.MONDAY) {
+            val initDayWeek = dateInit.dayOfWeek.value - 1
+            repeat(initDayWeek) {
+                val dayExtraMinus = dateInit.minusDays((initDayWeek - it).toLong())
+                finalList.add(
+                    AttendanceStudentDto().apply {
+                        this.outOfMonth = true
+                        this.dayOfWeek = dayExtraMinus.dayOfWeek
+                        this.dayNumber = dayExtraMinus.dayOfMonth
+                        this.totalDay = dayExtraMinus
+                        this.enabled = false
+                        this.failed = false
+                        this.reason = ""
+                    }
+                )
+            }
+        }
+
+        for (day in 1..maxDays) {
+            val dayFound = attendances.firstOrNull { it.day == day }
+            val fail = fails.firstOrNull { it.uuidAttendance == dayFound?.uuid }
+            val actualDate = dateInit.plusDays((day - 1).toLong())
+
+            finalList.add(
+                AttendanceStudentDto().apply {
+                    this.dayNumber = day
+                    this.dayOfWeek = DayOfWeek.from(actualDate)
+                    this.outOfMonth = false
+                    this.totalDay = actualDate
+                    this.enabled = dayFound != null
+                    this.failed = fail != null
+                    this.reason = fail?.reason ?: ""
+                }
+            )
+        }
+
+        if (dateFinish.dayOfWeek != DayOfWeek.SUNDAY) {
+            val daysToAdd = 7 - (dateFinish.dayOfWeek.value)
+            repeat(daysToAdd) {
+                val dayExtraPlus = dateFinish.plusDays(it.toLong() + 1)
+                finalList.add(
+                    AttendanceStudentDto().apply {
+                        this.outOfMonth = true
+                        this.dayOfWeek = dayExtraPlus.dayOfWeek
+                        this.dayNumber = dayExtraPlus.dayOfMonth
+                        this.totalDay = dayExtraPlus
+                        this.enabled = false
+                        this.failed = false
+                        this.reason = ""
+                    }
+                )
+            }
+        }
+        val groupedByFileList = mutableListOf<List<AttendanceStudentDto>>()
+        val fileData = mutableListOf<AttendanceStudentDto>()
+        finalList.forEach {
+            fileData.add(it)
+            if (it.dayOfWeek == DayOfWeek.SUNDAY) {
+                groupedByFileList.add(fileData.toMutableList())
+                fileData.clear()
+            }
+        }
+        return groupedByFileList
     }
 
     override fun getComplete(classroom: UUID, subject: UUID, month: Int, school: UUID): List<AttendanceCompleteDto> {

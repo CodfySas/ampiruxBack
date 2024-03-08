@@ -195,7 +195,7 @@ class NoteServiceImpl(
         val schoolFound = schoolService.getById(my.get().uuidSchool!!)
         val schoolPeriods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(schoolFound.uuid!!, schoolFound.actualYear!!)
         val classroomStudents = classroomStudentRepository.findAllByUuidClassroom(request.classroom)
-        val students0 = studentSubjectRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
+        val students0 = studentSubjectRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }).sortedBy { it.period }
         val classroom = classroomRepository.findById(request.classroom)
         var gradeSubjects = gradeSubjectRepository.findAllByUuidGrade(classroom.get().uuidGrade!!)
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())

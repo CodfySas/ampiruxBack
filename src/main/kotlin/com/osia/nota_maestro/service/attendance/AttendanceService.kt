@@ -3,6 +3,7 @@ package com.osia.nota_maestro.service.attendance
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceCompleteDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
+import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceStudentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.model.Attendance
@@ -27,6 +28,7 @@ interface AttendanceService {
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
 
+    fun getByStudent(uuid: UUID, subject: UUID, month: Int): List<List<AttendanceStudentDto>>
     fun getComplete(classroom: UUID, subject: UUID, month: Int, school: UUID): List<AttendanceCompleteDto>
     fun submit(classroom: UUID, subject: UUID, month: Int, school: UUID, req: List<AttendanceCompleteDto>): List<AttendanceCompleteDto>
 

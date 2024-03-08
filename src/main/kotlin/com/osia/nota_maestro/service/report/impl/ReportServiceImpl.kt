@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.service.report.impl
 
 import com.osia.nota_maestro.dto.note.v1.AccompanimentPeriodDto
+import com.osia.nota_maestro.dto.note.v1.NoteDetailsDto
 import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
 import com.osia.nota_maestro.dto.note.v1.ObservationPeriodDto
@@ -13,6 +14,7 @@ import com.osia.nota_maestro.repository.directorStudent.DirectorStudentRepositor
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
+import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.teacher.TeacherRepository
@@ -40,7 +42,8 @@ class ReportServiceImpl(
     private val accompanimentStudentRepository: AccompanimentStudentRepository,
     private val directorRepository: DirectorRepository,
     private val teacherRepository: TeacherRepository,
-    private val gradeRepository: GradeRepository
+    private val gradeRepository: GradeRepository,
+    private val studentNoteRepository: StudentNoteRepository
 ) : ReportService {
 
     override fun getByMultipleStudent(list: List<UUID>): List<ReportStudentNote> {
@@ -274,6 +277,10 @@ class ReportServiceImpl(
                 .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
         val promByPeriod = mutableMapOf<String, List<Pair<Double?, Double?>>>()
+
+        val allNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(
+                mutableListOf(myClassStudentActual.uuid!!)
+            )
         subjectsParents.forEach {
             val myNotePeriods = mutableListOf<NotePeriodDto>()
             var recoveryF: Double? = null
@@ -292,6 +299,17 @@ class ReportServiceImpl(
                         this.number = p.number
                         this.defi = (ssP?.def)
                         this.judgment = ssP?.judgment ?: ""
+                        val myPNotes = allNotes.filter { n ->
+                            n.period == ssP?.period && n.uuidClassroomStudent == myClassStudentActual.uuid &&
+                                    n.uuidSubject == it.uuid
+                        }
+                        this.notes = myPNotes.map { n ->
+                            NoteDetailsDto().apply {
+                                this.note = (n.note?.toString()?.replace(".", ",") ?: "")
+                                this.number = (n.number)
+                                this.name = n.noteName
+                            }
+                        }
                         this.def = (ssP?.def.toString().replace(".", ","))
                         this.basic = (ssP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                         this.color = getColor(this.basic)
@@ -324,6 +342,17 @@ class ReportServiceImpl(
                             NotePeriodDto().apply {
                                 this.number = p.number
                                 this.judgment = ssChP?.judgment ?: ""
+                                val myPNotes = allNotes.filter { n ->
+                                    n.period == ssChP?.period && n.uuidClassroomStudent == myClassStudentActual.uuid &&
+                                            n.uuidSubject == ch.uuid
+                                }
+                                this.notes = myPNotes.map { n ->
+                                    NoteDetailsDto().apply {
+                                        this.note = (n.note?.toString()?.replace(".", ",") ?: "")
+                                        this.number = (n.number)
+                                        this.name = n.noteName
+                                    }
+                                }
                                 this.def = ((ssChP?.def?.toString()?.replace(".", ",")) ?: "")
                                 this.basic = (ssChP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                 this.color = getColor(this.basic)

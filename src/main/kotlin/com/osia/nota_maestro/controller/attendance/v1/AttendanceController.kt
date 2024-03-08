@@ -5,6 +5,7 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceCompleteDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceMapper
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
+import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceStudentDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.service.attendance.AttendanceService
@@ -115,6 +116,15 @@ class AttendanceController(
         @RequestHeader school: UUID
     ): ResponseEntity<List<AttendanceCompleteDto>> {
         return ResponseEntity.ok().body(attendanceService.getComplete(classroom, subject, month, school))
+    }
+
+    @GetMapping("/complete-student/{uuid}/{subject}/{month}")
+    fun getByStudent(
+        @PathVariable uuid: UUID,
+        @PathVariable subject: UUID,
+        @PathVariable month: Int
+    ): ResponseEntity<List<List<AttendanceStudentDto>>> {
+        return ResponseEntity.ok().body(attendanceService.getByStudent(uuid, subject, month))
     }
 
     @PostMapping("/complete/{classroom}/{subject}/{month}")
