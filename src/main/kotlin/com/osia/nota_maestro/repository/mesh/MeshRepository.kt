@@ -28,5 +28,5 @@ interface MeshRepository :
     @Query("UPDATE Mesh SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
 
-    fun findFirstByClassroomAndSubjectAndPeriod(classroom: UUID, subject: UUID, period: Int): Optional<Mesh>
+    fun findAllByClassroomAndSubjectAndPeriod(classroom: UUID, subject: UUID, period: Int): List<Mesh>
 }

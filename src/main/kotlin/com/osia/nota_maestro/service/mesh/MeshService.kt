@@ -19,10 +19,10 @@ interface MeshService {
     fun saveMultiple(meshRequestList: List<MeshRequest>): List<MeshDto>
     // Update
     fun update(uuid: UUID, meshRequest: MeshRequest, includeDelete: Boolean = false): MeshDto
-    fun updateMultiple(meshDtoList: List<MeshDto>): List<MeshDto>
+    fun updateMultiple(meshDtoList: List<MeshDto>, classroom: UUID, subject: UUID, period: Int): List<MeshDto>
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
-    fun getBy(classroom: UUID, subject: UUID, period: Int): MeshDto
-    fun getByMy(uuid: UUID, subject: UUID, period: Int): MeshDto
+    fun getBy(classroom: UUID, subject: UUID, period: Int): List<Mesh>
+    fun getByMy(uuid: UUID, subject: UUID, period: Int): List<MeshDto>
 }

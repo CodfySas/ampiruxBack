@@ -1,7 +1,7 @@
 package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
-import com.osia.nota_maestro.model.listener.mesh.MeshListener
+import com.osia.nota_maestro.model.listener.planning.PlanningListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.util.UUID
@@ -10,28 +10,32 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "meshs",
+    name = "plannings",
 )
 @Entity
 @DynamicUpdate
 @EntityListeners(
     value = [
-        MeshListener::class
+        PlanningListener::class
     ]
 )
 @Where(clause = "deleted = false")
-data class Mesh(
-    var axis: String? = null,
-    var content: String? = null,
-    var achievements: String? = null,
-    var achievementIndicator: String? = null,
-    var strategies: String? = null,
-    var skills: String? = null,
+data class Planning(
+    var day: String? = null,
+    var position: Int? = null,
+
+    var area: String? = null,
+    var goals: String? = null,
+    var topic: String? = null,
+    var activity: String? = null,
+    var resources: String? = null,
+
     var classroom: UUID? = null,
     var subject: UUID? = null,
-    var period: Int? = null,
+    var week: Int? = null,
+
+    var dateRange: String? = null,
     var observation: String? = "",
     var status: String? = "pending",
-    var userReview: UUID? = null,
-    var position: Int? = null
+    var userReview: UUID? = null
 ) : BaseModel()

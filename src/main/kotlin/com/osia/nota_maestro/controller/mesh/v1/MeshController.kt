@@ -80,11 +80,11 @@ class MeshController(
         return ResponseEntity.ok().body(meshService.update(uuid, request))
     }
 
-    @PatchMapping("/multiple")
+    @PatchMapping("/multiple/{classroom}/{subject}/{period}")
     fun updateMultiple(
-        @RequestBody meshDtoList: List<MeshDto>
+        @RequestBody meshDtoList: List<MeshDto>, @PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int
     ): ResponseEntity<List<MeshDto>> {
-        return ResponseEntity.ok().body(meshService.updateMultiple(meshDtoList))
+        return ResponseEntity.ok().body(meshService.updateMultiple(meshDtoList,classroom, subject, period))
     }
 
     // delete
@@ -105,12 +105,18 @@ class MeshController(
     }
 
     @GetMapping("/get/{classroom}/{subject}/{period}")
-    fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int): MeshDto {
-        return meshService.getBy(classroom,subject,period)
+    fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int): List<MeshDto> {
+        val mesh = meshService.getBy(classroom,subject,period).map(meshMapper::toDto).sortedBy { it.position }
+        return mesh.ifEmpty {
+            mutableListOf(MeshDto())
+        }
     }
 
     @GetMapping("/get-my/{uuid}/{subject}/{period}")
-    fun getByMy(@PathVariable uuid: UUID, @PathVariable subject: UUID, @PathVariable period: Int): MeshDto {
-        return meshService.getByMy(uuid, subject, period)
+    fun getByMy(@PathVariable uuid: UUID, @PathVariable subject: UUID, @PathVariable period: Int): List<MeshDto> {
+        val mesh = meshService.getByMy(uuid, subject, period)
+        return mesh.ifEmpty {
+            mutableListOf(MeshDto())
+        }
     }
 }

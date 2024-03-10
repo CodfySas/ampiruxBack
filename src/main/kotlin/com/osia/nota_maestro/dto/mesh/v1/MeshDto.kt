@@ -16,4 +16,5 @@ class MeshDto : BaseDto() {
     var observation: String? = null
     var status: String? = null
     var userReview: UUID? = null
+    var position: Int? = null
 }
