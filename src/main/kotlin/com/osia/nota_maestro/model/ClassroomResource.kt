@@ -5,7 +5,6 @@ import com.osia.nota_maestro.model.listener.classroomResource.ClassroomResourceL
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
@@ -33,5 +32,8 @@ data class ClassroomResource(
     var durationTime: Int? = null,
     var lastHour: String? = null,
     var hasFile: Boolean? = false,
-    var ext: String? = null
+    var ext: String? = null,
+    var initTime: LocalDate? = null,
+    var initHour: String? = null,
+    var attempts: Int? = null
 ) : BaseModel()

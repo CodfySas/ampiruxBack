@@ -5,22 +5,32 @@ import com.osia.nota_maestro.dto.classroomResourceTask.v1.ClassroomResourceTaskD
 import com.osia.nota_maestro.dto.classroomResourceTask.v1.ClassroomResourceTaskMapper
 import com.osia.nota_maestro.dto.classroomResourceTask.v1.ClassroomResourceTaskRequest
 import com.osia.nota_maestro.model.ClassroomResourceTask
+import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomResourceTask.ClassroomResourceTaskRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroomResource.ClassroomResourceService
 import com.osia.nota_maestro.service.classroomResourceTask.ClassroomResourceTaskService
-import com.osia.nota_maestro.service.classroomStudent.ClassroomStudentService
+import com.osia.nota_maestro.service.school.SchoolService
 import com.osia.nota_maestro.util.CreateSpec
+import com.osia.nota_maestro.util.SubmitFile
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service("classroomResourceTask.crud_service")
@@ -31,7 +41,9 @@ class ClassroomResourceTaskServiceImpl(
     private val objectMapper: ObjectMapper,
     private val classroomResourceService: ClassroomResourceService,
     private val classroomStudentRepository: ClassroomStudentRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val classroomRepository: ClassroomRepository,
+    private val schoolService: SchoolService
 ) : ClassroomResourceTaskService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -149,6 +161,7 @@ class ClassroomResourceTaskServiceImpl(
             this.submitAtHour = myTask?.submitAtHour ?: ""
             this.note = myTask?.note
             this.observation = myTask?.observation ?: ""
+            this.uuid = myTask?.uuid
         } }
     }
 
@@ -175,5 +188,70 @@ class ClassroomResourceTaskServiceImpl(
         saveMultiple(toCreate)
         updateMultiple(toUpdate)
         return req
+    }
+
+    override fun getMyClassroomResourceTask(uuid: UUID, task: UUID): ClassroomResourceTaskDto {
+        val classroomResourceTask = classroomResourceTaskRepository.findAllByUuidStudentAndUuidClassroomResource(uuid, task).orElseGet {
+            ClassroomResourceTask()
+        }
+        return classroomResourceTaskMapper.toDto(classroomResourceTask)
+    }
+
+    override fun submitMyClassroomResourceTask(
+        uuid: UUID,
+        task: UUID,
+        name: String,
+        description: String,
+        hasFile: Boolean,
+        ext: String
+    ): ClassroomResourceTaskDto {
+        val csFound = classroomResourceTaskRepository.findAllByUuidStudentAndUuidClassroomResource(uuid, task)
+        return if(csFound.isPresent){
+            update(csFound.get().uuid!!, ClassroomResourceTaskRequest().apply {
+                this.description = description
+                this.hasFile = hasFile
+                this.ext = ext
+                this.name = name
+                this.submitAt = LocalDate.now(ZoneId.of("America/Bogota"))
+                val horaActual = LocalTime.now(ZoneId.of("America/Bogota"))
+                val fHora = DateTimeFormatter.ofPattern("HH:mm")
+                val horaActualFormat = horaActual.format(fHora)
+                this.submitAtHour = horaActualFormat
+            })
+        }else{
+            val user = userRepository.getByUuid(uuid)
+            val school = schoolService.getById(user.get().uuidSchool!!)
+            val classrooms = classroomRepository.findAllByUuidSchoolAndYear(school.uuid!!, school.actualYear!!)
+            val csF = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, uuid).orElseThrow {
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+            }
+            save(ClassroomResourceTaskRequest().apply {
+                this.uuidClassroomResource = task
+                this.uuidClassroomStudent = csF?.uuid
+                this.uuidStudent = uuid
+                this.description = description
+                this.hasFile = hasFile
+                this.name = name
+                this.ext = ext
+                this.submitAt = LocalDate.now(ZoneId.of("America/Bogota"))
+                val horaActual = LocalTime.now(ZoneId.of("America/Bogota"))
+                val fHora = DateTimeFormatter.ofPattern("HH:mm")
+                val horaActualFormat = horaActual.format(fHora)
+                this.submitAtHour = horaActualFormat
+            })
+        }
+    }
+
+    override fun download(uuid: UUID): ResponseEntity<ByteArray> {
+        val resource = getById(uuid)
+        return try {
+            val targetLocation: Path = Path.of("src/main/resources/files/${uuid}.${resource.ext}")
+            val fileBytes = Files.readAllBytes(targetLocation)
+            ResponseEntity.ok().contentType(SubmitFile().determineMediaType(resource.ext ?: "")).body(fileBytes)
+        } catch (ex: Exception) {
+            val targetLocation: Path = Path.of("src/main/resources/logos/none.png")
+            val imageBytes = Files.readAllBytes(targetLocation)
+            ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(imageBytes)
+        }
     }
 }

@@ -4,8 +4,10 @@ import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
+import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.service.classroomResource.ClassroomResourceService
+import com.osia.nota_maestro.util.SubmitFile
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -147,7 +149,7 @@ class ClassroomResourceController(
     ): ResponseEntity<ByteArray> {
         val originalFilename = file.originalFilename
         val extension = originalFilename?.substringAfterLast(".")
-        reviewExt(extension ?: "")
+        SubmitFile().reviewExt(extension ?: "")
         val newResource = classroomResourceService.save(ClassroomResourceRequest().apply {
             this.classroom = classroom
             this.subject = subject
@@ -156,7 +158,7 @@ class ClassroomResourceController(
             this.type = extension
             this.ext = extension
         })
-        return submitFile(newResource, extension, file)
+        return SubmitFile().submitFile(newResource.uuid!!, extension, file)
     }
 
     @PostMapping("/submit-task/{classroom}/{subject}/{period}")
@@ -178,8 +180,8 @@ class ClassroomResourceController(
         val date = dateFormatter.parse(datePart)
         val localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
 
-        if(file != null){
-            reviewExt(extension ?: "")
+        if (file != null) {
+            SubmitFile().reviewExt(extension ?: "")
         }
 
         val newTask = classroomResourceService.save(ClassroomResourceRequest().apply {
@@ -187,7 +189,7 @@ class ClassroomResourceController(
             this.description = description
             this.finishTime = localDate
             this.lastHour = lastHour
-            if(file != null){
+            if (file != null) {
                 this.hasFile = true
             }
             this.classroom = classroom
@@ -197,32 +199,66 @@ class ClassroomResourceController(
             this.ext = extension
         })
 
-        if(file != null){
-            submitFile(newTask, extension, file)
+        if (file != null) {
+            SubmitFile().submitFile(newTask.uuid!!, extension, file)
         }
 
         return ResponseEntity.ok(newTask)
     }
 
-    private fun reviewExt(ext: String) {
-        val letExtensions =
-            mutableListOf("doc", "docx", "ppt", "pptx", "xls", "xlsx", "png", "jpg", "jpeg", "gif", "pdf")
-        if (!letExtensions.contains(ext)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+    @PatchMapping("/update-task/{uuid}")
+    fun updateTask(
+        @RequestParam("file") file: MultipartFile?,
+        @RequestParam("name") name: String,
+        @RequestParam("description") description: String,
+        @RequestParam("last_day") lastDay: String,
+        @RequestParam("last_hour") lastHour: String,
+        @PathVariable uuid: UUID
+    ): ResponseEntity<ClassroomResourceDto> {
+        val originalFilename = file?.originalFilename
+        val extension = originalFilename?.substringAfterLast(".")
+
+        val datePart = lastDay.substring(0, 15)
+        val dateFormatter = SimpleDateFormat("EEE MMM dd yyyy", Locale.ENGLISH)
+        val date = dateFormatter.parse(datePart)
+        val localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+
+        var hasFile: Boolean? = null
+        var extt: String? = null
+        if (file != null) {
+            SubmitFile().reviewExt(extension ?: "")
+            hasFile = true
+            extt = extension
         }
+
+        val updated = classroomResourceService.update(uuid, ClassroomResourceRequest().apply {
+            this.hasFile = hasFile
+            this.name = name
+            this.description = description
+            this.finishTime = localDate
+            this.lastHour = lastHour
+            this.ext = extt
+        })
+
+        if (file != null) {
+            SubmitFile().submitFile(updated.uuid!!, extension, file)
+        }
+
+        return ResponseEntity.ok(updated)
     }
 
-    private fun submitFile(
-        newResource: ClassroomResourceDto,
-        extension: String?,
-        file: MultipartFile
-    ) = try {
-        val targetLocation: Path = Path.of("src/main/resources/files/${newResource.uuid}.${extension}")
-        Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
-        val imageBytes = Files.readAllBytes(targetLocation)
-        ResponseEntity.ok().contentType(classroomResourceService.determineMediaType(extension ?: ""))
-            .body(imageBytes)
-    } catch (ex: Exception) {
-        throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al cargar el archivo: ${ex.message}")
+    @GetMapping("/get-exam/{uuid}/{exam}")
+    fun getCompleteExamByTeacher(@PathVariable uuid: UUID, @PathVariable exam: UUID): ResponseEntity<ExamCompleteDto> {
+        return ResponseEntity.ok(classroomResourceService.getCompleteExamByTeacher(uuid, exam))
+    }
+
+    @PostMapping("/submit-exam/{classroom}/{subject}/{period}")
+    fun submitExam(
+        @PathVariable classroom: UUID,
+        @PathVariable subject: UUID,
+        @PathVariable period: Int,
+        @RequestBody req: ExamCompleteDto
+    ): ResponseEntity<ExamCompleteDto> {
+        return ResponseEntity.ok(classroomResourceService.submitExam(req, classroom, subject, period))
     }
 }

@@ -4,15 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
+import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
+import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionDto
+import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionRequest
+import com.osia.nota_maestro.dto.examResponse.v1.ExamResponseDto
+import com.osia.nota_maestro.dto.examResponse.v1.ExamResponseRequest
 import com.osia.nota_maestro.model.ClassroomResource
+import com.osia.nota_maestro.model.ExamQuestion
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomResource.ClassroomResourceRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
+import com.osia.nota_maestro.repository.examQuestion.ExamQuestionRepository
+import com.osia.nota_maestro.repository.examResponse.ExamResponseRepository
 import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroomResource.ClassroomResourceService
+import com.osia.nota_maestro.service.examQuestion.ExamQuestionService
+import com.osia.nota_maestro.service.examResponse.ExamResponseService
 import com.osia.nota_maestro.util.CreateSpec
+import com.osia.nota_maestro.util.SubmitFile
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -38,7 +49,11 @@ class ClassroomResourceServiceImpl(
     private val schoolRepository: SchoolRepository,
     private val schoolPeriodRepository: SchoolPeriodRepository,
     private val userRepository: UserRepository,
-    private val classroomStudentRepository: ClassroomStudentRepository
+    private val classroomStudentRepository: ClassroomStudentRepository,
+    private val examQuestionRepository: ExamQuestionRepository,
+    private val examQuestionService: ExamQuestionService,
+    private val examResponseRepository: ExamResponseRepository,
+    private val examResponseService: ExamResponseService
 ) : ClassroomResourceService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -163,7 +178,7 @@ class ClassroomResourceServiceImpl(
         return try {
             val targetLocation: Path = Path.of("src/main/resources/files/${uuid}.${resource.ext}")
             val fileBytes = Files.readAllBytes(targetLocation)
-            ResponseEntity.ok().contentType(determineMediaType(resource.ext ?: "")).body(fileBytes)
+            ResponseEntity.ok().contentType(SubmitFile().determineMediaType(resource.ext ?: "")).body(fileBytes)
         } catch (ex: Exception) {
             val targetLocation: Path = Path.of("src/main/resources/logos/none.png")
             val imageBytes = Files.readAllBytes(targetLocation)
@@ -171,16 +186,116 @@ class ClassroomResourceServiceImpl(
         }
     }
 
-    override fun determineMediaType(ext: String): MediaType {
-        return when {
-            ext.endsWith("png") -> MediaType.IMAGE_PNG
-            ext.endsWith("jpg") || ext.endsWith("jpeg") -> MediaType.IMAGE_JPEG
-            ext.endsWith("gif") -> MediaType.IMAGE_GIF
-            ext.endsWith("pdf") -> MediaType.APPLICATION_PDF
-            ext.endsWith("doc") || ext.endsWith("docx") -> MediaType.valueOf("application/msword")
-            ext.endsWith("xls") || ext.endsWith("xlsx") -> MediaType.valueOf("application/vnd.ms-excel")
-            ext.endsWith("ppt") || ext.endsWith("pptx") -> MediaType.valueOf("application/vnd.ms-powerpoint")
-            else -> MediaType.APPLICATION_OCTET_STREAM // Tipo genérico para otros tipos de archivo
+    override fun getCompleteExamByTeacher(uuid: UUID, task: UUID): ExamCompleteDto {
+        val user = userRepository.getByUuid(uuid).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        if(user.role == "student"){
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "trying to hack? :)")
+        }
+        val exam = classroomResourceRepository.getByUuid(task).orElseThrow {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val allExamQuestions = examQuestionRepository.getAllByUuidExam(exam.uuid!!)
+        val allResponses = examResponseRepository.getAllByUuidExamQuestionIn(allExamQuestions.mapNotNull { it.uuid })
+
+        return ExamCompleteDto().apply {
+            this.uuid = exam.uuid
+            this.attempts = exam.attempts
+            this.lastHour = exam.lastHour
+            this.finishTime = exam.finishTime
+            this.durationTime = exam.durationTime
+            this.initHour = exam.initHour
+            this.initTime = exam.initTime
+            this.name = exam.name
+            this.questions = allExamQuestions.filter { it.uuidExam == exam.uuid }.map { ExamQuestionDto().apply {
+                this.uuid = it.uuid
+                this.ordered = it.ordered
+                this.description = it.description
+                this.type = it.type
+                this.responses = allResponses.filter { r-> r.uuidExamQuestion == it.uuid }.map { r-> ExamResponseDto().apply {
+                    this.uuid = r.uuid
+                    this.description = r.description
+                    this.correct = r.correct
+                } }
+            } }
         }
     }
+
+    @Transactional
+    override fun submitExam(exam: ExamCompleteDto, classroom: UUID, subject: UUID, period: Int): ExamCompleteDto {
+        val req = ClassroomResourceRequest().apply {
+            this.attempts = exam.attempts
+            this.lastHour = exam.lastHour
+            this.finishTime = exam.finishTime
+            this.initHour = exam.initHour
+            this.initTime = exam.initTime
+            this.durationTime = exam.durationTime
+            this.name = exam.name
+        }
+
+        val examFound = if(exam.uuid == null){
+           save(req.apply {
+                this.classroom = classroom
+                this.period = period
+                this.subject = subject
+                this.hasFile = false
+                this.type = "exam"
+            })
+        }else{
+            val found = getById(exam.uuid!!)
+            update(found.uuid!!, req)
+        }
+
+        val toCreate = mutableListOf<ExamQuestion>()
+        val toUpdate = mutableListOf<ExamQuestionDto>()
+        val allExamQuestions = examQuestionRepository.getAllByUuidExam(examFound.uuid!!)
+        val submit = exam.questions ?: mutableListOf()
+        val toDelete = allExamQuestions.filterNot { submit.mapNotNull { r-> r.uuid }.contains(it.uuid!!) }
+
+        val toCreateR = mutableListOf<ExamResponseRequest>()
+        val toUpdateR = mutableListOf<ExamResponseDto>()
+        val allResponses = examResponseRepository.getAllByUuidExamQuestionIn(submit.mapNotNull { it.uuid })
+        val submitR = submit.flatMap { it.responses ?: mutableListOf() }
+        val toDeleteR = allResponses.filterNot { submitR.mapNotNull { r-> r.uuid }.contains(it.uuid!!) }
+
+        exam.questions?.forEach {
+            var newUuid = UUID.randomUUID()
+            if(it.uuid == null){
+                toCreate.add(ExamQuestion().apply {
+                    this.uuid = newUuid
+                    this.uuidExam = examFound.uuid!!
+                    this.type = it.type
+                    this.description = it.description
+                    this.ordered = it.ordered
+                })
+            }else{
+                newUuid = it.uuid
+                toUpdate.add(it)
+            }
+            it.responses?.forEach { r->
+                if(r.uuid == null){
+                    toCreateR.add(ExamResponseRequest().apply {
+                        this.uuidExamQuestion = newUuid
+                        this.description = r.description
+                        this.correct = r.correct
+                    })
+                }else{
+                    toUpdateR.add(r)
+                }
+            }
+        }
+
+        examQuestionRepository.saveAll(toCreate)
+        examQuestionService.updateMultiple(toUpdate)
+        examQuestionService.deleteMultiple(toDelete.mapNotNull { it.uuid })
+
+        examResponseService.saveMultiple(toCreateR)
+        examResponseService.updateMultiple(toUpdateR)
+        examResponseService.deleteMultiple(toDeleteR.mapNotNull { it.uuid })
+
+        return exam
+    }
+
+
 }

@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.dto.classroomResource.v1
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class ClassroomResourceRequest {
@@ -16,4 +15,7 @@ class ClassroomResourceRequest {
     var lastHour: String? = null
     var hasFile: Boolean? = null
     var ext: String? = null
+    var initTime: LocalDate? = null
+    var initHour: String? = null
+    var attempts: Int? = null
 }

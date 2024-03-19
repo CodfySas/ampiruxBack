@@ -29,4 +29,9 @@ interface ClassroomResourceTaskRepository :
     fun deleteByUuids(uuids: List<UUID>)
 
     fun findAllByUuidClassroomResource(uuid: UUID): List<ClassroomResourceTask>
+
+    fun findAllByUuidStudentAndUuidClassroomResource(uuid: UUID, uuidTask: UUID): Optional<ClassroomResourceTask>
+
+    fun findAllByUuidClassroomStudentAndUuidClassroomResource(uuid: UUID, uuidTask: UUID): Optional<ClassroomResourceTask>
+
 }

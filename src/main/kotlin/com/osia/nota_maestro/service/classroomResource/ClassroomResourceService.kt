@@ -2,11 +2,10 @@ package com.osia.nota_maestro.service.classroomResource
 
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
-import com.osia.nota_maestro.dto.mesh.v1.MeshDto
+import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
 import com.osia.nota_maestro.model.ClassroomResource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import java.util.UUID
 
@@ -34,7 +33,7 @@ interface ClassroomResourceService {
 
     fun download(uuid: UUID): ResponseEntity<ByteArray>
 
-    fun determineMediaType(ext: String): MediaType
+    fun getCompleteExamByTeacher(uuid: UUID, task: UUID): ExamCompleteDto
 
-
+    fun submitExam(exam: ExamCompleteDto, classroom: UUID, subject: UUID, period: Int): ExamCompleteDto
 }

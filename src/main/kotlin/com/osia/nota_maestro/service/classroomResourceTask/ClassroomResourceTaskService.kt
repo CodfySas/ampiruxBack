@@ -5,6 +5,7 @@ import com.osia.nota_maestro.dto.classroomResourceTask.v1.ClassroomResourceTaskR
 import com.osia.nota_maestro.model.ClassroomResourceTask
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
 import java.util.UUID
 
 interface ClassroomResourceTaskService {
@@ -26,4 +27,10 @@ interface ClassroomResourceTaskService {
 
     fun getByClassroomAndTask(classroom: UUID, task: UUID): List<ClassroomResourceTaskDto>
     fun submitClassroomAndTask(classroom: UUID, task: UUID, req: List<ClassroomResourceTaskDto>): List<ClassroomResourceTaskDto>
+
+    fun getMyClassroomResourceTask(uuid: UUID, task: UUID): ClassroomResourceTaskDto
+
+    fun submitMyClassroomResourceTask(uuid: UUID, task: UUID, name: String, description: String, hasFile: Boolean, ext: String): ClassroomResourceTaskDto
+
+    fun download(uuid: UUID): ResponseEntity<ByteArray>
 }
