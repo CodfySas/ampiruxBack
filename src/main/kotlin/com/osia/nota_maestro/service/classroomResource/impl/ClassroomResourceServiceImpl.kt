@@ -6,7 +6,6 @@ import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
 import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionDto
-import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionRequest
 import com.osia.nota_maestro.dto.examResponse.v1.ExamResponseDto
 import com.osia.nota_maestro.dto.examResponse.v1.ExamResponseRequest
 import com.osia.nota_maestro.model.ClassroomResource
@@ -186,11 +185,11 @@ class ClassroomResourceServiceImpl(
         }
     }
 
-    override fun getCompleteExamByTeacher(uuid: UUID, task: UUID): ExamCompleteDto {
+    override fun getCompleteExamByTeacher(uuid: UUID, task: UUID, showResponse: Boolean): ExamCompleteDto {
         val user = userRepository.getByUuid(uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
-        if(user.role == "student"){
+        if(user.role == "student" && showResponse){
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "trying to hack? :)")
         }
         val exam = classroomResourceRepository.getByUuid(task).orElseThrow {
@@ -216,7 +215,9 @@ class ClassroomResourceServiceImpl(
                 this.responses = allResponses.filter { r-> r.uuidExamQuestion == it.uuid }.map { r-> ExamResponseDto().apply {
                     this.uuid = r.uuid
                     this.description = r.description
-                    this.correct = r.correct
+                    if(showResponse){
+                        this.correct = r.correct
+                    }
                 } }
             } }
         }

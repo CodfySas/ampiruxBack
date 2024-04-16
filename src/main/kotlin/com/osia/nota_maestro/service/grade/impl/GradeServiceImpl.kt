@@ -285,7 +285,7 @@ class GradeServiceImpl(
     }
 
     override fun getGradeWithSubjects(school: UUID): List<GradeSubjectsDto> {
-        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete)
+        val allGrades = gradeRepository.findAll(Specification.where(CreateSpec<Grade>().createSpec("", school))).map(gradeMapper::toComplete).sortedBy { it.ordered }
         val gradeSubject = gradeSubjectRepository.findAllByUuidGradeIn(allGrades.mapNotNull { it.uuid })
         val final = mutableListOf<GradeSubjectsDto>()
         val subjects = subjectService.findByMultiple(gradeSubject.mapNotNull { it.uuidSubject })

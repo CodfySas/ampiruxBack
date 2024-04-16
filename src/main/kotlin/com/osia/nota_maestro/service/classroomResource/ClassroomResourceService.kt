@@ -33,7 +33,7 @@ interface ClassroomResourceService {
 
     fun download(uuid: UUID): ResponseEntity<ByteArray>
 
-    fun getCompleteExamByTeacher(uuid: UUID, task: UUID): ExamCompleteDto
+    fun getCompleteExamByTeacher(uuid: UUID, task: UUID, showResponse: Boolean): ExamCompleteDto
 
     fun submitExam(exam: ExamCompleteDto, classroom: UUID, subject: UUID, period: Int): ExamCompleteDto
 }

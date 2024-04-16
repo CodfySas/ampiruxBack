@@ -5,13 +5,11 @@ import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
-import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.service.classroomResource.ClassroomResourceService
 import com.osia.nota_maestro.util.SubmitFile
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -26,15 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.server.ResponseStatusException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.Locale
 import java.util.UUID
 
@@ -249,7 +240,13 @@ class ClassroomResourceController(
 
     @GetMapping("/get-exam/{uuid}/{exam}")
     fun getCompleteExamByTeacher(@PathVariable uuid: UUID, @PathVariable exam: UUID): ResponseEntity<ExamCompleteDto> {
-        return ResponseEntity.ok(classroomResourceService.getCompleteExamByTeacher(uuid, exam))
+        return ResponseEntity.ok(classroomResourceService.getCompleteExamByTeacher(uuid, exam, true))
+    }
+
+    @GetMapping("/get-exam-student/{uuid}/{exam}")
+    fun getExamByStudent(@PathVariable uuid: UUID, @PathVariable exam: UUID): ResponseEntity<ExamCompleteDto> {
+        return ResponseEntity.ok(classroomResourceService.getCompleteExamByTeacher(uuid, exam, false))
+
     }
 
     @PostMapping("/submit-exam/{classroom}/{subject}/{period}")
