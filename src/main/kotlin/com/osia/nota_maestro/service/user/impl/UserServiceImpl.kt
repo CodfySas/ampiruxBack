@@ -262,7 +262,7 @@ class UserServiceImpl(
                 listOf(
                     "Notas", "Archivo De Notas", "Asistencias", "Aula y Recursos",
                     "Recuperaciones", "Malla academica", "Evaluaciones",
-                    "Mi Grupo", "Certificados", "Acompañamientos", "Director de grupo", "Mis Cursos", "Planeacion", "Plan de Estudios"
+                    "Mi Grupo", "Certificados", "Acompañamientos", "Director de grupo", "Mis Cursos", "Planeacion", "Plan de Estudios", "Diagnostico"
                 )
             )
         }
