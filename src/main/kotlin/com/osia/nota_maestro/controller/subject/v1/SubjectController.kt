@@ -6,6 +6,7 @@ import com.osia.nota_maestro.dto.subject.v1.SubjectMapper
 import com.osia.nota_maestro.dto.subject.v1.SubjectRequest
 import com.osia.nota_maestro.service.subject.SubjectService
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -33,7 +34,7 @@ class SubjectController(
     // Read
     @GetMapping
     fun findAll(pageable: Pageable, @RequestHeader school: UUID): Page<SubjectDto> {
-        return subjectService.findAll(pageable, school)
+        return subjectService.findAll(Pageable.ofSize(500), school)
     }
 
     @GetMapping("/filter/{where}")
