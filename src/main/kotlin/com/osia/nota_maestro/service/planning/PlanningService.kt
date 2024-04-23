@@ -1,5 +1,6 @@
 package com.osia.nota_maestro.service.planning
 
+import com.osia.nota_maestro.dto.notification.v1.NotificationDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
 import com.osia.nota_maestro.model.Planning
@@ -19,10 +20,9 @@ interface PlanningService {
     fun saveMultiple(planningRequestList: List<PlanningRequest>): List<PlanningDto>
     // Update
     fun update(uuid: UUID, planningRequest: PlanningRequest, includeDelete: Boolean = false): PlanningDto
-    fun updateMultiple(planningDtoList: List<PlanningDto>, classroom: UUID, subject: UUID, period: Int): List<PlanningDto>
+    fun updateMultiple(planningRequest: List<PlanningDto>): List<PlanningDto>
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
-    fun getBy(classroom: UUID, subject: UUID, week: Int): List<Planning>
-    fun getByMy(uuid: UUID, subject: UUID, week: Int): List<PlanningDto>
+    fun getBy(classroom: UUID, subject: UUID, week: Int): Planning
 }

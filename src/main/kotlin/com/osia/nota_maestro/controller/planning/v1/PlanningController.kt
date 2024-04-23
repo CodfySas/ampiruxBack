@@ -1,13 +1,17 @@
 package com.osia.nota_maestro.controller.planning.v1
 
 import com.osia.nota_maestro.dto.OnCreate
+import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningMapper
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
+import com.osia.nota_maestro.repository.planning.PlanningRepository
 import com.osia.nota_maestro.service.planning.PlanningService
+import com.osia.nota_maestro.util.SubmitFile
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -19,7 +23,13 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 
 @RestController("planning.v1.crud")
@@ -28,8 +38,61 @@ import java.util.UUID
 @Validated
 class PlanningController(
     private val planningService: PlanningService,
-    private val planningMapper: PlanningMapper
+    private val planningMapper: PlanningMapper,
+    private val planningRepository: PlanningRepository
 ) {
+    @PostMapping("/submit/{classroom}/{subject}/{week}/{my}")
+    fun submitPlanning(
+        @RequestParam("file") file: MultipartFile,
+        @PathVariable classroom: UUID,
+        @PathVariable subject: UUID,
+        @PathVariable week: Int,
+        @PathVariable my: UUID,
+    ): ResponseEntity<PlanningDto> {
+        val originalFilename = file.originalFilename
+        val extension = originalFilename?.substringAfterLast(".")
+        SubmitFile().reviewExt(extension ?: "")
+        val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, subject, week)
+        var newResource: PlanningDto = PlanningDto()
+        if(founded.isPresent){
+            newResource = planningMapper.toDto(founded.get())
+            planningService.update(newResource.uuid!!, PlanningRequest().apply {
+                this.userReview = my
+                this.area = file.originalFilename?.substringBeforeLast(".")
+                this.topic = file.originalFilename?.substringAfterLast(".")
+                this.status = "pending"
+            })
+        }else{
+            newResource = planningService.save(PlanningRequest().apply {
+                this.classroom = classroom
+                this.subject = subject
+                this.week = week
+                this.userReview = my
+                this.area = file.originalFilename?.substringBeforeLast(".")
+                this.topic = file.originalFilename?.substringAfterLast(".")
+                this.status = "pending"
+            })
+        }
+        val name = "${newResource.uuid!!}-${file.originalFilename?.substringBeforeLast(".")}"
+
+        SubmitFile().submitPlanning(name, extension, file)
+        return ResponseEntity.ok(newResource)
+    }
+
+    @GetMapping("/download/{area}/{uuid}/{ext}")
+    fun downloadPlanning(@PathVariable area: String, @PathVariable uuid: UUID, @PathVariable ext: String): ResponseEntity<ByteArray> {
+        val name = "${uuid}-${area}"
+        return try {
+            val targetLocation: Path = Path.of("src/main/resources/plannings/${name}.${ext}")
+            val imageBytes = Files.readAllBytes(targetLocation)
+            ResponseEntity.ok().contentType(SubmitFile().determineMediaType(area.substringAfterLast("."))).body(imageBytes)
+        } catch (ex: Exception) {
+            val targetLocation: Path = Path.of("src/main/resources/logos/none.png")
+            val imageBytes = Files.readAllBytes(targetLocation)
+            ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(imageBytes)
+        }
+    }
+
     // Read
     @GetMapping
     fun findAll(pageable: Pageable, @RequestHeader school: UUID): Page<PlanningDto> {
@@ -80,13 +143,6 @@ class PlanningController(
         return ResponseEntity.ok().body(planningService.update(uuid, request))
     }
 
-    @PatchMapping("/multiple/{classroom}/{subject}/{period}")
-    fun updateMultiple(
-        @RequestBody planningDtoList: List<PlanningDto>, @PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int
-    ): ResponseEntity<List<PlanningDto>> {
-        return ResponseEntity.ok().body(planningService.updateMultiple(planningDtoList,classroom, subject, period))
-    }
-
     // delete
     @DeleteMapping("/{uuid}")
     fun delete(
@@ -105,27 +161,7 @@ class PlanningController(
     }
 
     @GetMapping("/get/{classroom}/{subject}/{week}")
-    fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable week: Int): List<PlanningDto> {
-        val planning = planningService.getBy(classroom,subject,week).map(planningMapper::toDto).sortedBy { it.position }
-        return planning.ifEmpty {
-            getEmpty()
-        }
-    }
-
-    @GetMapping("/get-my/{uuid}/{subject}/{week}")
-    fun getByMy(@PathVariable uuid: UUID, @PathVariable subject: UUID, @PathVariable week: Int): List<PlanningDto> {
-        val planning = planningService.getByMy(uuid, subject, week)
-        return planning.ifEmpty {
-            getEmpty()
-        }
-    }
-
-    private fun getEmpty(): List<PlanningDto>{
-        val planningList = mutableListOf<PlanningDto>()
-        val daysOfWeek = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
-        for ((position, day) in daysOfWeek.withIndex()) {
-            planningList.add(PlanningDto().apply { this.day = day; this.position = position })
-        }
-        return planningList
+    fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable week: Int): PlanningDto {
+        return planningMapper.toDto(planningService.getBy(classroom,subject,week))
     }
 }

@@ -1,6 +1,7 @@
 package com.osia.nota_maestro.service.planning.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.notification.v1.NotificationDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningMapper
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
@@ -71,8 +72,12 @@ class PlanningServiceImpl(
     @Transactional
     override fun save(planningRequest: PlanningRequest, replace: Boolean): PlanningDto {
         log.trace("planning save -> request: $planningRequest")
-        val savedPlanning = planningMapper.toModel(planningRequest)
-        return planningMapper.toDto(planningRepository.save(savedPlanning))
+        val found = planningRepository.findFirstByClassroomAndSubjectAndWeek(planningRequest.classroom!!, planningRequest.subject!!, planningRequest.week!!)
+        return if(found.isPresent){
+            update(found.get().uuid!!, planningRequest)
+        }else{
+            planningMapper.toDto(planningRepository.save(planningMapper.toModel(planningRequest)))
+        }
     }
 
     @Transactional
@@ -95,21 +100,22 @@ class PlanningServiceImpl(
     }
 
     @Transactional
-    override fun updateMultiple(planningDtoList: List<PlanningDto>, classroom: UUID, subject: UUID, period: Int): List<PlanningDto> {
-        log.trace("planning updateMultiple -> planningDtoList: ${objectMapper.writeValueAsString(planningDtoList)}")
-        val getBy = getBy(classroom, subject, period)
-        val toSave = planningDtoList.filter { it.uuid == null }
-        val toUpdate = planningDtoList.filter { it.uuid != null }
-        val toDelete = getBy.filterNot { m-> planningDtoList.mapNotNull { it.uuid }.contains(m.uuid) }.mapNotNull { it.uuid }
-        val toUpdateAll = mutableListOf<Planning>()
-        toUpdate.forEach {
-            val foundSaved = getBy.first { f-> f.uuid == it.uuid }
-            planningMapper.update(planningMapper.toRequest(it), foundSaved)
-            toUpdateAll.add(foundSaved)
+    override fun updateMultiple(planningRequest: List<PlanningDto>): List<PlanningDto> {
+        log.trace(
+            "planning updateMultiple -> planningDtoList: ${
+                objectMapper.writeValueAsString(
+                    planningRequest
+                )
+            }"
+        )
+        val plannings = planningRepository.findAllById(planningRequest.mapNotNull { it.uuid })
+        plannings.forEach { planning ->
+            planningMapper.update(
+                planningMapper.toRequest(planningRequest.first { it.uuid == planning.uuid }),
+                planning
+            )
         }
-        deleteMultiple(toDelete)
-        planningRepository.saveAll(toUpdateAll)
-        return saveMultiple(toSave.map(planningMapper::toRequest))
+        return planningRepository.saveAll(plannings).map(planningMapper::toDto)
     }
 
     @Transactional
@@ -132,21 +138,7 @@ class PlanningServiceImpl(
         planningRepository.saveAll(plannings)
     }
 
-    override fun getBy(classroom: UUID, subject: UUID, week: Int): List<Planning> {
-       return planningRepository.findAllByClassroomAndSubjectAndWeek(classroom, subject, week)
-    }
-
-    override fun getByMy(uuid: UUID, subject: UUID, week: Int): List<PlanningDto> {
-        val user = userRepository.findById(uuid).orElseThrow {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
-        }
-        val school = schoolRepository.findById(user.uuidSchool!!).orElseThrow {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
-        }
-        val classrooms = classroomRepository.findAllByUuidSchoolAndYear(user.uuidSchool!!, school.actualYear!!)
-        val classroomStudent = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }.distinct(), uuid).orElseThrow {
-            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
-        }
-        return getBy(classroomStudent.uuidClassroom!!, subject, week).map(planningMapper::toDto).sortedBy { it.position }
+    override fun getBy(classroom: UUID, subject: UUID, week: Int): Planning {
+       return planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, subject, week).orElse(Planning())
     }
 }

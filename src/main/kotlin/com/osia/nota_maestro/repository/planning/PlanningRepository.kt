@@ -28,5 +28,7 @@ interface PlanningRepository :
     @Query("UPDATE Planning SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
 
+    fun findFirstByClassroomAndSubjectAndWeek(classroom: UUID, subject: UUID, week: Int): Optional<Planning>
+
     fun findAllByClassroomAndSubjectAndWeek(classroom: UUID, subject: UUID, week: Int): List<Planning>
 }

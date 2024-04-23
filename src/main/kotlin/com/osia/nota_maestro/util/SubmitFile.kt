@@ -24,6 +24,20 @@ class SubmitFile {
         }
     }
 
+    fun submitPlanning(
+        name: String,
+        extension: String?,
+        file: MultipartFile
+    ) = try {
+        val targetLocation: Path = Path.of("src/main/resources/plannings/${name}.${extension}")
+        Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
+        val imageBytes = Files.readAllBytes(targetLocation)
+        ResponseEntity.ok().contentType(determineMediaType(extension ?: ""))
+            .body(imageBytes)
+    } catch (ex: Exception) {
+        throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al cargar el archivo: ${ex.message}")
+    }
+
     fun submitFile(
         uuid: UUID,
         extension: String?,
