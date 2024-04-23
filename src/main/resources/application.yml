@@ -2,6 +2,9 @@ app:
   country: ${COUNTRY:CO}
   description: ${app.name} is a Spring Boot application
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
   cloud:
     loadbalancer:
       ribbon:
