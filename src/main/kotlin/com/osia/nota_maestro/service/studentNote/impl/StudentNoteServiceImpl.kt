@@ -91,7 +91,11 @@ class StudentNoteServiceImpl(
         log.trace("studentNote updateMultiple -> studentNoteDtoList: ${objectMapper.writeValueAsString(studentNoteDtoList)}")
         val studentNotes = studentNoteRepository.findAllById(studentNoteDtoList.mapNotNull { it.uuid })
         studentNotes.forEach { studentNote ->
-            studentNoteMapper.update(studentNoteMapper.toRequest(studentNoteDtoList.first { it.uuid == studentNote.uuid }), studentNote)
+            val first = studentNoteDtoList.first { it.uuid == studentNote.uuid }
+            studentNoteMapper.update(studentNoteMapper.toRequest(first), studentNote)
+            if(first.note == null){
+                studentNote.note = null
+            }
         }
         return studentNoteRepository.saveAll(studentNotes).map(studentNoteMapper::toDto)
     }

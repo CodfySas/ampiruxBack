@@ -150,7 +150,7 @@ class NoteServiceImpl(
             request.period
         )
         val allNotes =
-            studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
+            studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct()).sortedBy { it.number }
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
 
         val studentSubjectAll = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectAndPeriodIn(
@@ -261,7 +261,7 @@ class NoteServiceImpl(
                 studentNoteRepository.findAllByUuidClassroomStudentIn(
                     classroomStudents.mapNotNull { it.uuid }
                         .distinct()
-                )
+                ).sortedBy { it.number }
             return NoteDto().apply {
                 this.students = classroomStudents.map { cs ->
                     NoteStudentDto().apply {
