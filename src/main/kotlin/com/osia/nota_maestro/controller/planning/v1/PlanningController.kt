@@ -8,6 +8,7 @@ import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
 import com.osia.nota_maestro.repository.planning.PlanningRepository
 import com.osia.nota_maestro.service.planning.PlanningService
 import com.osia.nota_maestro.util.SubmitFile
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -41,6 +42,9 @@ class PlanningController(
     private val planningMapper: PlanningMapper,
     private val planningRepository: PlanningRepository
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @PostMapping("/submit/{classroom}/{subject}/{week}/{my}")
     fun submitPlanning(
         @RequestParam("file") file: MultipartFile,
@@ -74,7 +78,7 @@ class PlanningController(
             })
         }
         val name = "${newResource.uuid!!}-${file.originalFilename?.substringBeforeLast(".")}"
-
+        log.info("llega aqui")
         SubmitFile().submitPlanning(name, extension, file)
         return ResponseEntity.ok(newResource)
     }

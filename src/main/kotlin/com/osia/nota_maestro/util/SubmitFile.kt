@@ -1,7 +1,9 @@
 package com.osia.nota_maestro.util
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResourceTask.v1.ClassroomResourceTaskDto
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -29,12 +31,15 @@ class SubmitFile {
         extension: String?,
         file: MultipartFile
     ) = try {
+        val log = LoggerFactory.getLogger(javaClass)
         val targetLocation: Path = Path.of("src/main/resources/plannings/${name}.${extension}")
         Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
         val imageBytes = Files.readAllBytes(targetLocation)
         ResponseEntity.ok().contentType(determineMediaType(extension ?: ""))
             .body(imageBytes)
     } catch (ex: Exception) {
+        val log = LoggerFactory.getLogger(javaClass)
+        log.info(ObjectMapper().writeValueAsString(ex))
         throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al cargar el archivo: ${ex.message}")
     }
 
