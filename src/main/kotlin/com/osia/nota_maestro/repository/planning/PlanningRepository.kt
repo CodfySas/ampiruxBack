@@ -30,5 +30,7 @@ interface PlanningRepository :
 
     fun findFirstByClassroomAndSubjectAndWeek(classroom: UUID, subject: UUID, week: Int): Optional<Planning>
 
+    fun findFirstByClassroomAndUuidTeacherAndWeek(classroom: UUID, teacher: UUID, week: Int): Optional<Planning>
+
     fun findAllByClassroomAndSubjectAndWeek(classroom: UUID, subject: UUID, week: Int): List<Planning>
 }

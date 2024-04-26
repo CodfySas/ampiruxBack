@@ -42,4 +42,5 @@ class UserDto : BaseDto() {
     var active: Boolean? = null
     var superUser: Boolean? = null
     var reportType: String? = null
+    var planningType: String? = null
 }

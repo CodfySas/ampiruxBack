@@ -7,6 +7,7 @@ import com.osia.nota_maestro.dto.resource.v1.ResourceRequest
 import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
+import com.osia.nota_maestro.dto.user.v1.UserMapper
 import com.osia.nota_maestro.model.Resource
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
@@ -42,6 +43,7 @@ class ResourceServiceImpl(
     private val subjectRepository: SubjectRepository,
     private val classroomStudentRepository: ClassroomStudentRepository,
     private val schoolService: SchoolService,
+    private val userMapper: UserMapper
 ) : ResourceService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -137,6 +139,7 @@ class ResourceServiceImpl(
         val userFound = userRepository.findById(uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
+        val teachers = userRepository.findAllByRoleAndUuidSchool("teacher", userFound.uuidSchool!!).map(userMapper::toDto)
         val schoolFound = schoolService.getById(userFound.uuidSchool!!)
         val grades = gradeRepository.findAllByUuidSchool(schoolFound.uuid!!).sortedBy { it.ordered }
         val classrooms = classroomRepository.findAllByUuidGradeIn(grades.mapNotNull { it.uuid }.distinct())
@@ -147,6 +150,7 @@ class ResourceServiceImpl(
             ResourceGradeDto().apply {
                 this.uuid = g.uuid
                 this.name = g.name
+                this.teachers = teachers
                 this.classrooms = classrooms.filter { c -> c.uuidGrade == g.uuid }.map { c ->
                     ResourceClassroomDto().apply {
                         this.uuid = c.uuid

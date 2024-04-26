@@ -13,6 +13,7 @@ class PlanningRequest {
     var resources: String? = null
 
     var classroom: UUID? = null
+    var uuidTeacher: UUID? = null
     var subject: UUID? = null
     var week: Int? = null
 

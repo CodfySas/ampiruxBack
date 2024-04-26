@@ -52,6 +52,7 @@ class PlanningController(
         @PathVariable subject: UUID,
         @PathVariable week: Int,
         @PathVariable my: UUID,
+        @RequestHeader school: UUID
     ): ResponseEntity<PlanningDto> {
         val originalFilename = file.originalFilename
         val extension = originalFilename?.substringAfterLast(".")
@@ -75,21 +76,57 @@ class PlanningController(
                 this.area = file.originalFilename?.substringBeforeLast(".")
                 this.topic = file.originalFilename?.substringAfterLast(".")
                 this.status = "pending"
-            })
+            }, school)
         }
-        val name = "${newResource.uuid!!}-${file.originalFilename?.substringBeforeLast(".")}"
+        val name = "${newResource.uuid!!}"
         log.info("llega aqui")
         SubmitFile().submitPlanning(name, extension, file)
         return ResponseEntity.ok(newResource)
     }
 
-    @GetMapping("/download/{area}/{uuid}/{ext}")
-    fun downloadPlanning(@PathVariable area: String, @PathVariable uuid: UUID, @PathVariable ext: String): ResponseEntity<ByteArray> {
-        val name = "${uuid}-${area}"
+    @PostMapping("/submit-my/{classroom}/{week}/{my}")
+    fun submitPlanningByTeacher(
+        @RequestParam("file") file: MultipartFile,
+        @PathVariable classroom: UUID,
+        @PathVariable week: Int,
+        @PathVariable my: UUID,
+        @RequestHeader school: UUID
+    ): ResponseEntity<PlanningDto> {
+        val originalFilename = file.originalFilename
+        val extension = originalFilename?.substringAfterLast(".")
+        SubmitFile().reviewExt(extension ?: "")
+        val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, my, week)
+        var newResource: PlanningDto = PlanningDto()
+        if(founded.isPresent){
+            newResource = planningMapper.toDto(founded.get())
+            planningService.update(newResource.uuid!!, PlanningRequest().apply {
+                this.userReview = my
+                this.area = file.originalFilename?.substringBeforeLast(".")
+                this.topic = file.originalFilename?.substringAfterLast(".")
+                this.status = "pending"
+            })
+        }else{
+            newResource = planningService.save(PlanningRequest().apply {
+                this.classroom = classroom
+                this.uuidTeacher = my
+                this.week = week
+                this.userReview = my
+                this.area = file.originalFilename?.substringBeforeLast(".")
+                this.topic = file.originalFilename?.substringAfterLast(".")
+                this.status = "pending"
+            }, school)
+        }
+        val name = "${newResource.uuid!!}"
+        SubmitFile().submitPlanning(name, extension, file)
+        return ResponseEntity.ok(newResource)
+    }
+
+    @GetMapping("/download/{uuid}/{ext}")
+    fun downloadPlanning(@PathVariable uuid: UUID, @PathVariable ext: String): ResponseEntity<ByteArray> {
         return try {
-            val targetLocation: Path = Path.of("src/main/resources/plannings/${name}.${ext}")
+            val targetLocation: Path = Path.of("src/main/resources/plannings/${uuid}.${ext}")
             val imageBytes = Files.readAllBytes(targetLocation)
-            ResponseEntity.ok().contentType(SubmitFile().determineMediaType(area.substringAfterLast("."))).body(imageBytes)
+            ResponseEntity.ok().contentType(SubmitFile().determineMediaType(ext)).body(imageBytes)
         } catch (ex: Exception) {
             val targetLocation: Path = Path.of("src/main/resources/logos/none.png")
             val imageBytes = Files.readAllBytes(targetLocation)
@@ -126,9 +163,10 @@ class PlanningController(
     // Create
     @PostMapping
     fun save(
-        @Validated(OnCreate::class) @RequestBody request: PlanningRequest
+        @Validated(OnCreate::class) @RequestBody request: PlanningRequest,
+        @RequestHeader school: UUID
     ): ResponseEntity<PlanningDto> {
-        return ResponseEntity(planningService.save(request), HttpStatus.CREATED)
+        return ResponseEntity(planningService.save(request, school), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
@@ -167,5 +205,10 @@ class PlanningController(
     @GetMapping("/get/{classroom}/{subject}/{week}")
     fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable week: Int): PlanningDto {
         return planningMapper.toDto(planningService.getBy(classroom,subject,week))
+    }
+
+    @GetMapping("/get-my/{classroom}/{my}/{week}")
+    fun getByGroup(@PathVariable classroom: UUID, @PathVariable my: UUID, @PathVariable week: Int): PlanningDto {
+        return planningMapper.toDto(planningService.getByTeacher(classroom,my,week))
     }
 }

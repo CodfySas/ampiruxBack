@@ -27,4 +27,5 @@ class SchoolRequest {
     var certificates: String? = null
     var periodAvailable: String? = null
     var reportType: String? = null
+    var planningType: String? = null
 }

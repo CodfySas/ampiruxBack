@@ -70,9 +70,16 @@ class PlanningServiceImpl(
     }
 
     @Transactional
-    override fun save(planningRequest: PlanningRequest, replace: Boolean): PlanningDto {
+    override fun save(planningRequest: PlanningRequest, school: UUID, replace: Boolean): PlanningDto {
         log.trace("planning save -> request: $planningRequest")
-        val found = planningRepository.findFirstByClassroomAndSubjectAndWeek(planningRequest.classroom!!, planningRequest.subject!!, planningRequest.week!!)
+        val sf = schoolRepository.findById(school).orElseThrow{
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        }
+        val found = if(sf.planningType != "group"){
+            planningRepository.findFirstByClassroomAndSubjectAndWeek(planningRequest.classroom!!, planningRequest.subject!!, planningRequest.week!!)
+        }else{
+            planningRepository.findFirstByClassroomAndUuidTeacherAndWeek(planningRequest.classroom!!, planningRequest.uuidTeacher!!, planningRequest.week!!)
+        }
         return if(found.isPresent){
             update(found.get().uuid!!, planningRequest)
         }else{
@@ -140,5 +147,9 @@ class PlanningServiceImpl(
 
     override fun getBy(classroom: UUID, subject: UUID, week: Int): Planning {
        return planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, subject, week).orElse(Planning())
+    }
+
+    override fun getByTeacher(classroom: UUID, teacher: UUID, week: Int): Planning {
+        return planningRepository.findFirstByClassroomAndUuidTeacherAndWeek(classroom, teacher, week).orElse(Planning())
     }
 }

@@ -32,6 +32,7 @@ data class Planning(
 
     var classroom: UUID? = null,
     var subject: UUID? = null,
+    var uuidTeacher: UUID? = null,
     var week: Int? = null,
 
     var dateRange: String? = null,

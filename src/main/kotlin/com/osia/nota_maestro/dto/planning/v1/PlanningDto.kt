@@ -12,7 +12,8 @@ class PlanningDto : BaseDto() {
     var topic: String? = null
     var activity: String? = null
     var resources: String? = null
-
+    var uuidTeacher: UUID? = null
+    var teacherName: String? = null
     var classroom: UUID? = null
     var subject: UUID? = null
     var week: Int? = null
@@ -21,4 +22,6 @@ class PlanningDto : BaseDto() {
     var observation: String? = null
     var status: String? = null
     var userReview: UUID? = null
+
+    var type: String? = null
 }

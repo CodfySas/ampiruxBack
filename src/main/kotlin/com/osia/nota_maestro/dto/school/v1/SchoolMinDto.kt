@@ -9,4 +9,5 @@ class SchoolMinDto : BaseDto() {
     var signReportType: String? = null
     var certificates: String? = null
     var periodAvailable: String? = null
+    var planningType: String? = null
 }
