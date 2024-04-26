@@ -1,0 +1,1 @@
+ALTER TABLE public.grades ADD if not exists attendance_type varchar null DEFAULT 'separated';

@@ -118,6 +118,15 @@ class AttendanceController(
         return ResponseEntity.ok().body(attendanceService.getComplete(classroom, subject, month, school))
     }
 
+    @GetMapping("/complete-group/{classroom}/{month}")
+    fun getCompleteGroup(
+        @PathVariable classroom: UUID,
+        @PathVariable month: Int,
+        @RequestHeader school: UUID
+    ): ResponseEntity<List<AttendanceCompleteDto>> {
+        return ResponseEntity.ok().body(attendanceService.getCompleteGroup(classroom, month, school))
+    }
+
     @GetMapping("/complete-student/{uuid}/{subject}/{month}")
     fun getByStudent(
         @PathVariable uuid: UUID,
@@ -136,6 +145,16 @@ class AttendanceController(
         @RequestBody req: List<AttendanceCompleteDto>
     ): ResponseEntity<List<AttendanceCompleteDto>> {
         return ResponseEntity.ok().body(attendanceService.submit(classroom, subject, month, school, req))
+    }
+
+    @PostMapping("/complete-group/{classroom}/{month}")
+    fun submitGrouped(
+        @PathVariable classroom: UUID,
+        @PathVariable month: Int,
+        @RequestHeader school: UUID,
+        @RequestBody req: List<AttendanceCompleteDto>
+    ): ResponseEntity<List<AttendanceCompleteDto>> {
+        return ResponseEntity.ok().body(attendanceService.submitGroup(classroom, month, school, req))
     }
 
     @GetMapping("/resources/{uuid}")

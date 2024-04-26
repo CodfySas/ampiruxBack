@@ -30,7 +30,9 @@ interface AttendanceService {
 
     fun getByStudent(uuid: UUID, subject: UUID, month: Int): List<List<AttendanceStudentDto>>
     fun getComplete(classroom: UUID, subject: UUID, month: Int, school: UUID): List<AttendanceCompleteDto>
+    fun getCompleteGroup(classroom: UUID, month: Int, school: UUID): List<AttendanceCompleteDto>
     fun submit(classroom: UUID, subject: UUID, month: Int, school: UUID, req: List<AttendanceCompleteDto>): List<AttendanceCompleteDto>
+    fun submitGroup(classroom: UUID, month: Int, school: UUID, req: List<AttendanceCompleteDto>): List<AttendanceCompleteDto>
 
     fun getResources(uuid: UUID): List<ResourceGradeDto>
     fun getResourcesStudent(uuid: UUID): List<ResourceSubjectDto>

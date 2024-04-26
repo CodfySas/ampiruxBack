@@ -17,4 +17,5 @@ class GradeDto : BaseDto() {
     var recessBFinish: String? = null
     var duration: Int? = null
     var recess: Int? = null
+    var attendanceType: String? = null
 }

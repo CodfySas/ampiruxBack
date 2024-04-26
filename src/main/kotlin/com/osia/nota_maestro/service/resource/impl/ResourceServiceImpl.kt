@@ -150,6 +150,7 @@ class ResourceServiceImpl(
             ResourceGradeDto().apply {
                 this.uuid = g.uuid
                 this.name = g.name
+                this.attendanceType = g.attendanceType
                 this.teachers = teachers
                 this.classrooms = classrooms.filter { c -> c.uuidGrade == g.uuid }.map { c ->
                     ResourceClassroomDto().apply {
