@@ -1,7 +1,7 @@
 package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
-import com.osia.nota_maestro.model.listener.studentSubject.StudentSubjectListener
+import com.osia.nota_maestro.model.listener.diagnosis.DiagnosisListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.util.UUID
@@ -10,24 +10,22 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "student_subjects",
+    name = "diagnoses",
 )
 @Entity
 @DynamicUpdate
 @EntityListeners(
     value = [
-        StudentSubjectListener::class
+        DiagnosisListener::class
     ]
 )
 @Where(clause = "deleted = false")
-data class StudentSubject(
-    var uuidClassroomStudent: UUID? = null,
-    var uuidSubject: UUID? = null,
+data class Diagnosis(
+    var name: String? = null,
+    var lastname: String? = null,
+    var age: Int? = null,
     var uuidStudent: UUID? = null,
-    var period: Int? = null,
-    var uuidSchool: UUID? = null,
-    var def: Double? = null,
-    var recovery: Double? = null,
-    var judgment: String = "",
-    var observation: String? = null
+    var grade: String? = null,
+    var diagnosis: String? = null,
+    var uuidSchool: UUID? = null
 ) : BaseModel()

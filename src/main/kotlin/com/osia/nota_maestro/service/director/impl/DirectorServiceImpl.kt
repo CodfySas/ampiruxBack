@@ -244,6 +244,7 @@ class DirectorServiceImpl(
                         this.def = ss.def
                         this.recovery = ss.recovery
                         this.judgment = ss.judgment
+                        this.observation = ss.observation
                     }
                 }
             }

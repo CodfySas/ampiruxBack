@@ -8,4 +8,5 @@ class ResourceGradeDto : BaseDto() {
     var classrooms: List<ResourceClassroomDto>? = null
     var teachers: List<UserDto> = mutableListOf()
     var attendanceType: String? = null
+    var noteType: String? = null
 }

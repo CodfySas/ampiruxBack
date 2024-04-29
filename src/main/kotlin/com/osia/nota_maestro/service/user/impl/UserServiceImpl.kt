@@ -273,7 +273,7 @@ class UserServiceImpl(
             saveSubModuleUsers(
                 user.uuid!!,
                 listOf(
-                    "Usuarios", "Administradores", "Estudiantes",
+                    "Usuarios", "Administradores", "Estudiantes", "Diagnostico",
                     "Docentes", "Cursos", "Asignaturas", "Asignar Docentes", "Archivo De Notas",
                     "Aula y Recursos", "Documentacion", "Boletines", "Directores grupo",
                     "Planificacion", "Horarios", "Certificados", "Malla academica", "Acompañantes", "Planeacion", "Plan de Estudios"

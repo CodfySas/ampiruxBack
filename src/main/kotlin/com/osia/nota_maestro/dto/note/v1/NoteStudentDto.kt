@@ -11,4 +11,5 @@ class NoteStudentDto : BaseDto() {
     var judgment: String = ""
     var def: String = ""
     var recovery: String = ""
+    var observation: String? = null
 }

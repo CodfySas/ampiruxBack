@@ -543,6 +543,7 @@ class AttendanceServiceImpl(
                 this.uuid = g.uuid
                 this.name = g.name
                 this.attendanceType = g.attendanceType
+                this.noteType = g.noteType
                 this.classrooms = classrooms.filter { c -> c.uuidGrade == g.uuid }.map { c ->
                     ResourceClassroomDto().apply {
                         this.uuid = c.uuid

@@ -6,6 +6,7 @@ import java.util.UUID
 class NotePeriodDto : BaseDto() {
     var number: Int? = null
     var judgment: String? = null
+    var observation: String? = null
     var uuidJudgment: UUID? = null
     var notes: List<NoteDetailsDto>? = mutableListOf()
     var defi: Double? = null

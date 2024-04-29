@@ -34,5 +34,6 @@ data class Grade(
     var recessaFinish: String? = null,
     var duration: Int? = null,
     var recess: Int? = null,
-    var attendanceType: String? = null
+    var attendanceType: String? = null,
+    var noteType: String? = null
 ) : BaseModel()

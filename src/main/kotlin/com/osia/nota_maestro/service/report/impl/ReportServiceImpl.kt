@@ -52,6 +52,10 @@ class ReportServiceImpl(
         if (students.isEmpty()) {
             return emptyList()
         }
+        val sortedClassroomStudents = classroomStudents.sortedBy { classroomStudent ->
+            val user = students.find { it.uuid == classroomStudent.uuidStudent }
+            user?.lastname
+        }
         val schoolFound = schoolService.getById(students.firstOrNull()?.uuidSchool!!)
         val maxNote = schoolFound.maxNote ?: 5.0
         val minNote = schoolFound.minNote ?: 3.0
@@ -59,7 +63,7 @@ class ReportServiceImpl(
         val alto = maxNote - (maxNote / 5)
 
         val classroomsInYear = classroomRepository.findByUuidInAndYear(
-            classroomStudents.mapNotNull { it.uuidClassroom },
+            sortedClassroomStudents.mapNotNull { it.uuidClassroom },
             schoolFound.actualYear!!
         )
         val gradeSubjects = gradeSubjectRepository.findAllByUuidGradeIn(classroomsInYear.mapNotNull { it.uuidGrade })
@@ -68,7 +72,7 @@ class ReportServiceImpl(
         val subjectsChildren = subjectRepository.findAllById(gradeSubjects.mapNotNull { it.uuidSubject }.distinct())
             .filter { it.uuidParent != null }
         val studentSubject = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(
-            classroomStudents.mapNotNull { it.uuid },
+            sortedClassroomStudents.mapNotNull { it.uuid },
             gradeSubjects.mapNotNull { it.uuidSubject }
         )
         val reportStudent = mutableListOf<ReportStudentNote>()
@@ -77,16 +81,16 @@ class ReportServiceImpl(
                 .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
 
-        val classrooms = classroomRepository.findAllById(classroomStudents.mapNotNull { it.uuidClassroom }.distinct())
+        val classrooms = classroomRepository.findAllById(sortedClassroomStudents.mapNotNull { it.uuidClassroom }.distinct())
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuid })
 
-        val directorStudents = directorStudentRepository.getAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
-        val accompanimentStudents = accompanimentStudentRepository.getAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
+        val directorStudents = directorStudentRepository.getAllByUuidClassroomStudentIn(sortedClassroomStudents.mapNotNull { it.uuid }.distinct())
+        val accompanimentStudents = accompanimentStudentRepository.getAllByUuidClassroomStudentIn(sortedClassroomStudents.mapNotNull { it.uuid }.distinct())
 
-        val directors = directorRepository.getAllByUuidClassroomIn(classroomStudents.mapNotNull { it.uuidClassroom })
+        val directors = directorRepository.getAllByUuidClassroomIn(sortedClassroomStudents.mapNotNull { it.uuidClassroom })
         val teachers = userRepository.findAllById(directors.mapNotNull { it.uuidTeacher })
 
-        classroomStudents.forEach { cs ->
+        sortedClassroomStudents.forEach { cs ->
             val promByPeriod = mutableMapOf<String, List<Pair<Double?, Double?>>>()
             val myDirectorStudent = directorStudents.filter { ds -> ds.uuidClassroomStudent == cs.uuid }
             val myAccompanimentStudent = accompanimentStudents.filter { ds -> ds.uuidClassroomStudent == cs.uuid }
@@ -114,6 +118,7 @@ class ReportServiceImpl(
                                     this.number = p.number
                                     this.defi = (ssP?.def)
                                     this.judgment = ssP?.judgment ?: ""
+                                    this.observation = ssP?.observation ?: ""
                                     this.def = (ssP?.def.toString().replace(".", ","))
                                     this.basic = (ssP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                     this.color = getColor(this.basic)
@@ -146,6 +151,7 @@ class ReportServiceImpl(
                                         NotePeriodDto().apply {
                                             this.number = p.number
                                             this.judgment = ssChP?.judgment ?: ""
+                                            this.observation = ssChP?.observation ?: ""
                                             this.def = ((ssChP?.def?.toString()?.replace(".", ",")) ?: "")
                                             this.basic = (ssChP?.def?.let { it1 -> getBasic(it1, superior, alto, minNote) }) ?: ""
                                             this.color = getColor(this.basic)
@@ -299,6 +305,7 @@ class ReportServiceImpl(
                         this.number = p.number
                         this.defi = (ssP?.def)
                         this.judgment = ssP?.judgment ?: ""
+                        this.observation = ssP?.observation ?: ""
                         val myPNotes = allNotes.filter { n ->
                             n.period == ssP?.period && n.uuidClassroomStudent == myClassStudentActual.uuid &&
                                     n.uuidSubject == it.uuid
@@ -342,6 +349,7 @@ class ReportServiceImpl(
                             NotePeriodDto().apply {
                                 this.number = p.number
                                 this.judgment = ssChP?.judgment ?: ""
+                                this.observation = ssChP?.observation ?: ""
                                 val myPNotes = allNotes.filter { n ->
                                     n.period == ssChP?.period && n.uuidClassroomStudent == myClassStudentActual.uuid &&
                                             n.uuidSubject == ch.uuid

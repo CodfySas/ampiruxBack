@@ -7,4 +7,5 @@ class DirectorStudentSubjectDto : BaseDto() {
     var def: Double? = null
     var recovery: Double? = null
     var judgment: String? = null
+    var observation: String? = null
 }
