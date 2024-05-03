@@ -2,6 +2,7 @@ package com.osia.nota_maestro.controller.planning.v1
 
 import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
+import com.osia.nota_maestro.dto.planning.v1.PlanningCompleteRequest
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningMapper
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
@@ -45,79 +46,56 @@ class PlanningController(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @PostMapping("/submit/{classroom}/{subject}/{week}/{my}")
+    @PostMapping("/submit")
     fun submitPlanning(
-        @RequestParam("file") file: MultipartFile,
-        @PathVariable classroom: UUID,
-        @PathVariable subject: UUID,
-        @PathVariable week: Int,
-        @PathVariable my: UUID,
+        @RequestBody p: PlanningCompleteRequest,
         @RequestHeader school: UUID
     ): ResponseEntity<PlanningDto> {
-        val originalFilename = file.originalFilename
-        val extension = originalFilename?.substringAfterLast(".")
-        SubmitFile().reviewExt(extension ?: "")
-        val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, subject, week)
-        var newResource: PlanningDto = PlanningDto()
-        if(founded.isPresent){
-            newResource = planningMapper.toDto(founded.get())
-            planningService.update(newResource.uuid!!, PlanningRequest().apply {
-                this.userReview = my
-                this.area = file.originalFilename?.substringBeforeLast(".")
-                this.topic = file.originalFilename?.substringAfterLast(".")
+
+        val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(p.classroom!!, p.subject!!, p.week!!)
+        val newResource = if(founded.isPresent){
+            planningMapper.toDto(founded.get())
+            planningService.update(founded.get().uuid!!, PlanningRequest().apply {
+                this.userReview = p.my
                 this.status = "pending"
+                this.area = p.area
             })
         }else{
-            newResource = planningService.save(PlanningRequest().apply {
-                this.classroom = classroom
-                this.subject = subject
-                this.week = week
-                this.userReview = my
-                this.area = file.originalFilename?.substringBeforeLast(".")
-                this.topic = file.originalFilename?.substringAfterLast(".")
+            planningService.save(PlanningRequest().apply {
+                this.classroom = p.classroom
+                this.subject = p.subject
+                this.week = p.week
+                this.userReview = p.my
                 this.status = "pending"
+                this.area = p.area
             }, school)
         }
-        val name = "${newResource.uuid!!}"
-        log.info("llega aqui")
-        SubmitFile().submitPlanning(name, extension, file)
         return ResponseEntity.ok(newResource)
     }
 
-    @PostMapping("/submit-my/{classroom}/{week}/{my}")
+    @PostMapping("/submit-my")
     fun submitPlanningByTeacher(
-        @RequestParam("file") file: MultipartFile,
-        @PathVariable classroom: UUID,
-        @PathVariable week: Int,
-        @PathVariable my: UUID,
+        @RequestBody p: PlanningCompleteRequest,
         @RequestHeader school: UUID
     ): ResponseEntity<PlanningDto> {
-        val originalFilename = file.originalFilename
-        val extension = originalFilename?.substringAfterLast(".")
-        SubmitFile().reviewExt(extension ?: "")
-        val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, my, week)
-        var newResource: PlanningDto = PlanningDto()
-        if(founded.isPresent){
-            newResource = planningMapper.toDto(founded.get())
-            planningService.update(newResource.uuid!!, PlanningRequest().apply {
-                this.userReview = my
-                this.area = file.originalFilename?.substringBeforeLast(".")
-                this.topic = file.originalFilename?.substringAfterLast(".")
+        val founded = planningRepository.findFirstByClassroomAndUuidTeacherAndWeek(p.classroom!!, p.teacher!!, p.week!!)
+        val newResource = if(founded.isPresent){
+            planningMapper.toDto(founded.get())
+            planningService.update(founded.get().uuid!!, PlanningRequest().apply {
+                this.userReview = p.teacher
                 this.status = "pending"
+                this.area = p.area
             })
         }else{
-            newResource = planningService.save(PlanningRequest().apply {
-                this.classroom = classroom
-                this.uuidTeacher = my
-                this.week = week
-                this.userReview = my
-                this.area = file.originalFilename?.substringBeforeLast(".")
-                this.topic = file.originalFilename?.substringAfterLast(".")
+            planningService.save(PlanningRequest().apply {
+                this.classroom = p.classroom
+                this.uuidTeacher = p.teacher
+                this.week = p.week
+                this.userReview = p.teacher
                 this.status = "pending"
+                this.area = p.area
             }, school)
         }
-        val name = "${newResource.uuid!!}"
-        SubmitFile().submitPlanning(name, extension, file)
         return ResponseEntity.ok(newResource)
     }
 
