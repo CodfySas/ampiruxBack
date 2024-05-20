@@ -10,4 +10,5 @@ class ExamQuestionDto : BaseDto() {
     var uuidExam: UUID? = null
     var ordered: Int? = null
     var responses: List<ExamResponseDto>? = null
+    var responseOpen: String? = null
 }

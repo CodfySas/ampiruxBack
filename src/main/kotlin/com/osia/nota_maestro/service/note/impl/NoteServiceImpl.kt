@@ -21,6 +21,8 @@ import com.osia.nota_maestro.dto.studentSubject.v1.StudentSubjectMapper
 import com.osia.nota_maestro.dto.studentSubject.v1.StudentSubjectRequest
 import com.osia.nota_maestro.model.Classroom
 import com.osia.nota_maestro.model.ClassroomStudent
+import com.osia.nota_maestro.model.SchoolPeriod
+import com.osia.nota_maestro.model.StudentPosition
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
@@ -29,6 +31,7 @@ import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.judgment.JudgmentRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
+import com.osia.nota_maestro.repository.studentPosition.StudentPositionRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
@@ -65,11 +68,13 @@ class NoteServiceImpl(
     private val gradeSubjectRepository: GradeSubjectRepository,
     private val studentSubjectMapper: StudentSubjectMapper,
     private val gradeSubjectMapper: GradeSubjectMapper,
-    private val notificationService: NotificationService
+    private val notificationService: NotificationService,
+    private val studentPositionRepository: StudentPositionRepository
 ) : NoteService {
 
     override fun getYears(schoolUUID: UUID): List<Int> {
-        val periods = schoolPeriodRepository.findAllByUuidSchool(schoolUUID).sortedByDescending { it.actualYear }.mapNotNull { it.actualYear }
+        val periods = schoolPeriodRepository.findAllByUuidSchool(schoolUUID).sortedByDescending { it.actualYear }
+            .mapNotNull { it.actualYear }
         return periods.distinct()
     }
 
@@ -82,7 +87,11 @@ class NoteServiceImpl(
         val classrooms = if (teacherFound.role == "teacher") {
             classroomRepository.findByUuidInAndYear(
                 classroomSubjects.mapNotNull { it.uuidClassroom },
-                if (year == 0) { schoolFound.actualYear!! } else { year }
+                if (year == 0) {
+                    schoolFound.actualYear!!
+                } else {
+                    year
+                }
             )
         } else {
             classroomRepository.findAllByUuidSchoolAndYear(schoolFound.uuid!!, year)
@@ -90,12 +99,17 @@ class NoteServiceImpl(
         if (teacherFound.role != "teacher") {
             classroomSubjects = classroomSubjectRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
         }
-        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }.distinct()).sortedBy { it.ordered }
+        val grades =
+            gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade }.distinct()).sortedBy { it.ordered }
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
         var periods = grades.firstOrNull()?.uuidSchool?.let {
             schoolPeriodRepository.findAllByUuidSchoolAndActualYear(
                 it,
-                if (year == 0) { schoolFound.actualYear!! } else { year }
+                if (year == 0) {
+                    schoolFound.actualYear!!
+                } else {
+                    year
+                }
             )
         }
             ?.filter {
@@ -105,7 +119,7 @@ class NoteServiceImpl(
         if (year == 0) {
             periods = periods.filter {
                 it.init!! <= LocalDateTime.now().plusDays(1) &&
-                    it.finish!!.plusDays(1) >= LocalDateTime.now()
+                        it.finish!!.plusDays(1) >= LocalDateTime.now()
             }
         }
 
@@ -151,7 +165,8 @@ class NoteServiceImpl(
             request.period
         )
         val allNotes =
-            studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct()).sortedBy { it.number }
+            studentNoteRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }.distinct())
+                .sortedBy { it.number }
         val students = userRepository.getAllByUuidIn(classroomStudents.mapNotNull { it.uuidStudent }.distinct())
 
         val studentSubjectAll = studentSubjectRepository.findAllByUuidClassroomStudentInAndUuidSubjectAndPeriodIn(
@@ -178,7 +193,7 @@ class NoteServiceImpl(
                     this.observation = studentSubject?.observation ?: ""
                     val myNotes = allNotes.filter {
                         it.uuidSubject == request.subject && it.period == request.period &&
-                            it.uuidClassroomStudent == cs.uuid
+                                it.uuidClassroomStudent == cs.uuid
                     }.map { n ->
                         NoteDetailsDto().apply {
                             this.note = n.note?.toString()?.replace(".", ",") ?: ""
@@ -203,9 +218,12 @@ class NoteServiceImpl(
     override fun getMyNotesArchive(teacher: UUID, year: Int, type: String, request: ResourceRequest): NoteDto {
         val my = userRepository.findById(teacher)
         val schoolFound = schoolService.getById(my.get().uuidSchool!!)
-        val schoolPeriods = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(schoolFound.uuid!!, schoolFound.actualYear!!)
+        val schoolPeriods =
+            schoolPeriodRepository.findAllByUuidSchoolAndActualYear(schoolFound.uuid!!, schoolFound.actualYear!!)
         val classroomStudents = classroomStudentRepository.findAllByUuidClassroom(request.classroom)
-        val students0 = studentSubjectRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid }).sortedBy { it.period }
+        val students0 =
+            studentSubjectRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
+                .sortedBy { it.period }
 
         val classroom = classroomRepository.findById(request.classroom)
         var gradeSubjects = gradeSubjectRepository.findAllByUuidGrade(classroom.get().uuidGrade!!)
@@ -217,12 +235,15 @@ class NoteServiceImpl(
         }
 
         if (my.get().role == "teacher") {
-            val cs = classroomSubjectRepository.getAllByUuidTeacher(teacher).filter { it.uuidClassroom == request.classroom }
+            val cs =
+                classroomSubjectRepository.getAllByUuidTeacher(teacher).filter { it.uuidClassroom == request.classroom }
             gradeSubjects = gradeSubjects.filter { cs.mapNotNull { cc -> cc.uuidSubject }.contains(it.uuidSubject) }
         }
         if (type == "all_subjects") {
             val subjects = subjectRepository.findAllById(gradeSubjects.mapNotNull { it.uuidSubject }.distinct())
-            val gradeParents = gradeSubjects.filter { gs -> subjects.filter { it.uuidParent == null }.mapNotNull { it.uuid }.contains(gs.uuidSubject) }
+            val gradeParents = gradeSubjects.filter { gs ->
+                subjects.filter { it.uuidParent == null }.mapNotNull { it.uuid }.contains(gs.uuidSubject)
+            }
             return NoteDto().apply {
                 this.students = sortedClassroomStudents.map { cs ->
                     NoteStudentDto().apply {
@@ -240,7 +261,8 @@ class NoteServiceImpl(
                                 val ss0 = ss.firstOrNull { it.period == 0 }
                                 val ssp = ss.filter { it.period != 0 }
                                 if (schoolFound.recoveryType == "atl_last") {
-                                    this.def = (ss0?.recovery?.toString()?.replace(".", ",") ?: (ss0?.def?.toString()?.replace(".", ",") ?: ""))
+                                    this.def = (ss0?.recovery?.toString()?.replace(".", ",") ?: (ss0?.def?.toString()
+                                        ?.replace(".", ",") ?: ""))
                                 } else {
                                     var sum = 0.0
                                     var notes = 0
@@ -248,7 +270,7 @@ class NoteServiceImpl(
                                         val def = p.recovery ?: p.def
                                         if (def != null) {
                                             sum += def
-                                            notes ++
+                                            notes++
                                         }
                                     }
                                     if (sum > 0.0) {
@@ -296,7 +318,7 @@ class NoteServiceImpl(
                                 this.recovery = (fss?.recovery?.toString()?.replace(".", ",") ?: "")
                                 val myNotes = allNotes.filter { n ->
                                     n.period == fss?.period && n.uuidClassroomStudent == cs.uuid &&
-                                        n.uuidSubject == request.subject
+                                            n.uuidSubject == request.subject
                                 }
                                 this.notes = myNotes.map { n ->
                                     NoteDetailsDto().apply {
@@ -322,13 +344,14 @@ class NoteServiceImpl(
         val classroom = classroomRepository.findAllById(notesDto.map { it.classroom }.distinct())
         val classroomStudents = classroomStudentRepository.findAllByUuidClassroomIn(notesDto.map { it.classroom })
         val allNotesSaved =
-            studentNoteRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(classroomStudents.mapNotNull { it.uuid }.distinct(), notesDto.map { it.subject })
+            studentNoteRepository.findAllByUuidClassroomStudentInAndUuidSubjectIn(classroomStudents.mapNotNull { it.uuid }
+                .distinct(), notesDto.map { it.subject })
         val allNotesToSave = notesDto.flatMap { it.students!! }.flatMap { it.notes!! }
 
         val toDel = (
-            allNotesSaved.filterNot { sn -> allNotesToSave.mapNotNull { it.uuid }.contains(sn.uuid) }
-                .filter { sn -> notesDto.map { it.period }.contains(sn.period) }
-            )
+                allNotesSaved.filterNot { sn -> allNotesToSave.mapNotNull { it.uuid }.contains(sn.uuid) }
+                    .filter { sn -> notesDto.map { it.period }.contains(sn.period) }
+                )
         val toUpdate = mutableMapOf<UUID, StudentNoteRequest>()
         val toCreate = mutableListOf<StudentNoteRequest>()
         val judgmentsToSave = mutableListOf<StudentSubjectDto>()
@@ -340,13 +363,14 @@ class NoteServiceImpl(
 
         notesDto.forEach { nDto ->
             nDto.students?.forEach { s ->
-                val myCs = classroomStudents.firstOrNull{ myCs-> myCs.uuid == s.uuid }
-                val myUser = users.firstOrNull { u-> u.uuid == myCs?.uuidStudent }
-                val subject = subjects.firstOrNull { sx-> sx.uuid == nDto.subject }
+                val myCs = classroomStudents.firstOrNull { myCs -> myCs.uuid == s.uuid }
+                val myUser = users.firstOrNull { u -> u.uuid == myCs?.uuidStudent }
+                val subject = subjects.firstOrNull { sx -> sx.uuid == nDto.subject }
                 notificationRequests.add(NotificationRequest().apply {
                     this.uuidUser = myUser?.uuid
                     this.type = "note"
-                    this.description = "El docente ${userFound?.name} ${userFound?.lastname} ha subido las notas de ${subject?.name}"
+                    this.description =
+                        "El docente ${userFound?.name} ${userFound?.lastname} ha subido las notas de ${subject?.name}"
                     this.urlLink = "/reports"
                     this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
                     this.uuidSchool = userFound?.uuidSchool
@@ -457,7 +481,7 @@ class NoteServiceImpl(
                     // subjects by student
                     val myStudentSubjects = studentSubjects.filter { ss ->
                         ss.uuidSubject == gs.uuidSubject &&
-                            ss.uuidClassroomStudent == cs.uuid
+                                ss.uuidClassroomStudent == cs.uuid
                     }
                     val ss0 = myStudentSubjects.firstOrNull { ss -> ss.period == 0 }
                     val ss0Children = mutableMapOf<UUID, Pair<Double, Int>>()
@@ -469,7 +493,7 @@ class NoteServiceImpl(
                         var defFinal: Double? = null
                         val myNotes = studentNotes.filter { sn ->
                             sn.period == p.number && sn.uuidClassroomStudent == cs.uuid &&
-                                sn.uuidSubject == gs.uuidSubject && sn.note != null
+                                    sn.uuidSubject == gs.uuidSubject && sn.note != null
                         }
                         if (gs.children.isNullOrEmpty()) {
                             if (myNotes.isNotEmpty()) {
@@ -484,11 +508,11 @@ class NoteServiceImpl(
                                 var defPerChildren: Double? = null
                                 val childrenNoteInPeriod = studentNotes.filter { sn ->
                                     sn.period == p.number &&
-                                        sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == ch.uuidSubject && sn.note != null
+                                            sn.uuidClassroomStudent == cs.uuid && sn.uuidSubject == ch.uuidSubject && sn.note != null
                                 }
                                 val sch = studentSubjects.firstOrNull { ss ->
                                     ss.uuidSubject == ch.uuidSubject && ss.uuidClassroomStudent == cs.uuid &&
-                                        ss.period == p.number
+                                            ss.period == p.number
                                 }
                                 if (childrenNoteInPeriod.isNotEmpty()) {
                                     defPerChildren =
@@ -571,7 +595,7 @@ class NoteServiceImpl(
             ssToCreate.forEach { ss ->
                 val find = judgmentsSubmited.firstOrNull { js ->
                     js.uuidSubject == ss.uuidSubject &&
-                        js.uuidClassroomStudent == ss.uuidClassroomStudent && js.period == ss.period
+                            js.uuidClassroomStudent == ss.uuidClassroomStudent && js.period == ss.period
                 }
                 if (find != null) {
                     ss.judgment = find.judgment
@@ -582,7 +606,7 @@ class NoteServiceImpl(
             ssToUpdate.forEach { ss ->
                 val find = judgmentsSubmited.firstOrNull { js ->
                     js.uuidSubject == ss.uuidSubject &&
-                        js.uuidClassroomStudent == ss.uuidClassroomStudent && js.period == ss.period
+                            js.uuidClassroomStudent == ss.uuidClassroomStudent && js.period == ss.period
                 }
                 if (find != null) {
                     ss.judgment = find.judgment
@@ -601,30 +625,76 @@ class NoteServiceImpl(
     }
 
     @Async
-    override fun setPositions(classroomStudents: List<ClassroomStudent>, allSs: List<StudentSubjectDto>) {
+    override fun setPositions(
+        classroomStudents: List<ClassroomStudent>,
+        allSs: List<StudentSubjectDto>
+    ) {
+        val studentPositions =
+            studentPositionRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
         val classes = classroomStudents.groupBy { it.uuidClassroom }
-        classes.forEach { (classroom, csList)->
-            csList.forEach { cs->
-                val my = allSs.filter { ss-> ss.period == 0 && ss.uuidClassroomStudent == cs.uuid }
+        val toSaveSp = mutableListOf<StudentPosition>()
+        classes.forEach { (classroom, csList) ->
+            val toLoad = mutableListOf<StudentPosition>()
+            csList.forEach { cs ->
+                val my = allSs.filter { ss-> ss.uuidClassroomStudent == cs.uuid }
+                val my0 = my.filter { ss -> ss.period == 0 }
+                val myP = my.filter { ss -> ss.period != 0 }.groupBy { it.period }
+                myP.forEach{ (p, ssList)->
+                    var sumByP = 0.0
+                    var countByP = 0
+                    var prom: Double? = null
+                    ssList.forEach { ss->
+                        val note = ss.recovery ?: ss.def
+                        if (note != null) {
+                            sumByP += note
+                            countByP++;
+                        }
+                    }
+                    if (sumByP > 0.0) {
+                        prom = sumByP / countByP
+                    }
+                    val mySP = studentPositions.firstOrNull{ spM -> spM.period == p && spM.uuidClassroomStudent == cs.uuid }
+                    if(mySP != null){
+                        toLoad.add(mySP.apply {
+                            this.prom = prom
+                        })
+                    }else{
+                        toLoad.add(StudentPosition().apply {
+                            this.period = p
+                            this.uuidStudent = cs.uuidStudent
+                            this.uuidClassroomStudent = cs.uuid
+                            this.prom = prom
+                        })
+                    }
+                }
                 var sum = 0.0
                 var count = 0
-                my.forEach {
+                my0.forEach {
                     val note = it.recovery ?: it.def
-                    if(note != null){
+                    if (note != null) {
                         sum += note
                         count++;
                     }
                 }
-                if(sum > 0.0){
-                    cs.prom = sum/count
+                if (sum > 0.0) {
+                    cs.prom = sum / count
                 }
             }
+            toLoad.groupBy { it.period }.forEach { (_, l) ->
+                var j = 1
+                l.sortedByDescending { it.prom }.forEach { x ->
+                    x.position = j
+                    j++;
+                }
+                toSaveSp.addAll(toLoad)
+            }
             var i = 1
-            csList.sortedByDescending { it.prom }.forEach { cs->
+            csList.sortedByDescending { it.prom }.forEach { cs ->
                 cs.position = i
                 i++;
             }
         }
+        studentPositionRepository.saveAll(toSaveSp)
         classroomStudentRepository.saveAll(classroomStudents)
     }
 

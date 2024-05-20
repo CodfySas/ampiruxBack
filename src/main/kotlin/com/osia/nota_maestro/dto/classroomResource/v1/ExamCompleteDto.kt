@@ -14,4 +14,5 @@ class ExamCompleteDto : BaseDto() {
     var initHour: String? = null
     var attempts: Int? = null
     var questions: List<ExamQuestionDto>? = null
+    var attemptsDone: List<ExamQuestionDto> = mutableListOf()
 }

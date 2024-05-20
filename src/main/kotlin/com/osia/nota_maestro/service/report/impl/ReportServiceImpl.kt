@@ -6,6 +6,7 @@ import com.osia.nota_maestro.dto.note.v1.NotePeriodDto
 import com.osia.nota_maestro.dto.note.v1.NoteSubjectsDto
 import com.osia.nota_maestro.dto.note.v1.ObservationPeriodDto
 import com.osia.nota_maestro.dto.note.v1.ReportStudentNote
+import com.osia.nota_maestro.dto.studentPosition.v1.StudentPositionMapper
 import com.osia.nota_maestro.repository.accompanimentStudent.AccompanimentStudentRepository
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
@@ -15,6 +16,7 @@ import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.gradeSubject.GradeSubjectRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
+import com.osia.nota_maestro.repository.studentPosition.StudentPositionRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.teacher.TeacherRepository
@@ -41,9 +43,10 @@ class ReportServiceImpl(
     private val directorStudentRepository: DirectorStudentRepository,
     private val accompanimentStudentRepository: AccompanimentStudentRepository,
     private val directorRepository: DirectorRepository,
-    private val teacherRepository: TeacherRepository,
     private val gradeRepository: GradeRepository,
-    private val studentNoteRepository: StudentNoteRepository
+    private val studentNoteRepository: StudentNoteRepository,
+    private val studentPositionRepository: StudentPositionRepository,
+    private val studentPositionMapper: StudentPositionMapper
 ) : ReportService {
 
     override fun getByMultipleStudent(list: List<UUID>): List<ReportStudentNote> {
@@ -81,6 +84,8 @@ class ReportServiceImpl(
                 .filter { it.init != null && it.finish != null }
         }?.sortedBy { it.number } ?: mutableListOf()
 
+        val studentPositions = studentPositionRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
+
         val classrooms = classroomRepository.findAllById(sortedClassroomStudents.mapNotNull { it.uuidClassroom }.distinct())
         val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuid })
 
@@ -99,6 +104,7 @@ class ReportServiceImpl(
                 ReportStudentNote().apply {
                     this.name = user?.name
                     this.lastname = user?.lastname
+                    this.positions = studentPositions.filter { it.uuidClassroomStudent == cs.uuid }.sortedBy { it.period }.map(studentPositionMapper::toDto)
                     val myNotes = mutableListOf<NoteSubjectsDto>()
                     subjectsParents.forEach {
                         val myNotePeriods = mutableListOf<NotePeriodDto>()

@@ -28,7 +28,9 @@ interface AttendanceService {
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
 
-    fun getByStudent(uuid: UUID, subject: UUID, month: Int): List<List<AttendanceStudentDto>>
+    fun getByStudent(uuid: UUID, subject: UUID?, month: Int): List<List<AttendanceStudentDto>>
+    fun getByStudentNull(uuid: UUID, month: Int): List<List<AttendanceStudentDto>>
+
     fun getComplete(classroom: UUID, subject: UUID, month: Int, school: UUID): List<AttendanceCompleteDto>
     fun getCompleteGroup(classroom: UUID, month: Int, school: UUID): List<AttendanceCompleteDto>
     fun submit(classroom: UUID, subject: UUID, month: Int, school: UUID, req: List<AttendanceCompleteDto>): List<AttendanceCompleteDto>

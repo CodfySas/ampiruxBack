@@ -5,6 +5,7 @@ import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshMapper
 import com.osia.nota_maestro.dto.mesh.v1.MeshRequest
 import com.osia.nota_maestro.model.Mesh
+import com.osia.nota_maestro.model.Planning
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.mesh.MeshRepository
@@ -100,15 +101,6 @@ class MeshServiceImpl(
         val getBy = getBy(classroom, subject, period)
         val toSave = meshDtoList.filter { it.uuid == null }
         val toUpdate = meshDtoList.filter { it.uuid != null }
-        val toDelete = getBy.filterNot { m-> meshDtoList.mapNotNull { it.uuid }.contains(m.uuid) }.mapNotNull { it.uuid }
-        val toUpdateAll = mutableListOf<Mesh>()
-        toUpdate.forEach {
-            val foundSaved = getBy.first { f-> f.uuid == it.uuid }
-            meshMapper.update(meshMapper.toRequest(it), foundSaved)
-            toUpdateAll.add(foundSaved)
-        }
-        deleteMultiple(toDelete)
-        meshRepository.saveAll(toUpdateAll)
         return saveMultiple(toSave.map(meshMapper::toRequest))
     }
 
@@ -132,11 +124,17 @@ class MeshServiceImpl(
         meshRepository.saveAll(meshs)
     }
 
-    override fun getBy(classroom: UUID, subject: UUID, period: Int): List<Mesh> {
-       return meshRepository.findAllByClassroomAndSubjectAndPeriod(classroom, subject, period)
+    override fun getBy(classroom: UUID, subject: UUID, period: Int): Mesh {
+       return meshRepository.findFirstByClassroomAndSubjectAndPeriod(classroom, subject, period).orElse(
+           Mesh()
+       )
     }
 
-    override fun getByMy(uuid: UUID, subject: UUID, period: Int): List<MeshDto> {
+    override fun getByTeacher(classroom: UUID, teacher: UUID, period: Int): Mesh {
+        return meshRepository.findFirstByClassroomAndUuidTeacherAndPeriod(classroom, teacher, period).orElse(Mesh())
+    }
+
+    override fun getByStudent(uuid: UUID, subject: UUID, period: Int): MeshDto {
         val user = userRepository.findById(uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -147,6 +145,6 @@ class MeshServiceImpl(
         val classroomStudent = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }.distinct(), uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
-        return getBy(classroomStudent.uuidClassroom!!, subject, period).map(meshMapper::toDto).sortedBy { it.position }
+        return meshMapper.toDto(getBy(classroomStudent.uuidClassroom!!, subject, period))
     }
 }

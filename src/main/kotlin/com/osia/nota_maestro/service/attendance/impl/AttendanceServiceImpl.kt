@@ -8,7 +8,6 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceFailDto
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceFailRequest
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceStudentDto
-import com.osia.nota_maestro.dto.calendar.v1.CalendarDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceClassroomDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
@@ -158,7 +157,7 @@ class AttendanceServiceImpl(
         attendanceRepository.saveAll(attendances)
     }
 
-    override fun getByStudent(uuid: UUID, subject: UUID, month: Int): List<List<AttendanceStudentDto>> {
+    override fun getByStudent(uuid: UUID, subject: UUID?, month: Int): List<List<AttendanceStudentDto>> {
         val user = userRepository.findById(uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -167,8 +166,12 @@ class AttendanceServiceImpl(
         val classroomStudent = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, user.uuid!!).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
-        val attendances = attendanceRepository.getAllByUuidClassroomAndUuidSubjectAndMonth(classroomStudent.uuidClassroom!!, subject, month)
-            .sortedBy { it.day }
+        val attendances = if(subject != null){
+            attendanceRepository.getAllByUuidClassroomAndUuidSubjectAndMonth(classroomStudent.uuidClassroom!!, subject, month)
+                .sortedBy { it.day }
+        }else{
+            attendanceRepository.getAllByUuidClassroomAndMonthAndUuidSubjectIsNull(classroomStudent.uuidClassroom!!, month)
+        }
         val fails = attendanceFailRepository.getAllByUuidAttendanceInAndUuidStudent(attendances.mapNotNull { it.uuid }, user.uuid!!)
 
         val maxDays = Month.of(month).length(Year.isLeap(school.actualYear!!.toLong()))
@@ -241,6 +244,10 @@ class AttendanceServiceImpl(
             }
         }
         return groupedByFileList
+    }
+
+    override fun getByStudentNull(uuid: UUID, month: Int): List<List<AttendanceStudentDto>> {
+        return getByStudent(uuid, null, month)
     }
 
     override fun getComplete(classroom: UUID, subject: UUID, month: Int, school: UUID): List<AttendanceCompleteDto> {
@@ -570,6 +577,13 @@ class AttendanceServiceImpl(
         val classrooms = classroomRepository.findAllByUuidSchoolAndYear(schoolFound.uuid!!, schoolFound.actualYear!!)
         val classroomStudent =
             classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, uuid)
+        val cFound = classrooms.firstOrNull { it.uuid == classroomStudent.get().uuidClassroom }
+        val grade = gradeRepository.findById(cFound?.uuidGrade!!)
+        if(grade.isPresent){
+            if(grade.get().attendanceType == "grouped"){
+                return emptyList()
+            }
+        }
         val classroomSubjects = classroomSubjectRepository.getAllByUuidClassroom(classroomStudent.get().uuidClassroom!!)
         val subjects = subjectRepository.findAllById(classroomSubjects.mapNotNull { it.uuidSubject }.distinct())
 

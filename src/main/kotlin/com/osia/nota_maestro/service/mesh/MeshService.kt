@@ -3,6 +3,7 @@ package com.osia.nota_maestro.service.mesh
 import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshRequest
 import com.osia.nota_maestro.model.Mesh
+import com.osia.nota_maestro.model.Planning
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import java.util.UUID
@@ -23,6 +24,7 @@ interface MeshService {
     // Delete
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
-    fun getBy(classroom: UUID, subject: UUID, period: Int): List<Mesh>
-    fun getByMy(uuid: UUID, subject: UUID, period: Int): List<MeshDto>
+    fun getBy(classroom: UUID, subject: UUID, period: Int): Mesh
+    fun getByTeacher(classroom: UUID, teacher: UUID, period: Int): Mesh
+    fun getByStudent(uuid: UUID, subject: UUID, period: Int): MeshDto
 }

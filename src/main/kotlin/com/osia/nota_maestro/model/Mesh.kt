@@ -33,5 +33,6 @@ data class Mesh(
     var observation: String? = "",
     var status: String? = "pending",
     var userReview: UUID? = null,
-    var position: Int? = null
+    var position: Int? = null,
+    var uuidTeacher: UUID? = null
 ) : BaseModel()

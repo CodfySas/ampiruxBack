@@ -5,9 +5,11 @@ import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
+import com.osia.nota_maestro.dto.examAttempt.v1.ExamAttemptRequest
 import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionDto
 import com.osia.nota_maestro.dto.examResponse.v1.ExamResponseDto
 import com.osia.nota_maestro.dto.examResponse.v1.ExamResponseRequest
+import com.osia.nota_maestro.dto.examUserResponse.v1.ExamUserResponseRequest
 import com.osia.nota_maestro.model.ClassroomResource
 import com.osia.nota_maestro.model.ExamQuestion
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
@@ -15,12 +17,15 @@ import com.osia.nota_maestro.repository.classroomResource.ClassroomResourceRepos
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.examQuestion.ExamQuestionRepository
 import com.osia.nota_maestro.repository.examResponse.ExamResponseRepository
+import com.osia.nota_maestro.repository.examUserResponse.ExamUserResponseRepository
 import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.classroomResource.ClassroomResourceService
+import com.osia.nota_maestro.service.examAttempt.ExamAttemptService
 import com.osia.nota_maestro.service.examQuestion.ExamQuestionService
 import com.osia.nota_maestro.service.examResponse.ExamResponseService
+import com.osia.nota_maestro.service.examUserResponse.ExamUserResponseService
 import com.osia.nota_maestro.util.CreateSpec
 import com.osia.nota_maestro.util.SubmitFile
 import org.slf4j.LoggerFactory
@@ -52,7 +57,9 @@ class ClassroomResourceServiceImpl(
     private val examQuestionRepository: ExamQuestionRepository,
     private val examQuestionService: ExamQuestionService,
     private val examResponseRepository: ExamResponseRepository,
-    private val examResponseService: ExamResponseService
+    private val examResponseService: ExamResponseService,
+    private val examAttemptService: ExamAttemptService,
+    private val examUserResponseService: ExamUserResponseService
 ) : ClassroomResourceService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -296,6 +303,25 @@ class ClassroomResourceServiceImpl(
         examResponseService.deleteMultiple(toDeleteR.mapNotNull { it.uuid })
 
         return exam
+    }
+
+    @Transactional
+    override fun submitAttempt(uuid: UUID, exam: UUID, responses: List<ExamQuestionDto>): List<ExamQuestionDto> {
+        val examAttempt = examAttemptService.save(ExamAttemptRequest().apply {
+            this.uuidExam = exam
+            this.uuidStudent = uuid
+        })
+        val responsesToSave = mutableListOf<ExamUserResponseRequest>()
+        responses.forEach {
+            responsesToSave.add(ExamUserResponseRequest().apply {
+                this.uuidAttempt = examAttempt.uuid
+                this.uuidExamQuestion = it.uuid
+                this.response = it.responseOpen
+                this.uuidExamResponse = it.responses?.firstOrNull { r-> r.selected == true }?.uuid
+            })
+        }
+        examUserResponseService.saveMultiple(responsesToSave)
+        return responses
     }
 
 

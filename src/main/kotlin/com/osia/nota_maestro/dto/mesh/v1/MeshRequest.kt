@@ -16,4 +16,7 @@ class MeshRequest {
     var status: String? = null
     var userReview: UUID? = null
     var position: Int? = null
+    var teacher: UUID? = null
+    var my: UUID? = null
+    var uuidTeacher: UUID? = null
 }

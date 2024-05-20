@@ -7,4 +7,5 @@ class ExamResponseDto : BaseDto() {
     var description: String? = null
     var correct: Boolean? = null
     var uuidExamQuestion: UUID? = null
+    var selected: Boolean? = null
 }

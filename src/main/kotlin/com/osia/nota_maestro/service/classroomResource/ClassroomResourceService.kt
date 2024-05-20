@@ -3,6 +3,7 @@ package com.osia.nota_maestro.service.classroomResource
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
+import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionDto
 import com.osia.nota_maestro.model.ClassroomResource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -36,4 +37,6 @@ interface ClassroomResourceService {
     fun getCompleteExamByTeacher(uuid: UUID, task: UUID, showResponse: Boolean): ExamCompleteDto
 
     fun submitExam(exam: ExamCompleteDto, classroom: UUID, subject: UUID, period: Int): ExamCompleteDto
+
+    fun submitAttempt(uuid: UUID, exam: UUID, responses: List<ExamQuestionDto>): List<ExamQuestionDto>
 }

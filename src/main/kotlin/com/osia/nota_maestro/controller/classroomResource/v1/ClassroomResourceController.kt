@@ -5,6 +5,7 @@ import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceMapper
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.classroomResource.v1.ExamCompleteDto
+import com.osia.nota_maestro.dto.examQuestion.v1.ExamQuestionDto
 import com.osia.nota_maestro.service.classroomResource.ClassroomResourceService
 import com.osia.nota_maestro.util.SubmitFile
 import org.springframework.data.domain.Page
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
 import java.util.UUID
@@ -246,7 +249,25 @@ class ClassroomResourceController(
     @GetMapping("/get-exam-student/{uuid}/{exam}")
     fun getExamByStudent(@PathVariable uuid: UUID, @PathVariable exam: UUID): ResponseEntity<ExamCompleteDto> {
         return ResponseEntity.ok(classroomResourceService.getCompleteExamByTeacher(uuid, exam, false))
+    }
 
+    @GetMapping("/can-do/{uuid}/{exam}")
+    fun canDoExam(@PathVariable uuid: UUID, @PathVariable exam: UUID): ResponseEntity<Boolean> {
+        var res = false
+        val getExam = classroomResourceService.getById(exam)
+        val now = LocalDateTime.now()
+
+        val iTime = (getExam.initHour ?: "00:00").split(":")
+        val fTime = (getExam.lastHour ?: "00:00").split(":")
+        val iExamDate = LocalDateTime.of(getExam.initTime, LocalTime.MIDNIGHT).plusHours(iTime[0].toLong())
+            .plusMinutes(iTime[1].toLong())
+        val fExamDate = LocalDateTime.of(getExam.finishTime, LocalTime.MIDNIGHT).plusHours(fTime[0].toLong())
+            .plusMinutes(fTime[1].toLong())
+
+        if (now in iExamDate..fExamDate) {
+            res = true
+        }
+        return ResponseEntity.ok(res)
     }
 
     @PostMapping("/submit-exam/{classroom}/{subject}/{period}")
@@ -257,5 +278,14 @@ class ClassroomResourceController(
         @RequestBody req: ExamCompleteDto
     ): ResponseEntity<ExamCompleteDto> {
         return ResponseEntity.ok(classroomResourceService.submitExam(req, classroom, subject, period))
+    }
+
+    @PostMapping("/submit-attempt/{uuid}/{exam}")
+    fun submitAttempt(
+        @PathVariable uuid: UUID,
+        @PathVariable exam: UUID,
+        @RequestBody responses: List<ExamQuestionDto>
+    ): ResponseEntity<List<ExamQuestionDto>> {
+        return ResponseEntity.ok(classroomResourceService.submitAttempt(uuid, exam, responses))
     }
 }

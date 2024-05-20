@@ -29,4 +29,8 @@ interface MeshRepository :
     fun deleteByUuids(uuids: List<UUID>)
 
     fun findAllByClassroomAndSubjectAndPeriod(classroom: UUID, subject: UUID, period: Int): List<Mesh>
+
+    fun findFirstByClassroomAndSubjectAndPeriod(classroom: UUID, subject: UUID, period: Int): Optional<Mesh>
+
+    fun findFirstByClassroomAndUuidTeacherAndPeriod(classroom: UUID, teacher: UUID, period: Int): Optional<Mesh>
 }

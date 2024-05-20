@@ -136,6 +136,14 @@ class AttendanceController(
         return ResponseEntity.ok().body(attendanceService.getByStudent(uuid, subject, month))
     }
 
+    @GetMapping("/complete-student-null/{uuid}/{month}")
+    fun getByStudentNull(
+        @PathVariable uuid: UUID,
+        @PathVariable month: Int
+    ): ResponseEntity<List<List<AttendanceStudentDto>>> {
+        return ResponseEntity.ok().body(attendanceService.getByStudentNull(uuid, month))
+    }
+
     @PostMapping("/complete/{classroom}/{subject}/{month}")
     fun submit(
         @PathVariable classroom: UUID,
