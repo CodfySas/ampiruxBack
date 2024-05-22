@@ -33,5 +33,4 @@ interface ClassroomResourceTaskRepository :
     fun findAllByUuidStudentAndUuidClassroomResource(uuid: UUID, uuidTask: UUID): Optional<ClassroomResourceTask>
 
     fun findAllByUuidClassroomStudentAndUuidClassroomResource(uuid: UUID, uuidTask: UUID): Optional<ClassroomResourceTask>
-
 }

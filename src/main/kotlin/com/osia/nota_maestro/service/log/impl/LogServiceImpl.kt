@@ -125,24 +125,23 @@ class LogServiceImpl(
     override fun findAllByMonth(month: Int, day: Int, school: UUID): List<LogDto> {
         log.trace("log findAllByMonth -> month: $month, day: $day")
         val schoolF = schoolService.getById(school)
-        val firstDay = LocalDate.of(schoolF.actualYear!!, month+1, 1)
-        val yearMonth = YearMonth.of(schoolF.actualYear!!, month+1)
+        val firstDay = LocalDate.of(schoolF.actualYear!!, month + 1, 1)
+        val yearMonth = YearMonth.of(schoolF.actualYear!!, month + 1)
         val lastDay = yearMonth.atEndOfMonth()
 
-        val founds = if(day != 0){
-            logRepository.findAllByDay(LocalDate.of(schoolF.actualYear!!, month+1, day))
-        }else{
+        val founds = if (day != 0) {
+            logRepository.findAllByDay(LocalDate.of(schoolF.actualYear!!, month + 1, day))
+        } else {
             logRepository.findAllByDayBetween(firstDay, lastDay)
         }
         val users = userService.findByMultiple(founds.mapNotNull { it.uuidUser })
         val logs = founds.map(logMapper::toDto).sortedByDescending { it.createdAt }
         logs.forEach {
-            val userF = users.firstOrNull { u-> u.uuid == it.uuidUser }
+            val userF = users.firstOrNull { u -> u.uuid == it.uuidUser }
             it.userName = userF?.name + " " + userF?.lastname
             it.userCode = userF?.code
             it.userRole = userF?.role
         }
         return logs
-
     }
 }

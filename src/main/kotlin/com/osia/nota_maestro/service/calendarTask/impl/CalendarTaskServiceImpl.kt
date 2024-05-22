@@ -32,7 +32,7 @@ class CalendarTaskServiceImpl(
 
         val tasks = calendarRepository.findAllByDayBetweenAndUuidSchoolOrderByDayAsc(dateInit, dateFinish, school)
         val resourceTasks = tasks.filter { it.uuidResource != null }
-        val resources = resourceRepository.findAllById(resourceTasks.mapNotNull { it.uuidResource })
+        val resources = resourceRepository.getByUuidIn(resourceTasks.mapNotNull { it.uuidResource })
         val finalList = mutableListOf<CalendarDto>()
 
         if (dateInit.dayOfWeek != DayOfWeek.MONDAY) {

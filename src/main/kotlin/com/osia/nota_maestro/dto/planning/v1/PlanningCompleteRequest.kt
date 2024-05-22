@@ -9,5 +9,4 @@ class PlanningCompleteRequest {
     var teacher: UUID? = null
     var my: UUID? = null
     var area: String? = null
-
 }

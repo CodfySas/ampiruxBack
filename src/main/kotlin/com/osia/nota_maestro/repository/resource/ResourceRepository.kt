@@ -23,6 +23,9 @@ interface ResourceRepository :
     @Query(value = "SELECT * FROM resources where uuid = ?1", nativeQuery = true)
     fun getByUuid(uuid: UUID): Optional<Resource>
 
+    @Query(value = "SELECT * FROM resources where uuid in ?1", nativeQuery = true)
+    fun getByUuidIn(uuids: List<UUID>): List<Resource>
+
     @Modifying
     @Transactional
     @Query("UPDATE Resource SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")

@@ -1,19 +1,15 @@
 package com.osia.nota_maestro.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceDto
-import com.osia.nota_maestro.dto.classroomResourceTask.v1.ClassroomResourceTaskDto
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
-import java.math.BigInteger
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.security.MessageDigest
 import java.util.UUID
 
 class SubmitFile {
@@ -32,7 +28,7 @@ class SubmitFile {
         file: MultipartFile
     ) = try {
         val log = LoggerFactory.getLogger(javaClass)
-        val targetLocation: Path = Path.of("src/main/resources/plannings/${name}.${extension}")
+        val targetLocation: Path = Path.of("src/main/resources/plannings/$name.$extension")
         Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
         val imageBytes = Files.readAllBytes(targetLocation)
         ResponseEntity.ok().contentType(determineMediaType(extension ?: ""))
@@ -48,7 +44,7 @@ class SubmitFile {
         extension: String?,
         file: MultipartFile
     ) = try {
-        val targetLocation: Path = Path.of("src/main/resources/files/${uuid}.${extension}")
+        val targetLocation: Path = Path.of("src/main/resources/files/$uuid.$extension")
         Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
         val imageBytes = Files.readAllBytes(targetLocation)
         ResponseEntity.ok().contentType(determineMediaType(extension ?: ""))

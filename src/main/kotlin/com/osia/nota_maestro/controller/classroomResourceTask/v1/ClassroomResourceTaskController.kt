@@ -141,7 +141,9 @@ class ClassroomResourceTaskController(
 
     @PostMapping("/submit-response/{task}/{uuid}")
     fun submitTaskResponse(
-        @PathVariable task: UUID, @PathVariable uuid: UUID, @RequestParam("file") file: MultipartFile?,
+        @PathVariable task: UUID,
+        @PathVariable uuid: UUID,
+        @RequestParam("file") file: MultipartFile?,
         @RequestParam("description") description: String?
     ): ResponseEntity<ClassroomResourceTaskDto> {
         val originalFilename = file?.originalFilename

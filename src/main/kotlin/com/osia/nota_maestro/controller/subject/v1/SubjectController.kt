@@ -6,7 +6,6 @@ import com.osia.nota_maestro.dto.subject.v1.SubjectMapper
 import com.osia.nota_maestro.dto.subject.v1.SubjectRequest
 import com.osia.nota_maestro.service.subject.SubjectService
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

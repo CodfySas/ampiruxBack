@@ -17,7 +17,6 @@ import com.osia.nota_maestro.repository.classroomResource.ClassroomResourceRepos
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.examQuestion.ExamQuestionRepository
 import com.osia.nota_maestro.repository.examResponse.ExamResponseRepository
-import com.osia.nota_maestro.repository.examUserResponse.ExamUserResponseRepository
 import com.osia.nota_maestro.repository.school.SchoolRepository
 import com.osia.nota_maestro.repository.schoolPeriod.SchoolPeriodRepository
 import com.osia.nota_maestro.repository.user.UserRepository
@@ -159,7 +158,7 @@ class ClassroomResourceServiceImpl(
         val resources = classroomResourceRepository.findAllByClassroomAndSubject(classroom, subject).sortedBy { it.createdAt }
         val finalList = mutableListOf<List<ClassroomResourceDto>>()
         schoolPeriods.forEach {
-            val rsP = resources.filter { rs-> rs.period == it.number }
+            val rsP = resources.filter { rs -> rs.period == it.number }
             finalList.add(rsP.map(classroomResourceMapper::toDto))
         }
         return finalList
@@ -182,7 +181,7 @@ class ClassroomResourceServiceImpl(
     override fun download(uuid: UUID): ResponseEntity<ByteArray> {
         val resource = getById(uuid)
         return try {
-            val targetLocation: Path = Path.of("src/main/resources/files/${uuid}.${resource.ext}")
+            val targetLocation: Path = Path.of("src/main/resources/files/$uuid.${resource.ext}")
             val fileBytes = Files.readAllBytes(targetLocation)
             ResponseEntity.ok().contentType(SubmitFile().determineMediaType(resource.ext ?: "")).body(fileBytes)
         } catch (ex: Exception) {
@@ -196,7 +195,7 @@ class ClassroomResourceServiceImpl(
         val user = userRepository.getByUuid(uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
-        if(user.role == "student" && showResponse){
+        if (user.role == "student" && showResponse) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "trying to hack? :)")
         }
         val exam = classroomResourceRepository.getByUuid(task).orElseThrow {
@@ -214,19 +213,23 @@ class ClassroomResourceServiceImpl(
             this.initHour = exam.initHour
             this.initTime = exam.initTime
             this.name = exam.name
-            this.questions = allExamQuestions.filter { it.uuidExam == exam.uuid }.map { ExamQuestionDto().apply {
-                this.uuid = it.uuid
-                this.ordered = it.ordered
-                this.description = it.description
-                this.type = it.type
-                this.responses = allResponses.filter { r-> r.uuidExamQuestion == it.uuid }.map { r-> ExamResponseDto().apply {
-                    this.uuid = r.uuid
-                    this.description = r.description
-                    if(showResponse){
-                        this.correct = r.correct
+            this.questions = allExamQuestions.filter { it.uuidExam == exam.uuid }.map {
+                ExamQuestionDto().apply {
+                    this.uuid = it.uuid
+                    this.ordered = it.ordered
+                    this.description = it.description
+                    this.type = it.type
+                    this.responses = allResponses.filter { r -> r.uuidExamQuestion == it.uuid }.map { r ->
+                        ExamResponseDto().apply {
+                            this.uuid = r.uuid
+                            this.description = r.description
+                            if (showResponse) {
+                                this.correct = r.correct
+                            }
+                        }
                     }
-                } }
-            } }
+                }
+            }
         }
     }
 
@@ -242,15 +245,17 @@ class ClassroomResourceServiceImpl(
             this.name = exam.name
         }
 
-        val examFound = if(exam.uuid == null){
-           save(req.apply {
-                this.classroom = classroom
-                this.period = period
-                this.subject = subject
-                this.hasFile = false
-                this.type = "exam"
-            })
-        }else{
+        val examFound = if (exam.uuid == null) {
+            save(
+                req.apply {
+                    this.classroom = classroom
+                    this.period = period
+                    this.subject = subject
+                    this.hasFile = false
+                    this.type = "exam"
+                }
+            )
+        } else {
             val found = getById(exam.uuid!!)
             update(found.uuid!!, req)
         }
@@ -259,36 +264,40 @@ class ClassroomResourceServiceImpl(
         val toUpdate = mutableListOf<ExamQuestionDto>()
         val allExamQuestions = examQuestionRepository.getAllByUuidExam(examFound.uuid!!)
         val submit = exam.questions ?: mutableListOf()
-        val toDelete = allExamQuestions.filterNot { submit.mapNotNull { r-> r.uuid }.contains(it.uuid!!) }
+        val toDelete = allExamQuestions.filterNot { submit.mapNotNull { r -> r.uuid }.contains(it.uuid!!) }
 
         val toCreateR = mutableListOf<ExamResponseRequest>()
         val toUpdateR = mutableListOf<ExamResponseDto>()
         val allResponses = examResponseRepository.getAllByUuidExamQuestionIn(submit.mapNotNull { it.uuid })
         val submitR = submit.flatMap { it.responses ?: mutableListOf() }
-        val toDeleteR = allResponses.filterNot { submitR.mapNotNull { r-> r.uuid }.contains(it.uuid!!) }
+        val toDeleteR = allResponses.filterNot { submitR.mapNotNull { r -> r.uuid }.contains(it.uuid!!) }
 
         exam.questions?.forEach {
             var newUuid = UUID.randomUUID()
-            if(it.uuid == null){
-                toCreate.add(ExamQuestion().apply {
-                    this.uuid = newUuid
-                    this.uuidExam = examFound.uuid!!
-                    this.type = it.type
-                    this.description = it.description
-                    this.ordered = it.ordered
-                })
-            }else{
+            if (it.uuid == null) {
+                toCreate.add(
+                    ExamQuestion().apply {
+                        this.uuid = newUuid
+                        this.uuidExam = examFound.uuid!!
+                        this.type = it.type
+                        this.description = it.description
+                        this.ordered = it.ordered
+                    }
+                )
+            } else {
                 newUuid = it.uuid
                 toUpdate.add(it)
             }
-            it.responses?.forEach { r->
-                if(r.uuid == null){
-                    toCreateR.add(ExamResponseRequest().apply {
-                        this.uuidExamQuestion = newUuid
-                        this.description = r.description
-                        this.correct = r.correct
-                    })
-                }else{
+            it.responses?.forEach { r ->
+                if (r.uuid == null) {
+                    toCreateR.add(
+                        ExamResponseRequest().apply {
+                            this.uuidExamQuestion = newUuid
+                            this.description = r.description
+                            this.correct = r.correct
+                        }
+                    )
+                } else {
                     toUpdateR.add(r)
                 }
             }
@@ -307,22 +316,24 @@ class ClassroomResourceServiceImpl(
 
     @Transactional
     override fun submitAttempt(uuid: UUID, exam: UUID, responses: List<ExamQuestionDto>): List<ExamQuestionDto> {
-        val examAttempt = examAttemptService.save(ExamAttemptRequest().apply {
-            this.uuidExam = exam
-            this.uuidStudent = uuid
-        })
+        val examAttempt = examAttemptService.save(
+            ExamAttemptRequest().apply {
+                this.uuidExam = exam
+                this.uuidStudent = uuid
+            }
+        )
         val responsesToSave = mutableListOf<ExamUserResponseRequest>()
         responses.forEach {
-            responsesToSave.add(ExamUserResponseRequest().apply {
-                this.uuidAttempt = examAttempt.uuid
-                this.uuidExamQuestion = it.uuid
-                this.response = it.responseOpen
-                this.uuidExamResponse = it.responses?.firstOrNull { r-> r.selected == true }?.uuid
-            })
+            responsesToSave.add(
+                ExamUserResponseRequest().apply {
+                    this.uuidAttempt = examAttempt.uuid
+                    this.uuidExamQuestion = it.uuid
+                    this.response = it.responseOpen
+                    this.uuidExamResponse = it.responses?.firstOrNull { r -> r.selected == true }?.uuid
+                }
+            )
         }
         examUserResponseService.saveMultiple(responsesToSave)
         return responses
     }
-
-
 }

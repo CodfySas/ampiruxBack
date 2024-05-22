@@ -161,21 +161,25 @@ class AttendanceController(
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
             this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
+            this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado las asistencias"
         }
         val response = try {
             val res = attendanceService.submit(classroom, subject, month, school, req)
-            logService.save(req1.apply {
-                this.status  = "Completado"
-            })
+            logService.save(
+                req1.apply {
+                    this.status = "Completado"
+                }
+            )
             res
-        } catch (e: Exception){
-            logService.save(req1.apply {
-                this.status  = "Error"
-                this.detail = "${e.message}"
-            })
+        } catch (e: Exception) {
+            logService.save(
+                req1.apply {
+                    this.status = "Error"
+                    this.detail = "${e.message}"
+                }
+            )
             emptyList()
         }
         return ResponseEntity.ok().body(response)
@@ -192,21 +196,25 @@ class AttendanceController(
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
             this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
+            this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado las asistencias"
         }
         val response = try {
             val res = attendanceService.submitGroup(classroom, month, school, req)
-            logService.save(req1.apply {
-                this.status  = "Completado"
-            })
+            logService.save(
+                req1.apply {
+                    this.status = "Completado"
+                }
+            )
             res
-        } catch (e: Exception){
-            logService.save(req1.apply {
-                this.status  = "Error"
-                this.detail = "${e.message}"
-            })
+        } catch (e: Exception) {
+            logService.save(
+                req1.apply {
+                    this.status = "Error"
+                    this.detail = "${e.message}"
+                }
+            )
             emptyList()
         }
         return ResponseEntity.ok().body(response)
@@ -217,8 +225,8 @@ class AttendanceController(
         return attendanceService.getResources(uuid)
     }
 
-    @GetMapping("/resources-student/{uuid}")
-    fun getResourcesStudent(@PathVariable uuid: UUID): List<ResourceSubjectDto> {
-        return attendanceService.getResourcesStudent(uuid)
+    @GetMapping("/resources-student/{uuid}/{include}")
+    fun getResourcesStudent(@PathVariable uuid: UUID, @PathVariable include: Boolean): List<ResourceSubjectDto> {
+        return attendanceService.getResourcesStudent(uuid, include)
     }
 }

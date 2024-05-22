@@ -58,7 +58,7 @@ class AuthServiceImpl(
             }
         }
 
-        if(userFound.active == false){
+        if (userFound.active == false) {
             throw ResponseStatusException(HttpStatus.LOCKED, "Invalid credentials")
         }
         val periodList = schoolPeriodRepository.findAllByUuidSchoolAndActualYear(school.uuid!!, school.actualYear!!)

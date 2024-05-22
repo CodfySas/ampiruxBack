@@ -37,5 +37,5 @@ interface AttendanceService {
     fun submitGroup(classroom: UUID, month: Int, school: UUID, req: List<AttendanceCompleteDto>): List<AttendanceCompleteDto>
 
     fun getResources(uuid: UUID): List<ResourceGradeDto>
-    fun getResourcesStudent(uuid: UUID): List<ResourceSubjectDto>
+    fun getResourcesStudent(uuid: UUID, include: Boolean): List<ResourceSubjectDto>
 }

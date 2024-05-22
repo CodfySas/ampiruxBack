@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.service.planning.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.osia.nota_maestro.dto.notification.v1.NotificationDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningMapper
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
@@ -72,17 +71,17 @@ class PlanningServiceImpl(
     @Transactional
     override fun save(planningRequest: PlanningRequest, school: UUID, replace: Boolean): PlanningDto {
         log.trace("planning save -> request: $planningRequest")
-        val sf = schoolRepository.findById(school).orElseThrow{
+        val sf = schoolRepository.findById(school).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
-        val found = if(sf.planningType != "group"){
+        val found = if (sf.planningType != "group") {
             planningRepository.findFirstByClassroomAndSubjectAndWeek(planningRequest.classroom!!, planningRequest.subject!!, planningRequest.week!!)
-        }else{
+        } else {
             planningRepository.findFirstByClassroomAndUuidTeacherAndWeek(planningRequest.classroom!!, planningRequest.uuidTeacher!!, planningRequest.week!!)
         }
-        return if(found.isPresent){
+        return if (found.isPresent) {
             update(found.get().uuid!!, planningRequest)
-        }else{
+        } else {
             planningMapper.toDto(planningRepository.save(planningMapper.toModel(planningRequest)))
         }
     }
@@ -110,9 +109,9 @@ class PlanningServiceImpl(
     override fun updateMultiple(planningRequest: List<PlanningDto>): List<PlanningDto> {
         log.trace(
             "planning updateMultiple -> planningDtoList: ${
-                objectMapper.writeValueAsString(
-                    planningRequest
-                )
+            objectMapper.writeValueAsString(
+                planningRequest
+            )
             }"
         )
         val plannings = planningRepository.findAllById(planningRequest.mapNotNull { it.uuid })
@@ -146,7 +145,7 @@ class PlanningServiceImpl(
     }
 
     override fun getBy(classroom: UUID, subject: UUID, week: Int): Planning {
-       return planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, subject, week).orElse(Planning())
+        return planningRepository.findFirstByClassroomAndSubjectAndWeek(classroom, subject, week).orElse(Planning())
     }
 
     override fun getByTeacher(classroom: UUID, teacher: UUID, week: Int): Planning {

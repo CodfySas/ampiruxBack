@@ -73,7 +73,8 @@ class NotificationController(
     @PostMapping("/role/{role}")
     fun generateToRole(
         @Validated(OnCreate::class) @RequestBody request: NotificationRequest,
-        @RequestHeader school: UUID, @PathVariable role: String
+        @RequestHeader school: UUID,
+        @PathVariable role: String
     ): ResponseEntity<List<NotificationDto>> {
         return ResponseEntity(notificationService.generateToRole(request, school, role), HttpStatus.CREATED)
     }

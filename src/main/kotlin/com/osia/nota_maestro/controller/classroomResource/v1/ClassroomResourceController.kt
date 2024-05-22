@@ -144,14 +144,16 @@ class ClassroomResourceController(
         val originalFilename = file.originalFilename
         val extension = originalFilename?.substringAfterLast(".")
         SubmitFile().reviewExt(extension ?: "")
-        val newResource = classroomResourceService.save(ClassroomResourceRequest().apply {
-            this.classroom = classroom
-            this.subject = subject
-            this.period = period
-            this.name = name
-            this.type = extension
-            this.ext = extension
-        })
+        val newResource = classroomResourceService.save(
+            ClassroomResourceRequest().apply {
+                this.classroom = classroom
+                this.subject = subject
+                this.period = period
+                this.name = name
+                this.type = extension
+                this.ext = extension
+            }
+        )
         return SubmitFile().submitFile(newResource.uuid!!, extension, file)
     }
 
@@ -178,20 +180,22 @@ class ClassroomResourceController(
             SubmitFile().reviewExt(extension ?: "")
         }
 
-        val newTask = classroomResourceService.save(ClassroomResourceRequest().apply {
-            this.type = "task"
-            this.description = description
-            this.finishTime = localDate
-            this.lastHour = lastHour
-            if (file != null) {
-                this.hasFile = true
+        val newTask = classroomResourceService.save(
+            ClassroomResourceRequest().apply {
+                this.type = "task"
+                this.description = description
+                this.finishTime = localDate
+                this.lastHour = lastHour
+                if (file != null) {
+                    this.hasFile = true
+                }
+                this.classroom = classroom
+                this.subject = subject
+                this.period = period
+                this.name = name
+                this.ext = extension
             }
-            this.classroom = classroom
-            this.subject = subject
-            this.period = period
-            this.name = name
-            this.ext = extension
-        })
+        )
 
         if (file != null) {
             SubmitFile().submitFile(newTask.uuid!!, extension, file)
@@ -225,14 +229,17 @@ class ClassroomResourceController(
             extt = extension
         }
 
-        val updated = classroomResourceService.update(uuid, ClassroomResourceRequest().apply {
-            this.hasFile = hasFile
-            this.name = name
-            this.description = description
-            this.finishTime = localDate
-            this.lastHour = lastHour
-            this.ext = extt
-        })
+        val updated = classroomResourceService.update(
+            uuid,
+            ClassroomResourceRequest().apply {
+                this.hasFile = hasFile
+                this.name = name
+                this.description = description
+                this.finishTime = localDate
+                this.lastHour = lastHour
+                this.ext = extt
+            }
+        )
 
         if (file != null) {
             SubmitFile().submitFile(updated.uuid!!, extension, file)

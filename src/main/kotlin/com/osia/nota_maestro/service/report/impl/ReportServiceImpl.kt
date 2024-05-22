@@ -19,7 +19,6 @@ import com.osia.nota_maestro.repository.studentNote.StudentNoteRepository
 import com.osia.nota_maestro.repository.studentPosition.StudentPositionRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
-import com.osia.nota_maestro.repository.teacher.TeacherRepository
 import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.report.ReportService
 import com.osia.nota_maestro.service.school.SchoolService
@@ -197,7 +196,7 @@ class ReportServiceImpl(
                     val myTeacher = teachers.firstOrNull { it.uuid == myDirector?.uuidTeacher }
                     this.director = myTeacher?.name + ' ' + myTeacher?.lastname
                     this.position = cs.position
-                    this.prom = cs.prom.toString().replace(".",",")
+                    this.prom = cs.prom.toString().replace(".", ",")
                     this.promBasic = cs.prom?.let { getBasic(it, superior, alto, minNote) } ?: ""
                     val myCl = classrooms.firstOrNull { it.uuid == cs.uuidClassroom }
                     val myGr = grades.firstOrNull { it.uuid == myCl?.uuidGrade }
@@ -214,36 +213,36 @@ class ReportServiceImpl(
                             this.description = ds.description ?: ""
                         }
                     }
-                    this.periodDef = periods.map { p->
+                    this.periodDef = periods.map { p ->
                         NotePeriodDto().apply {
                             this.number = p.number
                             val founds = promByPeriod["${cs.uuid}-${p.number}"]
                             var sum = 0.0
                             var count = 0
-                            if(schoolFound.recoveryType == "at_last"){
+                            if (schoolFound.recoveryType == "at_last") {
                                 founds?.forEach {
-                                    if(it.first != null){
+                                    if (it.first != null) {
                                         sum += it.first!!
-                                        count++;
+                                        count++
                                     }
                                 }
-                            }else{
+                            } else {
                                 founds?.forEach {
-                                    if(it.second != null){
+                                    if (it.second != null) {
                                         sum += it.second!!
-                                        count++;
-                                    }else{
-                                        if(it.first != null){
+                                        count++
+                                    } else {
+                                        if (it.first != null) {
                                             sum += it.first!!
-                                            count++;
+                                            count++
                                         }
                                     }
                                 }
                             }
-                            if(count > 0){
-                                this.def = (sum/count).toString().replace(".",",")
-                                this.basic = getBasic(sum/count, superior, alto, minNote)
-                            }else{
+                            if (count > 0) {
+                                this.def = (sum / count).toString().replace(".", ",")
+                                this.basic = getBasic(sum / count, superior, alto, minNote)
+                            } else {
                                 this.def = ""
                                 this.basic = ""
                             }
@@ -291,8 +290,8 @@ class ReportServiceImpl(
         val promByPeriod = mutableMapOf<String, List<Pair<Double?, Double?>>>()
 
         val allNotes = studentNoteRepository.findAllByUuidClassroomStudentIn(
-                mutableListOf(myClassStudentActual.uuid!!)
-            )
+            mutableListOf(myClassStudentActual.uuid!!)
+        )
         subjectsParents.forEach {
             val myNotePeriods = mutableListOf<NotePeriodDto>()
             var recoveryF: Double? = null
@@ -314,7 +313,7 @@ class ReportServiceImpl(
                         this.observation = ssP?.observation ?: ""
                         val myPNotes = allNotes.filter { n ->
                             n.period == ssP?.period && n.uuidClassroomStudent == myClassStudentActual.uuid &&
-                                    n.uuidSubject == it.uuid
+                                n.uuidSubject == it.uuid
                         }
                         this.notes = myPNotes.map { n ->
                             NoteDetailsDto().apply {
@@ -358,7 +357,7 @@ class ReportServiceImpl(
                                 this.observation = ssChP?.observation ?: ""
                                 val myPNotes = allNotes.filter { n ->
                                     n.period == ssChP?.period && n.uuidClassroomStudent == myClassStudentActual.uuid &&
-                                            n.uuidSubject == ch.uuid
+                                        n.uuidSubject == ch.uuid
                                 }
                                 this.notes = myPNotes.map { n ->
                                     NoteDetailsDto().apply {
@@ -423,39 +422,39 @@ class ReportServiceImpl(
             this.lastname = studentFound.lastname
             this.director = teacher?.name + ' ' + teacher?.lastname
             this.position = myClassStudentActual.position
-            this.prom = myClassStudentActual.prom.toString().replace(".",",")
+            this.prom = myClassStudentActual.prom.toString().replace(".", ",")
             this.promBasic = myClassStudentActual.prom?.let { getBasic(it, superior, alto, minNote) } ?: ""
             this.classroom = grade?.name + '-' + classroom?.name
-            this.periodDef = periods.map { p->
+            this.periodDef = periods.map { p ->
                 NotePeriodDto().apply {
                     this.number = p.number
                     val founds = promByPeriod["${myClassStudentActual.uuid}-${p.number}"]
                     var sum = 0.0
                     var count = 0
-                    if(schoolFound.recoveryType == "at_last"){
+                    if (schoolFound.recoveryType == "at_last") {
                         founds?.forEach {
-                            if(it.first != null){
+                            if (it.first != null) {
                                 sum += it.first!!
-                                count++;
+                                count++
                             }
                         }
-                    }else{
+                    } else {
                         founds?.forEach {
-                            if(it.second != null){
+                            if (it.second != null) {
                                 sum += it.second!!
-                                count++;
-                            }else{
-                                if(it.first != null){
+                                count++
+                            } else {
+                                if (it.first != null) {
                                     sum += it.first!!
-                                    count++;
+                                    count++
                                 }
                             }
                         }
                     }
-                    if(count > 0){
-                        this.def = (sum/count).toString().replace(".",",")
-                        this.basic = getBasic(sum/count, superior, alto, minNote)
-                    }else{
+                    if (count > 0) {
+                        this.def = (sum / count).toString().replace(".", ",")
+                        this.basic = getBasic(sum / count, superior, alto, minNote)
+                    } else {
                         this.def = ""
                         this.basic = ""
                     }

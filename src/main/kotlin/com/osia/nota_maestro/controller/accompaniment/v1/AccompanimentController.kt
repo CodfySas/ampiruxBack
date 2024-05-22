@@ -53,21 +53,25 @@ class AccompanimentController(
         val time = LocalDateTime.now()
         val req = LogRequest().apply {
             this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
+            this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado los docentes acompañantes de cada curso"
         }
         return try {
             val res = accompanimentService.saveComplete(complete, school)
-            logService.save(req.apply {
-                this.status  = "Completado"
-            })
+            logService.save(
+                req.apply {
+                    this.status = "Completado"
+                }
+            )
             res
-        } catch (e: Exception){
-            logService.save(req.apply {
-                this.status  = "Error"
-                this.detail = "${e.message}"
-            })
+        } catch (e: Exception) {
+            logService.save(
+                req.apply {
+                    this.status = "Error"
+                    this.detail = "${e.message}"
+                }
+            )
             emptyList()
         }
     }
@@ -87,21 +91,25 @@ class AccompanimentController(
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
             this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
+            this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado la información del acompañamiento de los estudiantes"
         }
         return try {
             val res = accompanimentService.submit(classroom, period, req)
-            logService.save(req1.apply {
-                this.status  = "Completado"
-            })
+            logService.save(
+                req1.apply {
+                    this.status = "Completado"
+                }
+            )
             res
-        } catch (e: Exception){
-            logService.save(req1.apply {
-                this.status  = "Error"
-                this.detail = "${e.message}"
-            })
+        } catch (e: Exception) {
+            logService.save(
+                req1.apply {
+                    this.status = "Error"
+                    this.detail = "${e.message}"
+                }
+            )
             emptyList()
         }
     }

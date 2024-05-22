@@ -4,9 +4,6 @@ import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshMapper
 import com.osia.nota_maestro.dto.mesh.v1.MeshRequest
-import com.osia.nota_maestro.dto.planning.v1.PlanningCompleteRequest
-import com.osia.nota_maestro.dto.planning.v1.PlanningDto
-import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
 import com.osia.nota_maestro.repository.mesh.MeshRepository
 import com.osia.nota_maestro.service.mesh.MeshService
 import org.springframework.data.domain.Page
@@ -87,9 +84,12 @@ class MeshController(
 
     @PatchMapping("/multiple/{classroom}/{subject}/{period}")
     fun updateMultiple(
-        @RequestBody meshDtoList: List<MeshDto>, @PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int
+        @RequestBody meshDtoList: List<MeshDto>,
+        @PathVariable classroom: UUID,
+        @PathVariable subject: UUID,
+        @PathVariable period: Int
     ): ResponseEntity<List<MeshDto>> {
-        return ResponseEntity.ok().body(meshService.updateMultiple(meshDtoList,classroom, subject, period))
+        return ResponseEntity.ok().body(meshService.updateMultiple(meshDtoList, classroom, subject, period))
     }
 
     // delete
@@ -111,12 +111,12 @@ class MeshController(
 
     @GetMapping("/get/{classroom}/{subject}/{period}")
     fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable period: Int): MeshDto {
-       return meshMapper.toDto(meshService.getBy(classroom,subject,period))
+        return meshMapper.toDto(meshService.getBy(classroom, subject, period))
     }
 
     @GetMapping("/get-my/{classroom}/{my}/{period}")
     fun getByGroup(@PathVariable classroom: UUID, @PathVariable my: UUID, @PathVariable period: Int): MeshDto {
-        return meshMapper.toDto(meshService.getByTeacher(classroom,my,period))
+        return meshMapper.toDto(meshService.getByTeacher(classroom, my, period))
     }
 
     @GetMapping("/get-my-student/{uuid}/{subject}/{period}")
@@ -131,24 +131,30 @@ class MeshController(
     ): ResponseEntity<MeshDto> {
 
         val founded = meshRepository.findFirstByClassroomAndSubjectAndPeriod(p.classroom!!, p.subject!!, p.period!!)
-        val newResource = if(founded.isPresent){
+        val newResource = if (founded.isPresent) {
             meshMapper.toDto(founded.get())
-            meshService.update(founded.get().uuid!!, MeshRequest().apply {
-                this.userReview = p.my
-                this.uuidTeacher = p.teacher
-                this.status = "pending"
-                this.axis = p.axis
-            })
-        }else{
-            meshService.save(MeshRequest().apply {
-                this.classroom = p.classroom
-                this.subject = p.subject
-                this.period = p.period
-                this.uuidTeacher = p.teacher
-                this.userReview = p.my
-                this.status = "pending"
-                this.axis = p.axis
-            }, false)
+            meshService.update(
+                founded.get().uuid!!,
+                MeshRequest().apply {
+                    this.userReview = p.my
+                    this.uuidTeacher = p.teacher
+                    this.status = "pending"
+                    this.axis = p.axis
+                }
+            )
+        } else {
+            meshService.save(
+                MeshRequest().apply {
+                    this.classroom = p.classroom
+                    this.subject = p.subject
+                    this.period = p.period
+                    this.uuidTeacher = p.teacher
+                    this.userReview = p.my
+                    this.status = "pending"
+                    this.axis = p.axis
+                },
+                false
+            )
         }
         return ResponseEntity.ok(newResource)
     }
@@ -159,21 +165,27 @@ class MeshController(
         @RequestHeader school: UUID
     ): ResponseEntity<MeshDto> {
         val founded = meshRepository.findFirstByClassroomAndSubjectAndPeriod(p.classroom!!, p.teacher!!, p.period!!)
-        val newResource = if(founded.isPresent){
+        val newResource = if (founded.isPresent) {
             meshMapper.toDto(founded.get())
-            meshService.update(founded.get().uuid!!, MeshRequest().apply {
-                this.userReview = p.userReview
-                this.status = "pending"
-                this.axis = p.axis
-            })
-        }else{
-            meshService.save(MeshRequest().apply {
-                this.classroom = p.classroom
-                this.userReview = p.userReview
-                this.period = p.period
-                this.status = "pending"
-                this.axis = p.axis
-            }, false)
+            meshService.update(
+                founded.get().uuid!!,
+                MeshRequest().apply {
+                    this.userReview = p.userReview
+                    this.status = "pending"
+                    this.axis = p.axis
+                }
+            )
+        } else {
+            meshService.save(
+                MeshRequest().apply {
+                    this.classroom = p.classroom
+                    this.userReview = p.userReview
+                    this.period = p.period
+                    this.status = "pending"
+                    this.axis = p.axis
+                },
+                false
+            )
         }
         return ResponseEntity.ok(newResource)
     }

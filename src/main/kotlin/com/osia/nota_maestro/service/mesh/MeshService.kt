@@ -3,7 +3,6 @@ package com.osia.nota_maestro.service.mesh
 import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshRequest
 import com.osia.nota_maestro.model.Mesh
-import com.osia.nota_maestro.model.Planning
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import java.util.UUID

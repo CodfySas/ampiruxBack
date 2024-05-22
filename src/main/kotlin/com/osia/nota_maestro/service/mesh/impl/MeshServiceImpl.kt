@@ -5,7 +5,6 @@ import com.osia.nota_maestro.dto.mesh.v1.MeshDto
 import com.osia.nota_maestro.dto.mesh.v1.MeshMapper
 import com.osia.nota_maestro.dto.mesh.v1.MeshRequest
 import com.osia.nota_maestro.model.Mesh
-import com.osia.nota_maestro.model.Planning
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.mesh.MeshRepository
@@ -125,9 +124,9 @@ class MeshServiceImpl(
     }
 
     override fun getBy(classroom: UUID, subject: UUID, period: Int): Mesh {
-       return meshRepository.findFirstByClassroomAndSubjectAndPeriod(classroom, subject, period).orElse(
-           Mesh()
-       )
+        return meshRepository.findFirstByClassroomAndSubjectAndPeriod(classroom, subject, period).orElse(
+            Mesh()
+        )
     }
 
     override fun getByTeacher(classroom: UUID, teacher: UUID, period: Int): Mesh {

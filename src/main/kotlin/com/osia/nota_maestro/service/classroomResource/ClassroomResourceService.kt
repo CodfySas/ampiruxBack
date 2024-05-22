@@ -31,7 +31,6 @@ interface ClassroomResourceService {
 
     fun getByMy(uuid: UUID, subject: UUID): List<List<ClassroomResourceDto>>
 
-
     fun download(uuid: UUID): ResponseEntity<ByteArray>
 
     fun getCompleteExamByTeacher(uuid: UUID, task: UUID, showResponse: Boolean): ExamCompleteDto

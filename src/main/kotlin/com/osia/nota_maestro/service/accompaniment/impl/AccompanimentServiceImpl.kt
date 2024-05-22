@@ -9,10 +9,10 @@ import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentDto
 import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentRequest
 import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentSubjectDto
 import com.osia.nota_maestro.model.Accompaniment
-import com.osia.nota_maestro.repository.classroom.ClassroomRepository
-import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.accompaniment.AccompanimentRepository
 import com.osia.nota_maestro.repository.accompanimentStudent.AccompanimentStudentRepository
+import com.osia.nota_maestro.repository.classroom.ClassroomRepository
+import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.studentSubject.StudentSubjectRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
@@ -88,7 +88,8 @@ class AccompanimentServiceImpl(
                     where,
                     school
                 )
-            ), pageable
+            ),
+            pageable
         ).map(accompanimentMapper::toDto)
     }
 
@@ -126,9 +127,9 @@ class AccompanimentServiceImpl(
     override fun updateMultiple(accompanimentDtoList: List<AccompanimentDto>): List<AccompanimentDto> {
         log.trace(
             "accompaniment updateMultiple -> accompanimentDtoList: ${
-                objectMapper.writeValueAsString(
-                    accompanimentDtoList
-                )
+            objectMapper.writeValueAsString(
+                accompanimentDtoList
+            )
             }"
         )
         val accompaniments = accompanimentRepository.findAllById(accompanimentDtoList.mapNotNull { it.uuid })

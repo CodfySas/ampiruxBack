@@ -166,10 +166,10 @@ class AttendanceServiceImpl(
         val classroomStudent = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, user.uuid!!).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
-        val attendances = if(subject != null){
+        val attendances = if (subject != null) {
             attendanceRepository.getAllByUuidClassroomAndUuidSubjectAndMonth(classroomStudent.uuidClassroom!!, subject, month)
                 .sortedBy { it.day }
-        }else{
+        } else {
             attendanceRepository.getAllByUuidClassroomAndMonthAndUuidSubjectIsNull(classroomStudent.uuidClassroom!!, month)
         }
         val fails = attendanceFailRepository.getAllByUuidAttendanceInAndUuidStudent(attendances.mapNotNull { it.uuid }, user.uuid!!)
@@ -268,7 +268,7 @@ class AttendanceServiceImpl(
                         AttendanceDto().apply {
                             val found = attendances.firstOrNull { a ->
                                 a.uuidClassroom == classroom && a.uuidSubject == subject &&
-                                        a.day == i && a.month == month
+                                    a.day == i && a.month == month
                             }
                             val fail =
                                 found?.let { fails.firstOrNull { f -> f.uuidAttendance == it.uuid && f.uuidStudent == cs.uuidStudent } }
@@ -318,7 +318,7 @@ class AttendanceServiceImpl(
                         AttendanceDto().apply {
                             val found = attendances.firstOrNull { a ->
                                 a.uuidClassroom == classroom && a.uuidSubject == null &&
-                                        a.day == i && a.month == month
+                                    a.day == i && a.month == month
                             }
                             val fail =
                                 found?.let { fails.firstOrNull { f -> f.uuidAttendance == it.uuid && f.uuidStudent == cs.uuidStudent } }
@@ -349,7 +349,6 @@ class AttendanceServiceImpl(
             }
         }
     }
-
 
     override fun submit(
         classroom: UUID,
@@ -569,7 +568,7 @@ class AttendanceServiceImpl(
         }
     }
 
-    override fun getResourcesStudent(uuid: UUID): List<ResourceSubjectDto> {
+    override fun getResourcesStudent(uuid: UUID, include: Boolean): List<ResourceSubjectDto> {
         val student = userRepository.findById(uuid).orElseThrow {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
         }
@@ -579,8 +578,8 @@ class AttendanceServiceImpl(
             classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, uuid)
         val cFound = classrooms.firstOrNull { it.uuid == classroomStudent.get().uuidClassroom }
         val grade = gradeRepository.findById(cFound?.uuidGrade!!)
-        if(grade.isPresent){
-            if(grade.get().attendanceType == "grouped"){
+        if (grade.isPresent) {
+            if (grade.get().attendanceType == "grouped" && !include) {
                 return emptyList()
             }
         }

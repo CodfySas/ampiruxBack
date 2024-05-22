@@ -129,22 +129,24 @@ class DiagnosisServiceImpl(
         val grades = gradeRepository.findAllByUuidSchool(school)
         return DiagnosisCompleteDto().apply {
             this.diagnoses = diagnoses
-            this.users = students.map { s-> UserDiagnosesDto().apply {
-                this.uuid = s.uuid
-                this.age = null
-                this.grade = grades.firstOrNull { g-> g.uuid == s.actualGrade }?.name
-                this.name = s.name
-                this.lastname = s.lastname
-            } }
+            this.users = students.map { s ->
+                UserDiagnosesDto().apply {
+                    this.uuid = s.uuid
+                    this.age = null
+                    this.grade = grades.firstOrNull { g -> g.uuid == s.actualGrade }?.name
+                    this.name = s.name
+                    this.lastname = s.lastname
+                }
+            }
         }
     }
 
     override fun submitComplete(req: List<DiagnosisDto>, school: UUID): DiagnosisCompleteDto {
         log.trace("diagnosis submitComplete -> uuid: $school")
         val diagnoses = diagnosisRepository.findAllByUuidSchool(school).map(diagnosisMapper::toDto).sortedBy { it.code }
-        val toCreate = req.filter { r-> r.uuid == null }
-        val toUpdate = req.filter { r-> r.uuid != null }
-        val toDelete = diagnoses.filterNot { d-> toUpdate.mapNotNull { it.uuid }.contains(d.uuid) }
+        val toCreate = req.filter { r -> r.uuid == null }
+        val toUpdate = req.filter { r -> r.uuid != null }
+        val toDelete = diagnoses.filterNot { d -> toUpdate.mapNotNull { it.uuid }.contains(d.uuid) }
 
         req.forEach {
             it.uuidSchool = school

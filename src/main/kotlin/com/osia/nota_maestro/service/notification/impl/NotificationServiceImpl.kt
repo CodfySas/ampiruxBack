@@ -108,9 +108,9 @@ class NotificationServiceImpl(
     override fun updateMultiple(notificationDtoList: List<NotificationDto>): List<NotificationDto> {
         log.trace(
             "notification updateMultiple -> notificationDtoList: ${
-                objectMapper.writeValueAsString(
-                    notificationDtoList
-                )
+            objectMapper.writeValueAsString(
+                notificationDtoList
+            )
             }"
         )
         val notifications = notificationRepository.findAllById(notificationDtoList.mapNotNull { it.uuid })
@@ -153,11 +153,11 @@ class NotificationServiceImpl(
         log.trace("notification generateToRole $role -> req: ${objectMapper.writeValueAsString(notificationRequest)}")
         val users = userRepository.findAllByRoleAndUuidSchool(role, school)
         val notificationsToSave = mutableListOf<NotificationRequest>()
-        users.forEach { user->
+        users.forEach { user ->
 
             val notification = NotificationRequest().apply {
                 this.uuidUser = user.uuid
-                this.datetime  = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
                 this.uuidSchool = school
                 this.urlLink = notificationRequest.urlLink
                 this.type = notificationRequest.type

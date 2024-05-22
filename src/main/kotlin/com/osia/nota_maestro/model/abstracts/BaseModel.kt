@@ -41,9 +41,9 @@ abstract class BaseModel {
     var deleted: Boolean = false
 
     fun getCode(counter: Long, prefix: String? = ""): String {
-        val newPrefix = if(prefix == ""){
+        val newPrefix = if (prefix == "") {
             this.javaClass.simpleName.substring(0..1).uppercase(Locale.getDefault())
-        }else{
+        } else {
             prefix
         }
         return newPrefix + "-" + String.format(String.format("%%0%dd", 7), counter)

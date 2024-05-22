@@ -267,7 +267,7 @@ class UserServiceImpl(
             )
         }
         if (role == "student") {
-            saveSubModuleUsers(user.uuid!!, listOf("Boletin", "Certificados", "Mis Asistencias", "Malla academica", "Plan de Estudios", "Mis Clases" ))
+            saveSubModuleUsers(user.uuid!!, listOf("Boletin", "Certificados", "Mis Asistencias", "Malla academica", "Plan de Estudios", "Mis Clases"))
         }
         if (role == "admin") {
             saveSubModuleUsers(

@@ -6,7 +6,6 @@ import com.osia.nota_maestro.dto.resources.v1.ResourceRequest
 import com.osia.nota_maestro.dto.studentSubject.v1.StudentSubjectDto
 import com.osia.nota_maestro.model.Classroom
 import com.osia.nota_maestro.model.ClassroomStudent
-import com.osia.nota_maestro.model.SchoolPeriod
 import java.util.UUID
 
 interface NoteService {

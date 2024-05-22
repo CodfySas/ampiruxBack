@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.controller.planning.v1
 
 import com.osia.nota_maestro.dto.OnCreate
-import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
 import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.dto.planning.v1.PlanningCompleteRequest
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
@@ -27,13 +26,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.server.ResponseStatusException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -58,31 +53,39 @@ class PlanningController(
         @RequestHeader user: UUID?
     ): ResponseEntity<PlanningDto> {
         val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(p.classroom!!, p.subject!!, p.week!!)
-        val newResource = if(founded.isPresent){
+        val newResource = if (founded.isPresent) {
             planningMapper.toDto(founded.get())
-            planningService.update(founded.get().uuid!!, PlanningRequest().apply {
-                this.userReview = p.my
-                this.status = "pending"
-                this.area = p.area
-            })
-        }else{
-            planningService.save(PlanningRequest().apply {
-                this.classroom = p.classroom
-                this.subject = p.subject
-                this.week = p.week
-                this.userReview = p.my
-                this.status = "pending"
-                this.area = p.area
-            }, school)
+            planningService.update(
+                founded.get().uuid!!,
+                PlanningRequest().apply {
+                    this.userReview = p.my
+                    this.status = "pending"
+                    this.area = p.area
+                }
+            )
+        } else {
+            planningService.save(
+                PlanningRequest().apply {
+                    this.classroom = p.classroom
+                    this.subject = p.subject
+                    this.week = p.week
+                    this.userReview = p.my
+                    this.status = "pending"
+                    this.area = p.area
+                },
+                school
+            )
         }
         val time = LocalDateTime.now()
-        logService.save(LogRequest().apply {
-            this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
-            this.uuidUser = user
-            this.movement = "ha actualizado la planeación"
-            this.status  = "Completado"
-        })
+        logService.save(
+            LogRequest().apply {
+                this.day = LocalDate.now()
+                this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
+                this.uuidUser = user
+                this.movement = "ha actualizado la planeación"
+                this.status = "Completado"
+            }
+        )
         return ResponseEntity.ok(newResource)
     }
 
@@ -93,38 +96,46 @@ class PlanningController(
         @RequestHeader user: UUID?
     ): ResponseEntity<PlanningDto> {
         val founded = planningRepository.findFirstByClassroomAndUuidTeacherAndWeek(p.classroom!!, p.teacher!!, p.week!!)
-        val newResource = if(founded.isPresent){
+        val newResource = if (founded.isPresent) {
             planningMapper.toDto(founded.get())
-            planningService.update(founded.get().uuid!!, PlanningRequest().apply {
-                this.userReview = p.teacher
-                this.status = "pending"
-                this.area = p.area
-            })
-        }else{
-            planningService.save(PlanningRequest().apply {
-                this.classroom = p.classroom
-                this.uuidTeacher = p.teacher
-                this.week = p.week
-                this.userReview = p.teacher
-                this.status = "pending"
-                this.area = p.area
-            }, school)
+            planningService.update(
+                founded.get().uuid!!,
+                PlanningRequest().apply {
+                    this.userReview = p.teacher
+                    this.status = "pending"
+                    this.area = p.area
+                }
+            )
+        } else {
+            planningService.save(
+                PlanningRequest().apply {
+                    this.classroom = p.classroom
+                    this.uuidTeacher = p.teacher
+                    this.week = p.week
+                    this.userReview = p.teacher
+                    this.status = "pending"
+                    this.area = p.area
+                },
+                school
+            )
         }
         val time = LocalDateTime.now()
-        logService.save(LogRequest().apply {
-            this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
-            this.uuidUser = user
-            this.movement = "ha actualizado la planeación"
-            this.status  = "Completado"
-        })
+        logService.save(
+            LogRequest().apply {
+                this.day = LocalDate.now()
+                this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
+                this.uuidUser = user
+                this.movement = "ha actualizado la planeación"
+                this.status = "Completado"
+            }
+        )
         return ResponseEntity.ok(newResource)
     }
 
     @GetMapping("/download/{uuid}/{ext}")
     fun downloadPlanning(@PathVariable uuid: UUID, @PathVariable ext: String): ResponseEntity<ByteArray> {
         return try {
-            val targetLocation: Path = Path.of("src/main/resources/plannings/${uuid}.${ext}")
+            val targetLocation: Path = Path.of("src/main/resources/plannings/$uuid.$ext")
             val imageBytes = Files.readAllBytes(targetLocation)
             ResponseEntity.ok().contentType(SubmitFile().determineMediaType(ext)).body(imageBytes)
         } catch (ex: Exception) {
@@ -204,11 +215,11 @@ class PlanningController(
 
     @GetMapping("/get/{classroom}/{subject}/{week}")
     fun getBy(@PathVariable classroom: UUID, @PathVariable subject: UUID, @PathVariable week: Int): PlanningDto {
-        return planningMapper.toDto(planningService.getBy(classroom,subject,week))
+        return planningMapper.toDto(planningService.getBy(classroom, subject, week))
     }
 
     @GetMapping("/get-my/{classroom}/{my}/{week}")
     fun getByGroup(@PathVariable classroom: UUID, @PathVariable my: UUID, @PathVariable week: Int): PlanningDto {
-        return planningMapper.toDto(planningService.getByTeacher(classroom,my,week))
+        return planningMapper.toDto(planningService.getByTeacher(classroom, my, week))
     }
 }

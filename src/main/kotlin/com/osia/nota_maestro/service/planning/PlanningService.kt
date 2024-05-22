@@ -1,12 +1,10 @@
 package com.osia.nota_maestro.service.planning
 
-import com.osia.nota_maestro.dto.notification.v1.NotificationDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
 import com.osia.nota_maestro.model.Planning
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.web.bind.annotation.RequestHeader
 import java.util.UUID
 
 interface PlanningService {

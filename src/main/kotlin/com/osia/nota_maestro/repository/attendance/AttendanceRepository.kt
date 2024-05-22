@@ -31,5 +31,4 @@ interface AttendanceRepository :
     fun getAllByUuidClassroomAndUuidSubjectAndMonth(classroom: UUID, subject: UUID, month: Int): List<Attendance>
 
     fun getAllByUuidClassroomAndMonthAndUuidSubjectIsNull(classroom: UUID, month: Int): List<Attendance>
-
 }

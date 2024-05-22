@@ -144,25 +144,27 @@ class ClassroomResourceTaskServiceImpl(
             val user = users.find { it.uuid == classroomStudent.uuidStudent }
             user?.lastname
         }
-        return sortedClassroomStudents.map { cs-> ClassroomResourceTaskDto().apply {
-            val my = users.firstOrNull { it.uuid == cs.uuidStudent }
-            this.sname = my?.name
-            this.slastname = my?.lastname
+        return sortedClassroomStudents.map { cs ->
+            ClassroomResourceTaskDto().apply {
+                val my = users.firstOrNull { it.uuid == cs.uuidStudent }
+                this.sname = my?.name
+                this.slastname = my?.lastname
 
-            val myTask = classroomResourceTasks.firstOrNull{ it.uuidClassroomStudent == cs.uuid }
-            this.uuidClassroomResource = myTask?.uuidClassroomResource
-            this.uuidStudent = cs.uuidStudent
-            this.uuidClassroomStudent = cs.uuid
-            this.name = myTask?.name ?: ""
-            this.ext = myTask?.ext ?: ""
-            this.hasFile = myTask?.hasFile ?: false
-            this.description = myTask?.description ?: ""
-            this.submitAt = myTask?.submitAt
-            this.submitAtHour = myTask?.submitAtHour ?: ""
-            this.note = myTask?.note
-            this.observation = myTask?.observation ?: ""
-            this.uuid = myTask?.uuid
-        } }
+                val myTask = classroomResourceTasks.firstOrNull { it.uuidClassroomStudent == cs.uuid }
+                this.uuidClassroomResource = myTask?.uuidClassroomResource
+                this.uuidStudent = cs.uuidStudent
+                this.uuidClassroomStudent = cs.uuid
+                this.name = myTask?.name ?: ""
+                this.ext = myTask?.ext ?: ""
+                this.hasFile = myTask?.hasFile ?: false
+                this.description = myTask?.description ?: ""
+                this.submitAt = myTask?.submitAt
+                this.submitAtHour = myTask?.submitAtHour ?: ""
+                this.note = myTask?.note
+                this.observation = myTask?.observation ?: ""
+                this.uuid = myTask?.uuid
+            }
+        }
     }
 
     override fun submitClassroomAndTask(
@@ -170,9 +172,9 @@ class ClassroomResourceTaskServiceImpl(
         task: UUID,
         req: List<ClassroomResourceTaskDto>
     ): List<ClassroomResourceTaskDto> {
-        req.forEach { r->
-            if(r.noteText != null && r.noteText != ""){
-                r.note = r.noteText!!.replace(",",".").toDoubleOrNull()
+        req.forEach { r ->
+            if (r.noteText != null && r.noteText != "") {
+                r.note = r.noteText!!.replace(",", ".").toDoubleOrNull()
             }
         }
         val toCreate = req.filter { it.uuid == null }.map {
@@ -206,46 +208,51 @@ class ClassroomResourceTaskServiceImpl(
         ext: String
     ): ClassroomResourceTaskDto {
         val csFound = classroomResourceTaskRepository.findAllByUuidStudentAndUuidClassroomResource(uuid, task)
-        return if(csFound.isPresent){
-            update(csFound.get().uuid!!, ClassroomResourceTaskRequest().apply {
-                this.description = description
-                this.hasFile = hasFile
-                this.ext = ext
-                this.name = name
-                this.submitAt = LocalDate.now(ZoneId.of("America/Bogota"))
-                val horaActual = LocalTime.now(ZoneId.of("America/Bogota"))
-                val fHora = DateTimeFormatter.ofPattern("HH:mm")
-                val horaActualFormat = horaActual.format(fHora)
-                this.submitAtHour = horaActualFormat
-            })
-        }else{
+        return if (csFound.isPresent) {
+            update(
+                csFound.get().uuid!!,
+                ClassroomResourceTaskRequest().apply {
+                    this.description = description
+                    this.hasFile = hasFile
+                    this.ext = ext
+                    this.name = name
+                    this.submitAt = LocalDate.now(ZoneId.of("America/Bogota"))
+                    val horaActual = LocalTime.now(ZoneId.of("America/Bogota"))
+                    val fHora = DateTimeFormatter.ofPattern("HH:mm")
+                    val horaActualFormat = horaActual.format(fHora)
+                    this.submitAtHour = horaActualFormat
+                }
+            )
+        } else {
             val user = userRepository.getByUuid(uuid)
             val school = schoolService.getById(user.get().uuidSchool!!)
             val classrooms = classroomRepository.findAllByUuidSchoolAndYear(school.uuid!!, school.actualYear!!)
             val csF = classroomStudentRepository.findFirstByUuidClassroomInAndUuidStudent(classrooms.mapNotNull { it.uuid }, uuid).orElseThrow {
                 throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
             }
-            save(ClassroomResourceTaskRequest().apply {
-                this.uuidClassroomResource = task
-                this.uuidClassroomStudent = csF?.uuid
-                this.uuidStudent = uuid
-                this.description = description
-                this.hasFile = hasFile
-                this.name = name
-                this.ext = ext
-                this.submitAt = LocalDate.now(ZoneId.of("America/Bogota"))
-                val horaActual = LocalTime.now(ZoneId.of("America/Bogota"))
-                val fHora = DateTimeFormatter.ofPattern("HH:mm")
-                val horaActualFormat = horaActual.format(fHora)
-                this.submitAtHour = horaActualFormat
-            })
+            save(
+                ClassroomResourceTaskRequest().apply {
+                    this.uuidClassroomResource = task
+                    this.uuidClassroomStudent = csF?.uuid
+                    this.uuidStudent = uuid
+                    this.description = description
+                    this.hasFile = hasFile
+                    this.name = name
+                    this.ext = ext
+                    this.submitAt = LocalDate.now(ZoneId.of("America/Bogota"))
+                    val horaActual = LocalTime.now(ZoneId.of("America/Bogota"))
+                    val fHora = DateTimeFormatter.ofPattern("HH:mm")
+                    val horaActualFormat = horaActual.format(fHora)
+                    this.submitAtHour = horaActualFormat
+                }
+            )
         }
     }
 
     override fun download(uuid: UUID): ResponseEntity<ByteArray> {
         val resource = getById(uuid)
         return try {
-            val targetLocation: Path = Path.of("src/main/resources/files/${uuid}.${resource.ext}")
+            val targetLocation: Path = Path.of("src/main/resources/files/$uuid.${resource.ext}")
             val fileBytes = Files.readAllBytes(targetLocation)
             ResponseEntity.ok().contentType(SubmitFile().determineMediaType(resource.ext ?: "")).body(fileBytes)
         } catch (ex: Exception) {

@@ -60,21 +60,25 @@ class NoteController(
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
             this.day = LocalDate.now()
-            this.hour = "${time.hour}:${time.second}"
+            this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado las notas"
         }
         val response = try {
             val res = noteService.submitNotes(notes, teacher)
-            logService.save(req1.apply {
-                this.status  = "Completado"
-            })
+            logService.save(
+                req1.apply {
+                    this.status = "Completado"
+                }
+            )
             res
-        } catch (e: Exception){
-            logService.save(req1.apply {
-                this.status  = "Error"
-                this.detail = "${e.message}"
-            })
+        } catch (e: Exception) {
+            logService.save(
+                req1.apply {
+                    this.status = "Error"
+                    this.detail = "${e.message}"
+                }
+            )
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
         }
         return ResponseEntity.ok().body(response)

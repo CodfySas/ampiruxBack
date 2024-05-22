@@ -1,7 +1,6 @@
 package com.osia.nota_maestro.repository.classroomResource
 
 import com.osia.nota_maestro.model.ClassroomResource
-import com.osia.nota_maestro.model.Mesh
 import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -30,5 +29,4 @@ interface ClassroomResourceRepository :
     fun deleteByUuids(uuids: List<UUID>)
 
     fun findAllByClassroomAndSubject(classroom: UUID, subject: UUID): List<ClassroomResource>
-
 }

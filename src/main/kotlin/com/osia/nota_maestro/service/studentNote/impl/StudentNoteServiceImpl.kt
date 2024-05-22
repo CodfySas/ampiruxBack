@@ -93,7 +93,7 @@ class StudentNoteServiceImpl(
         studentNotes.forEach { studentNote ->
             val first = studentNoteDtoList.first { it.uuid == studentNote.uuid }
             studentNoteMapper.update(studentNoteMapper.toRequest(first), studentNote)
-            if(first.note == null){
+            if (first.note == null) {
                 studentNote.note = null
             }
         }
