@@ -5,7 +5,9 @@ import com.osia.nota_maestro.dto.diagnosis.v1.DiagnosisCompleteDto
 import com.osia.nota_maestro.dto.diagnosis.v1.DiagnosisDto
 import com.osia.nota_maestro.dto.diagnosis.v1.DiagnosisMapper
 import com.osia.nota_maestro.dto.diagnosis.v1.DiagnosisRequest
+import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.service.diagnosis.DiagnosisService
+import com.osia.nota_maestro.service.log.LogService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -21,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController("diagnosis.v1.crud")
@@ -29,7 +34,8 @@ import java.util.UUID
 @Validated
 class DiagnosisController(
     private val diagnosisService: DiagnosisService,
-    private val diagnosisMapper: DiagnosisMapper
+    private val diagnosisMapper: DiagnosisMapper,
+    private val logService: LogService
 ) {
     // Read
     @GetMapping
@@ -111,7 +117,27 @@ class DiagnosisController(
     }
 
     @PostMapping("/complete")
-    fun submitComplete(@RequestHeader school: UUID, @RequestBody req: List<DiagnosisDto>): ResponseEntity<DiagnosisCompleteDto> {
-        return ResponseEntity.ok().body(diagnosisService.submitComplete(req, school))
+    fun submitComplete(@RequestHeader school: UUID, @RequestHeader user: UUID?, @RequestBody req: List<DiagnosisDto>): ResponseEntity<DiagnosisCompleteDto> {
+        val time = LocalDateTime.now()
+        val req1 = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado los diagnosticos de los estudiantes"
+        }
+        val response = try {
+            val res = diagnosisService.submitComplete(req, school)
+            logService.save(req1.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req1.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
+        }
+        return ResponseEntity.ok().body(response)
     }
 }

@@ -2,11 +2,13 @@ package com.osia.nota_maestro.controller.planning.v1
 
 import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.classroomResource.v1.ClassroomResourceRequest
+import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.dto.planning.v1.PlanningCompleteRequest
 import com.osia.nota_maestro.dto.planning.v1.PlanningDto
 import com.osia.nota_maestro.dto.planning.v1.PlanningMapper
 import com.osia.nota_maestro.dto.planning.v1.PlanningRequest
 import com.osia.nota_maestro.repository.planning.PlanningRepository
+import com.osia.nota_maestro.service.log.LogService
 import com.osia.nota_maestro.service.planning.PlanningService
 import com.osia.nota_maestro.util.SubmitFile
 import org.slf4j.LoggerFactory
@@ -32,6 +34,8 @@ import org.springframework.web.server.ResponseStatusException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController("planning.v1.crud")
@@ -41,7 +45,8 @@ import java.util.UUID
 class PlanningController(
     private val planningService: PlanningService,
     private val planningMapper: PlanningMapper,
-    private val planningRepository: PlanningRepository
+    private val planningRepository: PlanningRepository,
+    private val logService: LogService
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -49,9 +54,9 @@ class PlanningController(
     @PostMapping("/submit")
     fun submitPlanning(
         @RequestBody p: PlanningCompleteRequest,
-        @RequestHeader school: UUID
+        @RequestHeader school: UUID,
+        @RequestHeader user: UUID?
     ): ResponseEntity<PlanningDto> {
-
         val founded = planningRepository.findFirstByClassroomAndSubjectAndWeek(p.classroom!!, p.subject!!, p.week!!)
         val newResource = if(founded.isPresent){
             planningMapper.toDto(founded.get())
@@ -70,13 +75,22 @@ class PlanningController(
                 this.area = p.area
             }, school)
         }
+        val time = LocalDateTime.now()
+        logService.save(LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado la planeación"
+            this.status  = "Completado"
+        })
         return ResponseEntity.ok(newResource)
     }
 
     @PostMapping("/submit-my")
     fun submitPlanningByTeacher(
         @RequestBody p: PlanningCompleteRequest,
-        @RequestHeader school: UUID
+        @RequestHeader school: UUID,
+        @RequestHeader user: UUID?
     ): ResponseEntity<PlanningDto> {
         val founded = planningRepository.findFirstByClassroomAndUuidTeacherAndWeek(p.classroom!!, p.teacher!!, p.week!!)
         val newResource = if(founded.isPresent){
@@ -96,6 +110,14 @@ class PlanningController(
                 this.area = p.area
             }, school)
         }
+        val time = LocalDateTime.now()
+        logService.save(LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado la planeación"
+            this.status  = "Completado"
+        })
         return ResponseEntity.ok(newResource)
     }
 

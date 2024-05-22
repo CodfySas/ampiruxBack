@@ -6,9 +6,11 @@ import com.osia.nota_maestro.dto.attendance.v1.AttendanceDto
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceMapper
 import com.osia.nota_maestro.dto.attendance.v1.AttendanceRequest
 import com.osia.nota_maestro.dto.attendanceFail.v1.AttendanceStudentDto
+import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.dto.resources.v1.ResourceGradeDto
 import com.osia.nota_maestro.dto.resources.v1.ResourceSubjectDto
 import com.osia.nota_maestro.service.attendance.AttendanceService
+import com.osia.nota_maestro.service.log.LogService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController("attendance.v1.crud")
@@ -32,7 +36,8 @@ import java.util.UUID
 @Validated
 class AttendanceController(
     private val attendanceService: AttendanceService,
-    private val attendanceMapper: AttendanceMapper
+    private val attendanceMapper: AttendanceMapper,
+    private val logService: LogService
 ) {
     // Read
     @GetMapping
@@ -150,9 +155,30 @@ class AttendanceController(
         @PathVariable subject: UUID,
         @PathVariable month: Int,
         @RequestHeader school: UUID,
+        @RequestHeader user: UUID?,
         @RequestBody req: List<AttendanceCompleteDto>
     ): ResponseEntity<List<AttendanceCompleteDto>> {
-        return ResponseEntity.ok().body(attendanceService.submit(classroom, subject, month, school, req))
+        val time = LocalDateTime.now()
+        val req1 = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado las asistencias"
+        }
+        val response = try {
+            val res = attendanceService.submit(classroom, subject, month, school, req)
+            logService.save(req1.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req1.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            emptyList()
+        }
+        return ResponseEntity.ok().body(response)
     }
 
     @PostMapping("/complete-group/{classroom}/{month}")
@@ -160,9 +186,30 @@ class AttendanceController(
         @PathVariable classroom: UUID,
         @PathVariable month: Int,
         @RequestHeader school: UUID,
+        @RequestHeader user: UUID?,
         @RequestBody req: List<AttendanceCompleteDto>
     ): ResponseEntity<List<AttendanceCompleteDto>> {
-        return ResponseEntity.ok().body(attendanceService.submitGroup(classroom, month, school, req))
+        val time = LocalDateTime.now()
+        val req1 = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado las asistencias"
+        }
+        val response = try {
+            val res = attendanceService.submitGroup(classroom, month, school, req)
+            logService.save(req1.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req1.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            emptyList()
+        }
+        return ResponseEntity.ok().body(response)
     }
 
     @GetMapping("/resources/{uuid}")

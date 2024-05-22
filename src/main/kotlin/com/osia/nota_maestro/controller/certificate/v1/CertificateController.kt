@@ -4,7 +4,9 @@ import com.osia.nota_maestro.dto.OnCreate
 import com.osia.nota_maestro.dto.certificate.v1.CertificateDto
 import com.osia.nota_maestro.dto.certificate.v1.CertificateMapper
 import com.osia.nota_maestro.dto.certificate.v1.CertificateRequest
+import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.service.certificate.CertificateService
+import com.osia.nota_maestro.service.log.LogService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -20,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController("certificate.v1.crud")
@@ -28,7 +33,8 @@ import java.util.UUID
 @Validated
 class CertificateController(
     private val certificateService: CertificateService,
-    private val certificateMapper: CertificateMapper
+    private val certificateMapper: CertificateMapper,
+    private val logService: LogService
 ) {
     // Read
     @GetMapping
@@ -115,7 +121,27 @@ class CertificateController(
     }
 
     @PostMapping("/request/{type}/{user}")
-    fun requestCertificate(@PathVariable type: String, @PathVariable user: UUID, @RequestHeader school: UUID): ResponseEntity<CertificateDto> {
-        return ResponseEntity.ok(certificateService.request(type, user, school))
+    fun requestCertificate(@PathVariable type: String,  @PathVariable user: UUID, @RequestHeader school: UUID): ResponseEntity<CertificateDto> {
+        val time = LocalDateTime.now()
+        val req1 = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha solicitado un certificado"
+        }
+        val response = try {
+            val res = certificateService.request(type, user, school)
+            logService.save(req1.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req1.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
+        }
+        return ResponseEntity.ok(response)
     }
 }

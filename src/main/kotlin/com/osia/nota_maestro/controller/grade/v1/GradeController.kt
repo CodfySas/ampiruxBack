@@ -6,7 +6,9 @@ import com.osia.nota_maestro.dto.grade.v1.GradeDto
 import com.osia.nota_maestro.dto.grade.v1.GradeMapper
 import com.osia.nota_maestro.dto.grade.v1.GradeRequest
 import com.osia.nota_maestro.dto.grade.v1.GradeSubjectsDto
+import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.service.grade.GradeService
+import com.osia.nota_maestro.service.log.LogService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -22,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController("grade.v1.crud")
@@ -30,7 +35,8 @@ import java.util.UUID
 @Validated
 class GradeController(
     private val gradeService: GradeService,
-    private val gradeMapper: GradeMapper
+    private val gradeMapper: GradeMapper,
+    private val logService: LogService
 ) {
     // Read
     @GetMapping
@@ -79,9 +85,29 @@ class GradeController(
     @PostMapping("/complete")
     fun saveGrade(
         @Validated(OnCreate::class) @RequestBody request: CourseInfoDto,
-        @RequestHeader school: UUID
+        @RequestHeader school: UUID, @RequestHeader user: UUID?
     ): ResponseEntity<CourseInfoDto> {
-        return ResponseEntity(gradeService.saveComplete(request, school), HttpStatus.CREATED)
+        val time = LocalDateTime.now()
+        val req1 = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado los grados y los cursos"
+        }
+        val response = try {
+            val res = gradeService.saveComplete(request, school)
+            logService.save(req1.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req1.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
+        }
+        return ResponseEntity(response, HttpStatus.CREATED)
     }
 
     @PostMapping("/grade-subjects")

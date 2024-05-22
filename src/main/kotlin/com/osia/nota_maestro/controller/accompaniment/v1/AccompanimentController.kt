@@ -6,7 +6,9 @@ import com.osia.nota_maestro.dto.accompaniment.v1.AccompanimentDto
 import com.osia.nota_maestro.dto.accompaniment.v1.AccompanimentMapper
 import com.osia.nota_maestro.dto.accompaniment.v1.AccompanimentRequest
 import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentDto
+import com.osia.nota_maestro.dto.log.v1.LogRequest
 import com.osia.nota_maestro.service.accompaniment.AccompanimentService
+import com.osia.nota_maestro.service.log.LogService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @RestController("accompaniment.v1.crud")
@@ -30,7 +34,8 @@ import java.util.UUID
 @Validated
 class AccompanimentController(
     private val accompanimentService: AccompanimentService,
-    private val accompanimentMapper: AccompanimentMapper
+    private val accompanimentMapper: AccompanimentMapper,
+    private val logService: LogService
 ) {
     // Read
     @GetMapping
@@ -44,8 +49,27 @@ class AccompanimentController(
     }
 
     @PostMapping("/complete")
-    fun saveComplete(@RequestBody complete: List<AccompanimentCompleteDto>, @RequestHeader school: UUID): List<AccompanimentCompleteDto> {
-        return accompanimentService.saveComplete(complete, school)
+    fun saveComplete(@RequestBody complete: List<AccompanimentCompleteDto>, @RequestHeader school: UUID, @RequestHeader user: UUID?): List<AccompanimentCompleteDto> {
+        val time = LocalDateTime.now()
+        val req = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado los docentes acompañantes de cada curso"
+        }
+        return try {
+            val res = accompanimentService.saveComplete(complete, school)
+            logService.save(req.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            emptyList()
+        }
     }
 
     @GetMapping("/my/{user}")
@@ -59,8 +83,27 @@ class AccompanimentController(
     }
 
     @PostMapping("/detail/{classroom}/{period}")
-    fun submit(@PathVariable classroom: UUID, @PathVariable period: Int, @RequestBody req: List<AccompanimentStudentDto>): List<AccompanimentStudentDto> {
-        return accompanimentService.submit(classroom, period, req)
+    fun submit(@PathVariable classroom: UUID, @PathVariable period: Int, @RequestHeader user: UUID?, @RequestBody req: List<AccompanimentStudentDto>): List<AccompanimentStudentDto> {
+        val time = LocalDateTime.now()
+        val req1 = LogRequest().apply {
+            this.day = LocalDate.now()
+            this.hour = "${time.hour}:${time.second}"
+            this.uuidUser = user
+            this.movement = "ha actualizado la información del acompañamiento de los estudiantes"
+        }
+        return try {
+            val res = accompanimentService.submit(classroom, period, req)
+            logService.save(req1.apply {
+                this.status  = "Completado"
+            })
+            res
+        } catch (e: Exception){
+            logService.save(req1.apply {
+                this.status  = "Error"
+                this.detail = "${e.message}"
+            })
+            emptyList()
+        }
     }
 
     @GetMapping("/filter/{where}")
