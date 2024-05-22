@@ -29,7 +29,7 @@ interface LogRepository :
     @Query("UPDATE Log SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
 
-    fun findAllByDayBetween(day1: LocalDate, day2: LocalDate): List<Log>
+    fun findAllByDayBetweenAndUuidSchool(day1: LocalDate, day2: LocalDate, uuid: UUID): List<Log>
 
-    fun findAllByDay(day: LocalDate): List<Log>
+    fun findAllByDayAndUuidSchool(day: LocalDate, uuid: UUID): List<Log>
 }

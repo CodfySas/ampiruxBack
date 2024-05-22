@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("diagnosis.v1.crud")
@@ -120,9 +121,10 @@ class DiagnosisController(
     fun submitComplete(@RequestHeader school: UUID, @RequestHeader user: UUID?, @RequestBody req: List<DiagnosisDto>): ResponseEntity<DiagnosisCompleteDto> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
+            this.uuidSchool = school
             this.movement = "ha actualizado los diagnosticos de los estudiantes"
         }
         val response = try {

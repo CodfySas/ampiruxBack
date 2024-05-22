@@ -1,0 +1,1 @@
+ALTER TABLE public.logs ADD if not exists uuid_school uuid null;

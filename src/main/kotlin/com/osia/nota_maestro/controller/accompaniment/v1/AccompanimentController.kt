@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("accompaniment.v1.crud")
@@ -52,7 +53,8 @@ class AccompanimentController(
     fun saveComplete(@RequestBody complete: List<AccompanimentCompleteDto>, @RequestHeader school: UUID, @RequestHeader user: UUID?): List<AccompanimentCompleteDto> {
         val time = LocalDateTime.now()
         val req = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.uuidSchool = school
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado los docentes acompañantes de cada curso"
@@ -87,10 +89,11 @@ class AccompanimentController(
     }
 
     @PostMapping("/detail/{classroom}/{period}")
-    fun submit(@PathVariable classroom: UUID, @PathVariable period: Int, @RequestHeader user: UUID?, @RequestBody req: List<AccompanimentStudentDto>): List<AccompanimentStudentDto> {
+    fun submit(@PathVariable classroom: UUID, @RequestHeader school: UUID, @PathVariable period: Int, @RequestHeader user: UUID?, @RequestBody req: List<AccompanimentStudentDto>): List<AccompanimentStudentDto> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+            this.uuidSchool = school
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado la información del acompañamiento de los estudiantes"

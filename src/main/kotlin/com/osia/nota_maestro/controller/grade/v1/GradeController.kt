@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("grade.v1.crud")
@@ -90,9 +91,10 @@ class GradeController(
     ): ResponseEntity<CourseInfoDto> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
+            this.uuidSchool = school
             this.movement = "ha actualizado los grados y los cursos"
         }
         val response = try {

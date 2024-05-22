@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("certificate.v1.crud")
@@ -124,7 +125,8 @@ class CertificateController(
     fun requestCertificate(@PathVariable type: String, @PathVariable user: UUID, @RequestHeader school: UUID): ResponseEntity<CertificateDto> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+            this.uuidSchool = school
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha solicitado un certificado"

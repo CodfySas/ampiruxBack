@@ -130,9 +130,9 @@ class LogServiceImpl(
         val lastDay = yearMonth.atEndOfMonth()
 
         val founds = if (day != 0) {
-            logRepository.findAllByDay(LocalDate.of(schoolF.actualYear!!, month + 1, day))
+            logRepository.findAllByDayAndUuidSchool(LocalDate.of(schoolF.actualYear!!, month + 1, day), school)
         } else {
-            logRepository.findAllByDayBetween(firstDay, lastDay)
+            logRepository.findAllByDayBetweenAndUuidSchool(firstDay, lastDay, school)
         }
         val users = userService.findByMultiple(founds.mapNotNull { it.uuidUser })
         val logs = founds.map(logMapper::toDto).sortedByDescending { it.createdAt }

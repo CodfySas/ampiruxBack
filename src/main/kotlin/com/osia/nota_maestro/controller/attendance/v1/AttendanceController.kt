@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("attendance.v1.crud")
@@ -160,7 +161,8 @@ class AttendanceController(
     ): ResponseEntity<List<AttendanceCompleteDto>> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+            this.uuidSchool = school
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado las asistencias"
@@ -195,7 +197,8 @@ class AttendanceController(
     ): ResponseEntity<List<AttendanceCompleteDto>> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+            this.uuidSchool = school
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado las asistencias"

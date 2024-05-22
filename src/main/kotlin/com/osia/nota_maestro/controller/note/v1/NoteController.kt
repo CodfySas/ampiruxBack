@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("note.v1.crud")
@@ -56,10 +57,11 @@ class NoteController(
     }
 
     @PostMapping("/submit/{teacher}")
-    fun submitNotes(@PathVariable teacher: UUID, @RequestBody notes: List<NoteDto>, @RequestHeader user: UUID?): ResponseEntity<List<NoteDto>> {
+    fun submitNotes(@PathVariable teacher: UUID, @RequestHeader school: UUID, @RequestBody notes: List<NoteDto>, @RequestHeader user: UUID?): ResponseEntity<List<NoteDto>> {
         val time = LocalDateTime.now()
         val req1 = LogRequest().apply {
-            this.day = LocalDate.now()
+            this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+            this.uuidSchool = school
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
             this.uuidUser = user
             this.movement = "ha actualizado las notas"

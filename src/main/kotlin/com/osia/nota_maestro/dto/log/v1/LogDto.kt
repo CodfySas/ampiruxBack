@@ -14,4 +14,5 @@ class LogDto : BaseDto() {
     var hour: String? = null
     var status: String? = null
     var detail: String? = null
+    var uuidSchool: UUID? = null
 }

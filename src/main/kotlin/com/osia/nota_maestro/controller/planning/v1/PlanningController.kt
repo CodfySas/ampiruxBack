@@ -31,6 +31,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @RestController("planning.v1.crud")
@@ -79,7 +80,8 @@ class PlanningController(
         val time = LocalDateTime.now()
         logService.save(
             LogRequest().apply {
-                this.day = LocalDate.now()
+                this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+                this.uuidSchool = school
                 this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
                 this.uuidUser = user
                 this.movement = "ha actualizado la planeación"
@@ -122,7 +124,8 @@ class PlanningController(
         val time = LocalDateTime.now()
         logService.save(
             LogRequest().apply {
-                this.day = LocalDate.now()
+                this.day = LocalDate.now(ZoneId.of("America/Bogota"))
+                this.uuidSchool = school
                 this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
                 this.uuidUser = user
                 this.movement = "ha actualizado la planeación"
