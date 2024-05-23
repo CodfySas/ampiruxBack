@@ -22,6 +22,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.UUID
+import javax.persistence.criteria.CriteriaBuilder
+import javax.persistence.criteria.CriteriaQuery
+import javax.persistence.criteria.Predicate
+import javax.persistence.criteria.Root
 
 @Service("log.crud_service")
 @Transactional
@@ -122,18 +126,15 @@ class LogServiceImpl(
         logRepository.saveAll(logs)
     }
 
-    override fun findAllByMonth(month: Int, day: Int, school: UUID): List<LogDto> {
+    override fun findAllByMonth(pageable: Pageable, month: Int, day: Int, school: UUID): List<LogDto> {
         log.trace("log findAllByMonth -> month: $month, day: $day")
         val schoolF = schoolService.getById(school)
         val firstDay = LocalDate.of(schoolF.actualYear!!, month + 1, 1)
         val yearMonth = YearMonth.of(schoolF.actualYear!!, month + 1)
         val lastDay = yearMonth.atEndOfMonth()
 
-        val founds = if (day != 0) {
-            logRepository.findAllByDayAndUuidSchool(LocalDate.of(schoolF.actualYear!!, month + 1, day), school)
-        } else {
-            logRepository.findAllByDayBetweenAndUuidSchool(firstDay, lastDay, school)
-        }
+        val finalSpec = this.createSpec(firstDay, lastDay, school, schoolF.actualYear!!, month, day)
+        val founds = logRepository.findAll(finalSpec, pageable)
         val users = userService.findByMultiple(founds.mapNotNull { it.uuidUser })
         val logs = founds.map(logMapper::toDto).sortedByDescending { it.createdAt }
         logs.forEach {
@@ -143,5 +144,26 @@ class LogServiceImpl(
             it.userRole = userF?.role
         }
         return logs
+    }
+
+    private fun createSpec(firstDay: LocalDate, lastDay: LocalDate, school: UUID, year: Int, month: Int, day: Int): Specification<Log> {
+        var finalSpec = Specification { root: Root<Log>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
+            root.get<Boolean>("deleted").`in`(false)
+        }
+        finalSpec = if(day == 0){
+            finalSpec.and { root: Root<Log>, _: CriteriaQuery<*>?, cb: CriteriaBuilder ->
+                cb.between(root.get("day"), firstDay, lastDay) as Predicate
+            }
+        }else{
+            val date = LocalDate.of(year, month + 1, day)
+            finalSpec.and { root: Root<Log>, _: CriteriaQuery<*>?, cb: CriteriaBuilder ->
+                root.get<LocalDate>("day").`in`(date)
+            }
+        }
+
+        finalSpec = finalSpec.and { root: Root<Log>, _: CriteriaQuery<*>?, _: CriteriaBuilder ->
+            root.get<UUID>("uuidSchool").`in`(school)
+        }
+        return finalSpec
     }
 }

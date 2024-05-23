@@ -105,7 +105,7 @@ class LogController(
     }
 
     @GetMapping("/get-complete/{month}/{day}")
-    fun getComplete(@PathVariable month: Int, @PathVariable day: Int, @RequestHeader school: UUID): ResponseEntity<List<LogDto>> {
-        return ResponseEntity.ok(logService.findAllByMonth(month, day, school))
+    fun getComplete(pageable: Pageable, @PathVariable month: Int, @PathVariable day: Int, @RequestHeader school: UUID): ResponseEntity<List<LogDto>> {
+        return ResponseEntity.ok(logService.findAllByMonth(pageable, month, day, school))
     }
 }

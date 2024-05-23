@@ -24,5 +24,5 @@ interface LogService {
     fun delete(uuid: UUID)
     fun deleteMultiple(uuidList: List<UUID>)
 
-    fun findAllByMonth(month: Int, day: Int, school: UUID): List<LogDto>
+    fun findAllByMonth(pageable: Pageable, month: Int, day: Int, school: UUID): List<LogDto>
 }
