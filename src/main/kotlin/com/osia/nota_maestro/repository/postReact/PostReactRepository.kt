@@ -36,5 +36,7 @@ interface PostReactRepository :
 
     fun findAllByUuidPostAndReactNotAndUuidCommentIsNull(post: UUID, react: Int): List<PostReact>
 
+    fun findAllByUuidCommentAndReactNot(comment: UUID, react: Int): List<PostReact>
+
     fun findAllByUuidCommentInAndUuidUser(posts: List<UUID>, user: UUID): List<PostReact>
 }

@@ -141,7 +141,12 @@ class PostReactController(
 
     @GetMapping("/get-reacts/{post}")
     fun getReacts(@PathVariable post: UUID): ResponseEntity<List<PostReactComplete>> {
-        return ResponseEntity.ok(postReactService.getReacts(post))
+        return ResponseEntity.ok(postReactService.getReacts(post, "post"))
+    }
+
+    @GetMapping("/get-react-comments/{comment}")
+    fun getReactComments(@PathVariable comment: UUID): ResponseEntity<List<PostReactComplete>> {
+        return ResponseEntity.ok(postReactService.getReacts(comment, "comment"))
     }
 
 }

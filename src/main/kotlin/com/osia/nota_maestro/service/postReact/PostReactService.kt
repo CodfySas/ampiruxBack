@@ -29,5 +29,5 @@ interface PostReactService {
     fun reactComment(comment: UUID, post: UUID, react: Int, user: UUID): PostReactDto
     fun reactResponse(response: UUID, post: UUID, comment: UUID, react: Int, user: UUID): PostReactDto
 
-    fun getReacts(post: UUID): List<PostReactComplete>
+    fun getReacts(uuid: UUID, type: String): List<PostReactComplete>
 }

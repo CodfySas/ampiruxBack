@@ -290,9 +290,13 @@ class PostReactServiceImpl(
         return new
     }
 
-    override fun getReacts(post: UUID): List<PostReactComplete> {
+    override fun getReacts(uuid: UUID, type: String): List<PostReactComplete> {
         val final = mutableListOf<PostReactComplete>()
-        val reacts = postReactRepository.findAllByUuidPostAndReactNotAndUuidCommentIsNull(post, 0).map(postReactMapper::toDto)
+        val reacts = when(type){
+            "post"-> postReactRepository.findAllByUuidPostAndReactNotAndUuidCommentIsNull(uuid, 0).map(postReactMapper::toDto)
+            "comment" -> postReactRepository.findAllByUuidCommentAndReactNot(uuid, 0).map(postReactMapper::toDto)
+            else -> mutableListOf()
+        }
         val users = userRepository.findAllById(reacts.mapNotNull { it.uuidUser })
         reacts.forEach { r->
             val myu = users.firstOrNull { u-> u.uuid == r.uuidUser }
