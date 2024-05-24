@@ -6,6 +6,8 @@ import com.osia.nota_maestro.dto.post.v1.PostMapper
 import com.osia.nota_maestro.dto.post.v1.PostRequest
 import com.osia.nota_maestro.model.Post
 import com.osia.nota_maestro.repository.post.PostRepository
+import com.osia.nota_maestro.repository.postReact.PostReactRepository
+import com.osia.nota_maestro.repository.user.UserRepository
 import com.osia.nota_maestro.service.post.PostService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
@@ -24,7 +26,9 @@ import java.util.UUID
 class PostServiceImpl(
     private val postRepository: PostRepository,
     private val postMapper: PostMapper,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val userRepository: UserRepository,
+    private val postReactRepository: PostReactRepository
 ) : PostService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -49,22 +53,44 @@ class PostServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAll(pageable: Pageable): Page<PostDto> {
+    override fun findAll(pageable: Pageable, school: UUID, user: UUID): Page<PostDto> {
         log.trace("post findAll -> pageable: $pageable")
-        return postRepository.findAll(pageable).map(postMapper::toDto)
+        val posts = postRepository.findAll(Specification.where(CreateSpec<Post>().createSpec("", school)), pageable).map(postMapper::toDto)
+        val users = userRepository.findAllById(posts.mapNotNull { it.uuidUser })
+        val myReacts = postReactRepository.findAllByUuidPostInAndUuidUserAndUuidCommentIsNull(posts.mapNotNull { it.uuid }, user)
+        posts.forEach { p->
+            val u = users.firstOrNull { u-> u.uuid == p.uuidUser }
+            p.userName = "${u?.name} ${u?.lastname}"
+            if(u?.role == "admin"){
+                p.userRole = "Administrador"
+            }
+            if(u?.role == "teacher"){
+                p.userRole = "Docente"
+            }
+            if(u?.role == "student"){
+                p.userRole = "Estudiante"
+            }
+            val myR = myReacts.firstOrNull { it.uuidPost == p.uuid }
+            if(myR?.react != 0){
+                p.selectedReact = myR?.react
+            }else{
+                p.selectedReact = 0
+            }
+        }
+        return posts
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<PostDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<PostDto> {
         log.trace("post findAllByFilter -> pageable: $pageable, where: $where")
-        return postRepository.findAll(Specification.where(CreateSpec<Post>().createSpec(where)), pageable).map(postMapper::toDto)
+        return postRepository.findAll(Specification.where(CreateSpec<Post>().createSpec(where, school)), pageable).map(postMapper::toDto)
     }
 
     @Transactional
-    override fun save(postRequest: PostRequest): PostDto {
+    override fun save(postRequest: PostRequest, replace: Boolean): PostDto {
         log.trace("post save -> request: $postRequest")
-        val post = postMapper.toModel(postRequest)
-        return postMapper.toDto(postRepository.save(post))
+        val savedPost = postMapper.toModel(postRequest)
+        return postMapper.toDto(postRepository.save(savedPost))
     }
 
     @Transactional
@@ -75,9 +101,13 @@ class PostServiceImpl(
     }
 
     @Transactional
-    override fun update(uuid: UUID, postRequest: PostRequest): PostDto {
+    override fun update(uuid: UUID, postRequest: PostRequest, includeDelete: Boolean): PostDto {
         log.trace("post update -> uuid: $uuid, request: $postRequest")
-        val post = getById(uuid)
+        val post = if (!includeDelete) {
+            getById(uuid)
+        } else {
+            postRepository.getByUuid(uuid).get()
+        }
         postMapper.update(postRequest, post)
         return postMapper.toDto(postRepository.save(post))
     }

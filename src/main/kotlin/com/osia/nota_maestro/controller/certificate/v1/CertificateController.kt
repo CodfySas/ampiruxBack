@@ -123,7 +123,7 @@ class CertificateController(
 
     @PostMapping("/request/{type}/{user}")
     fun requestCertificate(@PathVariable type: String, @PathVariable user: UUID, @RequestHeader school: UUID): ResponseEntity<CertificateDto> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school

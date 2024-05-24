@@ -77,7 +77,7 @@ class PlanningController(
                 school
             )
         }
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         logService.save(
             LogRequest().apply {
                 this.day = LocalDate.now(ZoneId.of("America/Bogota"))
@@ -121,7 +121,7 @@ class PlanningController(
                 school
             )
         }
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         logService.save(
             LogRequest().apply {
                 this.day = LocalDate.now(ZoneId.of("America/Bogota"))

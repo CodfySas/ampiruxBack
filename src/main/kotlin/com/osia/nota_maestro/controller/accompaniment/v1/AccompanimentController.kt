@@ -51,7 +51,7 @@ class AccompanimentController(
 
     @PostMapping("/complete")
     fun saveComplete(@RequestBody complete: List<AccompanimentCompleteDto>, @RequestHeader school: UUID, @RequestHeader user: UUID?): List<AccompanimentCompleteDto> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req = LogRequest().apply {
             this.uuidSchool = school
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
@@ -90,7 +90,7 @@ class AccompanimentController(
 
     @PostMapping("/detail/{classroom}/{period}")
     fun submit(@PathVariable classroom: UUID, @RequestHeader school: UUID, @PathVariable period: Int, @RequestHeader user: UUID?, @RequestBody req: List<AccompanimentStudentDto>): List<AccompanimentStudentDto> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school

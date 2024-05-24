@@ -262,7 +262,7 @@ class ClassroomResourceController(
     fun canDoExam(@PathVariable uuid: UUID, @PathVariable exam: UUID): ResponseEntity<Boolean> {
         var res = false
         val getExam = classroomResourceService.getById(exam)
-        val now = LocalDateTime.now()
+        val now = LocalDateTime.now(ZoneId.of("America/Bogota"))
 
         val iTime = (getExam.initHour ?: "00:00").split(":")
         val fTime = (getExam.lastHour ?: "00:00").split(":")

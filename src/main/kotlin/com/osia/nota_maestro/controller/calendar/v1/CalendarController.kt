@@ -49,7 +49,7 @@ class CalendarController(
 
     @PostMapping("/task")
     fun submitTask(@RequestHeader school: UUID, @RequestHeader user: UUID?, @RequestBody calendarTaskRequest: CalendarTaskRequest): CalendarTaskDto {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school
@@ -79,7 +79,7 @@ class CalendarController(
 
     @PatchMapping("/task/{uuid}")
     fun updateTask(@RequestHeader school: UUID, @RequestHeader user: UUID?, @PathVariable uuid: UUID, @RequestBody calendarTaskRequest: CalendarTaskRequest): CalendarTaskDto {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school

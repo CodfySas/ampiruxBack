@@ -58,7 +58,7 @@ class NoteController(
 
     @PostMapping("/submit/{teacher}")
     fun submitNotes(@PathVariable teacher: UUID, @RequestHeader school: UUID, @RequestBody notes: List<NoteDto>, @RequestHeader user: UUID?): ResponseEntity<List<NoteDto>> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school

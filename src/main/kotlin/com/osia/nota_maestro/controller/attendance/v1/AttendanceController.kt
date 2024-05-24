@@ -159,7 +159,7 @@ class AttendanceController(
         @RequestHeader user: UUID?,
         @RequestBody req: List<AttendanceCompleteDto>
     ): ResponseEntity<List<AttendanceCompleteDto>> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school
@@ -195,7 +195,7 @@ class AttendanceController(
         @RequestHeader user: UUID?,
         @RequestBody req: List<AttendanceCompleteDto>
     ): ResponseEntity<List<AttendanceCompleteDto>> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school

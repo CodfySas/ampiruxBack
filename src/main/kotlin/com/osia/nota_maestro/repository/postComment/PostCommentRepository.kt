@@ -1,6 +1,6 @@
-package com.osia.nota_maestro.repository.post
+package com.osia.nota_maestro.repository.postComment
 
-import com.osia.nota_maestro.model.Post
+import com.osia.nota_maestro.model.PostComment
 import com.osia.nota_maestro.repository.BaseRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -11,21 +11,21 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.Optional
 import java.util.UUID
 
-@Repository("post.crud_repository")
-interface PostRepository :
-    JpaRepository<Post, UUID>,
-    JpaSpecificationExecutor<Post>,
+@Repository("postComment.crud_repository")
+interface PostCommentRepository :
+    JpaRepository<PostComment, UUID>,
+    JpaSpecificationExecutor<PostComment>,
     BaseRepository {
 
-    @Query(value = "SELECT COUNT(*) FROM posts", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM post_comments", nativeQuery = true)
     override fun count(schoolUuid: UUID?): Long
 
-    @Query(value = "SELECT * FROM posts where uuid = ?1", nativeQuery = true)
-    fun getByUuid(uuid: UUID): Optional<Post>
-
+    @Query(value = "SELECT * FROM post_comments where uuid = ?1", nativeQuery = true)
+    fun getByUuid(uuid: UUID): Optional<PostComment>
 
     @Modifying
     @Transactional
-    @Query("UPDATE Post SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
+    @Query("UPDATE PostComment SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
+
 }

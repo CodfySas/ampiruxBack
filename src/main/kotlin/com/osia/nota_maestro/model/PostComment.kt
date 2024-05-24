@@ -1,36 +1,36 @@
 package com.osia.nota_maestro.model
 
 import com.osia.nota_maestro.model.abstracts.BaseModel
-import com.osia.nota_maestro.model.listener.post.PostListener
+import com.osia.nota_maestro.model.listener.postComment.PostCommentListener
 import org.hibernate.annotations.DynamicUpdate
-import org.hibernate.envers.Audited
+import org.hibernate.annotations.Where
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "posts",
+    name = "post_comments",
 )
 @Entity
 @DynamicUpdate
 @EntityListeners(
     value = [
-        PostListener::class,
+        PostCommentListener::class
     ]
 )
-data class Post(
-    var description: String = "",
-    var comments: Int = 0,
+@Where(clause = "deleted = false")
+data class PostComment(
     var uuidUser: UUID? = null,
+    var responses: Int = 0,
+    var description: String = "",
     var likes: Int = 0,
     var loved: Int = 0,
     var wows: Int = 0,
     var interesting: Int = 0,
     var dislikes: Int = 0,
     var reacts: Int = 0,
-    var pinned: Boolean = false,
-    var type: String = "public",
-    var classroom: UUID? = null,
-    var uuidSchool: UUID? = null
+    var uuidPost: UUID? = null,
+    var isResponse: Boolean = false,
+    var uuidParent: UUID? = null
 ) : BaseModel()

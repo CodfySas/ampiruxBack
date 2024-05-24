@@ -35,7 +35,7 @@ class RecoveryController(
 
     @PostMapping("/submit")
     fun submitNotes(@RequestBody notes: List<RecoveryDto>, @RequestHeader school: UUID, @RequestHeader user: UUID?): ResponseEntity<List<RecoveryDto>> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.uuidSchool = school

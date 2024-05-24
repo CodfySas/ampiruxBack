@@ -89,7 +89,7 @@ class GradeController(
         @RequestHeader school: UUID,
         @RequestHeader user: UUID?
     ): ResponseEntity<CourseInfoDto> {
-        val time = LocalDateTime.now()
+        val time = LocalDateTime.now(ZoneId.of("America/Bogota"))
         val req1 = LogRequest().apply {
             this.day = LocalDate.now(ZoneId.of("America/Bogota"))
             this.hour = "${String.format("%02d", time.hour)}:${String.format("%02d", time.minute)}:${String.format("%02d", time.second)}"
