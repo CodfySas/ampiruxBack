@@ -26,8 +26,8 @@ interface PostReactService {
     fun deleteMultiple(uuidList: List<UUID>)
 
     fun reactClick(post: UUID, react: Int, user: UUID): PostReactDto
-    fun reactComment(comment: UUID, post: UUID, react: Int, user: UUID): PostReactDto
-    fun reactResponse(response: UUID, post: UUID, comment: UUID, react: Int, user: UUID): PostReactDto
+    fun reactComment(comment: UUID, post: UUID, react: Int, user: UUID, school: UUID): PostReactDto
+    fun reactResponse(response: UUID, post: UUID, comment: UUID, react: Int, user: UUID, school: UUID): PostReactDto
 
     fun getReacts(uuid: UUID, type: String): List<PostReactComplete>
 }

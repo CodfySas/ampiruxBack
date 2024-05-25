@@ -29,4 +29,6 @@ interface NotificationRepository :
     @Transactional
     @Query("UPDATE Notification SET deleted = true, deletedAt = now() WHERE uuid IN :uuids")
     fun deleteByUuids(uuids: List<UUID>)
+
+    fun findFirstByUrlLinkAndViewedAndUuidUserAndType(urlLink: String, viewed: Boolean, uuidUser: UUID, type: String): Optional<Notification>
 }

@@ -1,15 +1,18 @@
 package com.osia.nota_maestro.service.postReact.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.notification.v1.NotificationRequest
 import com.osia.nota_maestro.dto.postReact.v1.PostReactComplete
 import com.osia.nota_maestro.dto.postReact.v1.PostReactDto
 import com.osia.nota_maestro.dto.postReact.v1.PostReactMapper
 import com.osia.nota_maestro.dto.postReact.v1.PostReactRequest
 import com.osia.nota_maestro.model.PostReact
+import com.osia.nota_maestro.repository.notification.NotificationRepository
 import com.osia.nota_maestro.repository.post.PostRepository
 import com.osia.nota_maestro.repository.postComment.PostCommentRepository
 import com.osia.nota_maestro.repository.postReact.PostReactRepository
 import com.osia.nota_maestro.repository.user.UserRepository
+import com.osia.nota_maestro.service.notification.NotificationService
 import com.osia.nota_maestro.service.post.PostService
 import com.osia.nota_maestro.service.postComment.PostCommentService
 import com.osia.nota_maestro.service.postReact.PostReactService
@@ -37,7 +40,9 @@ class PostReactServiceImpl(
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
     private val postCommentService: PostCommentService,
-    private val postCommentRepository: PostCommentRepository
+    private val postCommentRepository: PostCommentRepository,
+    private val notificationService: NotificationService,
+    private val notificationRepository: NotificationRepository
 ) : PostReactService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -64,13 +69,19 @@ class PostReactServiceImpl(
     @Transactional(readOnly = true)
     override fun findAll(pageable: Pageable, school: UUID): Page<PostReactDto> {
         log.trace("postReact findAll -> pageable: $pageable")
-        return postReactRepository.findAll(Specification.where(CreateSpec<PostReact>().createSpec("", school)), pageable).map(postReactMapper::toDto)
+        return postReactRepository.findAll(
+            Specification.where(CreateSpec<PostReact>().createSpec("", school)),
+            pageable
+        ).map(postReactMapper::toDto)
     }
 
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String, school: UUID): Page<PostReactDto> {
         log.trace("postReact findAllByFilter -> pageable: $pageable, where: $where")
-        return postReactRepository.findAll(Specification.where(CreateSpec<PostReact>().createSpec(where, school)), pageable).map(postReactMapper::toDto)
+        return postReactRepository.findAll(
+            Specification.where(CreateSpec<PostReact>().createSpec(where, school)),
+            pageable
+        ).map(postReactMapper::toDto)
     }
 
     @Transactional
@@ -104,7 +115,10 @@ class PostReactServiceImpl(
         log.trace("postReact updateMultiple -> postReactDtoList: ${objectMapper.writeValueAsString(postReactDtoList)}")
         val postReacts = postReactRepository.findAllById(postReactDtoList.mapNotNull { it.uuid })
         postReacts.forEach { postReact ->
-            postReactMapper.update(postReactMapper.toRequest(postReactDtoList.first { it.uuid == postReact.uuid }), postReact)
+            postReactMapper.update(
+                postReactMapper.toRequest(postReactDtoList.first { it.uuid == postReact.uuid }),
+                postReact
+            )
         }
         return postReactRepository.saveAll(postReacts).map(postReactMapper::toDto)
     }
@@ -134,41 +148,68 @@ class PostReactServiceImpl(
     override fun reactClick(post: UUID, react: Int, user: UUID): PostReactDto {
         val postF = postService.getById(post)
         val postReact = postReactRepository.findFirstByUuidPostAndUuidUserAndUuidCommentIsNull(post, user)
-        val new = if(postReact.isPresent){
+        val new = if (postReact.isPresent) {
             val actualReact = postReact.get().react
-            if(actualReact != 0){
+            if (actualReact != 0) {
                 postF.reacts--;
                 when (actualReact) {
-                    1 -> { postF.likes--; }
-                    2 -> { postF.loved--; }
-                    3 -> { postF.interesting--; }
-                    4 -> { postF.wows--; }
-                    5 -> { postF.dislikes--; }
+                    1 -> {
+                        postF.likes--; }
+
+                    2 -> {
+                        postF.loved--; }
+
+                    3 -> {
+                        postF.interesting--; }
+
+                    4 -> {
+                        postF.wows--; }
+
+                    5 -> {
+                        postF.dislikes--; }
                 }
             }
-            if(react != 0){
+            if (react != 0) {
                 postF.reacts++;
                 when (react) {
-                    1 -> { postF.likes++; }
-                    2 -> { postF.loved++; }
-                    3 -> { postF.interesting++; }
-                    4 -> { postF.wows++; }
-                    5 -> { postF.dislikes++; }
+                    1 -> {
+                        postF.likes++; }
+
+                    2 -> {
+                        postF.loved++; }
+
+                    3 -> {
+                        postF.interesting++; }
+
+                    4 -> {
+                        postF.wows++; }
+
+                    5 -> {
+                        postF.dislikes++; }
                 }
             }
             postReact.get().react = react
             postF.lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
             postRepository.save(postF)
             postReactMapper.toDto(postReactRepository.save(postReact.get()))
-        }else{
-            if(react != 0){
+        } else {
+            if (react != 0) {
                 postF.reacts++;
                 when (react) {
-                    1 -> { postF.likes++; }
-                    2 -> { postF.loved++; }
-                    3 -> { postF.interesting++; }
-                    4 -> { postF.wows++; }
-                    5 -> { postF.dislikes++; }
+                    1 -> {
+                        postF.likes++; }
+
+                    2 -> {
+                        postF.loved++; }
+
+                    3 -> {
+                        postF.interesting++; }
+
+                    4 -> {
+                        postF.wows++; }
+
+                    5 -> {
+                        postF.dislikes++; }
                 }
             }
             postF.lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
@@ -179,49 +220,114 @@ class PostReactServiceImpl(
                 this.uuidUser = user
             })
         }
+        if(user != postF.uuidUser){
+            val link = "/forum?uuid=${postF.uuid}"
+            val notifyFound = notificationRepository.findFirstByUrlLinkAndViewedAndUuidUserAndType(link, false, postF.uuidUser!!, "react")
+            if(notifyFound.isPresent){
+                notifyFound.get().datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                notificationRepository.save(notifyFound.get())
+            }else {
+                notificationService.save(
+                    NotificationRequest().apply {
+                        this.uuidUser = postF.uuidUser
+                        this.type = "react"
+                        this.description = "se ha reaccionado a tu publicación en el foro"
+                        this.urlLink = "/forum?uuid=${postF.uuid}"
+                        this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                        this.uuidSchool = postF.uuidSchool
+                    }, postF.uuidSchool!!
+                )
+            }
+        }
         return new
     }
 
     @Transactional
     @Async
-    override fun reactComment(comment: UUID, post: UUID, react: Int, user: UUID): PostReactDto {
+    override fun reactComment(comment: UUID, post: UUID, react: Int, user: UUID, school: UUID): PostReactDto {
         val postF = postCommentService.getById(comment)
         val postReact = postReactRepository.findFirstByUuidCommentAndUuidUser(comment, user)
-        val new = if(postReact.isPresent){
+        val new = if (postReact.isPresent) {
             val actualReact = postReact.get().react
-            if(actualReact != 0){
+            if (actualReact != 0) {
                 postF.reacts--;
                 when (actualReact) {
-                    1 -> { postF.likes--; }
-                    2 -> { postF.loved--; }
-                    3 -> { postF.interesting--; }
-                    4 -> { postF.wows--; }
-                    5 -> { postF.dislikes--; }
+                    1 -> {
+                        postF.likes--; }
+
+                    2 -> {
+                        postF.loved--; }
+
+                    3 -> {
+                        postF.interesting--; }
+
+                    4 -> {
+                        postF.wows--; }
+
+                    5 -> {
+                        postF.dislikes--; }
                 }
             }
-            if(react != 0){
+            if (react != 0) {
                 postF.reacts++;
                 when (react) {
-                    1 -> { postF.likes++; }
-                    2 -> { postF.loved++; }
-                    3 -> { postF.interesting++; }
-                    4 -> { postF.wows++; }
-                    5 -> { postF.dislikes++; }
+                    1 -> {
+                        postF.likes++; }
+
+                    2 -> {
+                        postF.loved++; }
+
+                    3 -> {
+                        postF.interesting++; }
+
+                    4 -> {
+                        postF.wows++; }
+
+                    5 -> {
+                        postF.dislikes++; }
                 }
             }
             postReact.get().react = react
             postF.lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
             postCommentRepository.save(postF)
             postReactMapper.toDto(postReactRepository.save(postReact.get()))
-        }else{
-            if(react != 0){
+        } else {
+            if (react != 0) {
                 postF.reacts++;
                 when (react) {
-                    1 -> { postF.likes++; }
-                    2 -> { postF.loved++; }
-                    3 -> { postF.interesting++; }
-                    4 -> { postF.wows++; }
-                    5 -> { postF.dislikes++; }
+                    1 -> {
+                        postF.likes++; }
+
+                    2 -> {
+                        postF.loved++; }
+
+                    3 -> {
+                        postF.interesting++; }
+
+                    4 -> {
+                        postF.wows++; }
+
+                    5 -> {
+                        postF.dislikes++; }
+                }
+            }
+            if(user != postF.uuidUser){
+                val link = "/forum?uuid=${post}"
+                val notifyFound = notificationRepository.findFirstByUrlLinkAndViewedAndUuidUserAndType(link, false, postF.uuidUser!!, "react-c")
+                if(notifyFound.isPresent){
+                    notifyFound.get().datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                    notificationRepository.save(notifyFound.get())
+                }else{
+                    notificationService.save(
+                        NotificationRequest().apply {
+                            this.uuidUser = postF.uuidUser
+                            this.type = "react-c"
+                            this.description = "Se ha reaccionado a tu comentario en el foro"
+                            this.urlLink = "/forum?uuid=${post}"
+                            this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                            this.uuidSchool = school
+                        }, school
+                    )
                 }
             }
             postF.lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
@@ -238,44 +344,71 @@ class PostReactServiceImpl(
 
     @Transactional
     @Async
-    override fun reactResponse(response: UUID, post: UUID, comment: UUID, react: Int, user: UUID): PostReactDto {
+    override fun reactResponse(response: UUID, post: UUID, comment: UUID, react: Int, user: UUID, school: UUID): PostReactDto {
         val responseF = postCommentService.getById(response)
         val postReact = postReactRepository.findFirstByUuidCommentAndUuidUser(response, user)
-        val new = if(postReact.isPresent){
+        val new = if (postReact.isPresent) {
             val actualReact = postReact.get().react
-            if(actualReact != 0){
+            if (actualReact != 0) {
                 responseF.reacts--;
                 when (actualReact) {
-                    1 -> { responseF.likes--; }
-                    2 -> { responseF.loved--; }
-                    3 -> { responseF.interesting--; }
-                    4 -> { responseF.wows--; }
-                    5 -> { responseF.dislikes--; }
+                    1 -> {
+                        responseF.likes--; }
+
+                    2 -> {
+                        responseF.loved--; }
+
+                    3 -> {
+                        responseF.interesting--; }
+
+                    4 -> {
+                        responseF.wows--; }
+
+                    5 -> {
+                        responseF.dislikes--; }
                 }
             }
-            if(react != 0){
+            if (react != 0) {
                 responseF.reacts++;
                 when (react) {
-                    1 -> { responseF.likes++; }
-                    2 -> { responseF.loved++; }
-                    3 -> { responseF.interesting++; }
-                    4 -> { responseF.wows++; }
-                    5 -> { responseF.dislikes++; }
+                    1 -> {
+                        responseF.likes++; }
+
+                    2 -> {
+                        responseF.loved++; }
+
+                    3 -> {
+                        responseF.interesting++; }
+
+                    4 -> {
+                        responseF.wows++; }
+
+                    5 -> {
+                        responseF.dislikes++; }
                 }
             }
             postReact.get().react = react
             responseF.lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
             postCommentRepository.save(responseF)
             postReactMapper.toDto(postReactRepository.save(postReact.get()))
-        }else{
-            if(react != 0){
+        } else {
+            if (react != 0) {
                 responseF.reacts++;
                 when (react) {
-                    1 -> { responseF.likes++; }
-                    2 -> { responseF.loved++; }
-                    3 -> { responseF.interesting++; }
-                    4 -> { responseF.wows++; }
-                    5 -> { responseF.dislikes++; }
+                    1 -> {
+                        responseF.likes++; }
+
+                    2 -> {
+                        responseF.loved++; }
+
+                    3 -> {
+                        responseF.interesting++; }
+
+                    4 -> {
+                        responseF.wows++; }
+
+                    5 -> {
+                        responseF.dislikes++; }
                 }
             }
             responseF.lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
@@ -287,27 +420,49 @@ class PostReactServiceImpl(
                 this.uuidPost = post
             })
         }
+        if(user !=responseF.uuidUser){
+            val link = "/forum?uuid=${post}"
+            val notifyFound = notificationRepository.findFirstByUrlLinkAndViewedAndUuidUserAndType(link, false, responseF.uuidUser!!, "react-r")
+            if(notifyFound.isPresent){
+                notifyFound.get().datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                notificationRepository.save(notifyFound.get())
+            }else{
+                notificationService.save(
+                    NotificationRequest().apply {
+                        this.uuidUser = responseF.uuidUser
+                        this.type = "react-r"
+                        this.description = "Se ha reaccionado a tu respuesta en el foro"
+                        this.urlLink = "/forum?uuid=${post}"
+                        this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                        this.uuidSchool = school
+                    }, school
+                )
+            }
+        }
+
         return new
     }
 
     override fun getReacts(uuid: UUID, type: String): List<PostReactComplete> {
         val final = mutableListOf<PostReactComplete>()
-        val reacts = when(type){
-            "post"-> postReactRepository.findAllByUuidPostAndReactNotAndUuidCommentIsNull(uuid, 0).map(postReactMapper::toDto)
+        val reacts = when (type) {
+            "post" -> postReactRepository.findAllByUuidPostAndReactNotAndUuidCommentIsNull(uuid, 0)
+                .map(postReactMapper::toDto)
+
             "comment" -> postReactRepository.findAllByUuidCommentAndReactNot(uuid, 0).map(postReactMapper::toDto)
             else -> mutableListOf()
         }
         val users = userRepository.findAllById(reacts.mapNotNull { it.uuidUser })
-        reacts.forEach { r->
-            val myu = users.firstOrNull { u-> u.uuid == r.uuidUser }
+        reacts.forEach { r ->
+            val myu = users.firstOrNull { u -> u.uuid == r.uuidUser }
             r.userName = "${myu?.name} ${myu?.lastname}"
-            if(myu?.role == "admin"){
+            if (myu?.role == "admin") {
                 r.userRole = "Administrador"
             }
-            if(myu?.role == "teacher"){
+            if (myu?.role == "teacher") {
                 r.userRole = "Docente"
             }
-            if(myu?.role == "student"){
+            if (myu?.role == "student") {
                 r.userRole = "Estudiante"
             }
         }

@@ -123,9 +123,10 @@ class PostReactController(
         @PathVariable comment: UUID,
         @PathVariable post: UUID,
         @PathVariable react: Int,
-        @RequestHeader user: UUID
+        @RequestHeader user: UUID,
+        @RequestHeader school: UUID
     ): ResponseEntity<PostReactDto> {
-        return ResponseEntity.ok(postReactService.reactComment(comment, post, react, user))
+        return ResponseEntity.ok(postReactService.reactComment(comment, post, react, user, school))
     }
 
     @PostMapping("/react-response/{response}/{post}/{comment}/{react}")
@@ -134,9 +135,10 @@ class PostReactController(
         @PathVariable comment: UUID,
         @PathVariable post: UUID,
         @PathVariable react: Int,
-        @RequestHeader user: UUID
+        @RequestHeader user: UUID,
+        @RequestHeader school: UUID
     ): ResponseEntity<PostReactDto> {
-        return ResponseEntity.ok(postReactService.reactResponse(response, post, comment, react, user))
+        return ResponseEntity.ok(postReactService.reactResponse(response, post, comment, react, user, school))
     }
 
     @GetMapping("/get-reacts/{post}")

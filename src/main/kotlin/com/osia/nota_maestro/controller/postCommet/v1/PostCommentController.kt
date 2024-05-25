@@ -120,7 +120,7 @@ class PostCommentController(
     }
 
     @PostMapping("/respond")
-    fun respond(@RequestBody req: PostCommentRequest): ResponseEntity<PostCommentDto>{
-        return ResponseEntity.ok(postCommentService.respond(req))
+    fun respond(@RequestBody req: PostCommentRequest, @RequestHeader school: UUID): ResponseEntity<PostCommentDto>{
+        return ResponseEntity.ok(postCommentService.respond(req, school))
     }
 }

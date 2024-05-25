@@ -25,7 +25,7 @@ interface PostCommentService {
     fun deleteMultiple(uuidList: List<UUID>)
 
     fun comment(postCommentRequest: PostCommentRequest): PostCommentDto
-    fun respond(postCommentRequest: PostCommentRequest): PostCommentDto
+    fun respond(postCommentRequest: PostCommentRequest, school: UUID): PostCommentDto
 
     fun getComments(pageable: Pageable, post: UUID, user: UUID): Page<PostCommentDto>
     fun getResponses(pageable: Pageable, comment: UUID, user: UUID): Page<PostCommentDto>

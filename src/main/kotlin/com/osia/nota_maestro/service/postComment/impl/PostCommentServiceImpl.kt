@@ -1,14 +1,17 @@
 package com.osia.nota_maestro.service.postComment.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.osia.nota_maestro.dto.notification.v1.NotificationRequest
 import com.osia.nota_maestro.dto.postComment.v1.PostCommentDto
 import com.osia.nota_maestro.dto.postComment.v1.PostCommentMapper
 import com.osia.nota_maestro.dto.postComment.v1.PostCommentRequest
 import com.osia.nota_maestro.model.PostComment
+import com.osia.nota_maestro.repository.notification.NotificationRepository
 import com.osia.nota_maestro.repository.post.PostRepository
 import com.osia.nota_maestro.repository.postComment.PostCommentRepository
 import com.osia.nota_maestro.repository.postReact.PostReactRepository
 import com.osia.nota_maestro.repository.user.UserRepository
+import com.osia.nota_maestro.service.notification.NotificationService
 import com.osia.nota_maestro.service.postComment.PostCommentService
 import com.osia.nota_maestro.util.CreateSpec
 import org.slf4j.LoggerFactory
@@ -34,7 +37,9 @@ class PostCommentServiceImpl(
     private val objectMapper: ObjectMapper,
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
-    private val postReactRepository: PostReactRepository
+    private val postReactRepository: PostReactRepository,
+    private val notificationRepository: NotificationRepository,
+    private val notificationService: NotificationService
 ) : PostCommentService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -133,16 +138,55 @@ class PostCommentServiceImpl(
         post.get().comments++
         post.get().lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
         postRepository.save(post.get())
+        val link = "/forum?uuid=${post.get().uuid}"
+        if(postCommentRequest.uuidUser != post.get().uuidUser){
+            val notifyFound = notificationRepository.findFirstByUrlLinkAndViewedAndUuidUserAndType(link, false, post.get().uuidUser!!, "comment")
+            if(notifyFound.isPresent){
+                notifyFound.get().datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                notificationRepository.save(notifyFound.get())
+            }else{
+                notificationService.save(
+                    NotificationRequest().apply {
+                        this.uuidUser = post.get().uuidUser
+                        this.type = "comment"
+                        this.description = "Se ha comentado a tu post en el foro"
+                        this.urlLink = "/forum?uuid=${post.get().uuid}"
+                        this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                        this.uuidSchool = post.get().uuidSchool
+                    }, post.get().uuidSchool!!
+                )
+            }
+        }
         return save(postCommentRequest)
     }
 
     @Transactional
-    override fun respond(postCommentRequest: PostCommentRequest): PostCommentDto {
+    override fun respond(postCommentRequest: PostCommentRequest, school: UUID): PostCommentDto {
         log.trace("postComment respond -> uuid: ${objectMapper.writeValueAsString(postCommentRequest)}")
         val comment = postCommentRepository.getByUuid(postCommentRequest.uuidParent!!)
         comment.get().responses++
         comment.get().lastModifiedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
         postCommentRepository.save(comment.get())
+        val link = "/forum?uuid=${comment.get().uuidPost}"
+        if(postCommentRequest.uuidUser != comment.get().uuidUser){
+            val notifyFound = notificationRepository.findFirstByUrlLinkAndViewedAndUuidUserAndType(link, false, comment.get().uuidUser!!, "comment-c")
+            if(notifyFound.isPresent){
+                notifyFound.get().datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                notificationRepository.save(notifyFound.get())
+            }else{
+                notificationService.save(
+                    NotificationRequest().apply {
+                        this.uuidUser = comment.get().uuidUser
+                        this.type = "comment-c"
+                        this.description = "Se ha respondido a tu comentario en el foro"
+                        this.urlLink = "/forum?uuid=${comment.get().uuidPost}"
+                        this.datetime = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                        this.uuidSchool = school
+                    }, school
+                )
+            }
+        }
+
         return save(postCommentRequest)
     }
 
