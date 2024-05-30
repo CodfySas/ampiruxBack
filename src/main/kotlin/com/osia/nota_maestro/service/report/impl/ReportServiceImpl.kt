@@ -86,7 +86,7 @@ class ReportServiceImpl(
         val studentPositions = studentPositionRepository.findAllByUuidClassroomStudentIn(classroomStudents.mapNotNull { it.uuid })
 
         val classrooms = classroomRepository.findAllById(sortedClassroomStudents.mapNotNull { it.uuidClassroom }.distinct())
-        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuid })
+        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
 
         val directorStudents = directorStudentRepository.getAllByUuidClassroomStudentIn(sortedClassroomStudents.mapNotNull { it.uuid }.distinct())
         val accompanimentStudents = accompanimentStudentRepository.getAllByUuidClassroomStudentIn(sortedClassroomStudents.mapNotNull { it.uuid }.distinct())
@@ -200,7 +200,8 @@ class ReportServiceImpl(
                     this.promBasic = cs.prom?.let { getBasic(it, superior, alto, minNote) } ?: ""
                     val myCl = classrooms.firstOrNull { it.uuid == cs.uuidClassroom }
                     val myGr = grades.firstOrNull { it.uuid == myCl?.uuidGrade }
-                    this.classroom = myCl?.name + '-' + myGr?.name
+                    this.classroom = myGr?.name + '-' + myCl?.name
+                    this.noteType = myGr?.noteType
                     this.observations = myDirectorStudent.map { ds ->
                         ObservationPeriodDto().apply {
                             this.period = ds.period
@@ -406,6 +407,7 @@ class ReportServiceImpl(
         val grade = classroom?.uuidGrade?.let { gradeRepository.getByUuid(it).orElse(null) }
         return ReportStudentNote().apply {
             this.report = myNotes
+            this.noteType = grade?.noteType
             this.observations = myDirectorStudent.map { d ->
                 ObservationPeriodDto().apply {
                     this.period = d.period

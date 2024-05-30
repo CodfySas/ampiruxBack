@@ -16,4 +16,5 @@ class ReportStudentNote : BaseDto() {
     var position: Int? = null
     var prom: String? = null
     var promBasic: String? = null
+    var noteType: String? = null
 }
