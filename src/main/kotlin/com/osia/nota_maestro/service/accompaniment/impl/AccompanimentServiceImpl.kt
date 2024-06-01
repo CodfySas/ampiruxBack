@@ -9,6 +9,8 @@ import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentDto
 import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentRequest
 import com.osia.nota_maestro.dto.accompanimentStudent.v1.AccompanimentStudentSubjectDto
 import com.osia.nota_maestro.model.Accompaniment
+import com.osia.nota_maestro.model.Classroom
+import com.osia.nota_maestro.model.Grade
 import com.osia.nota_maestro.repository.accompaniment.AccompanimentRepository
 import com.osia.nota_maestro.repository.accompanimentStudent.AccompanimentStudentRepository
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
@@ -230,12 +232,25 @@ class AccompanimentServiceImpl(
 
     override fun getMyGroups(uuid: UUID, school: UUID): List<AccompanimentCompleteDto> {
         val schoolFound = schoolService.getById(school)
-        val accompanimentsByTeacher = accompanimentRepository.getAllByUuidTeacher(uuid)
-        val classrooms = classroomRepository.findAllById(accompanimentsByTeacher.mapNotNull { it.uuidClassroom })
-            .filter { c -> c.year == schoolFound.actualYear!! }
+        val user = userRepository.findById(uuid).get()
+        var classrooms = listOf<Classroom>()
+        var grades = listOf<Grade>()
+        val accompanimentsByTeacher = if(user.role == "admin"){
+            grades = gradeRepository.findAllByUuidSchool(school).sortedBy { it.ordered }
+            classrooms = classroomRepository.findAllByUuidGradeInAndYear(
+                grades.mapNotNull { it.uuid }.distinct(),
+                schoolFound.actualYear!!
+            )
+            accompanimentRepository.getAllByUuidClassroomIn(classrooms.mapNotNull { it.uuid })
+        }else{
+            val a = accompanimentRepository.getAllByUuidTeacher(uuid)
+            classrooms = classroomRepository.findAllById(a.mapNotNull { it.uuidClassroom })
+                .filter { c -> c.year == schoolFound.actualYear!! }
+            grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
+            a
+        }
         val accompanimentsYear =
             accompanimentsByTeacher.filter { d -> classrooms.mapNotNull { it.uuid }.contains(d.uuidClassroom) }
-        val grades = gradeRepository.findAllById(classrooms.mapNotNull { it.uuidGrade })
 
         val final = mutableListOf<AccompanimentCompleteDto>()
         accompanimentsYear.forEach {
