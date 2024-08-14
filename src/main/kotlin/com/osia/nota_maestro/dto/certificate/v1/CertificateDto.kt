@@ -17,5 +17,7 @@ class CertificateDto : BaseDto() {
     var term: String? = null
     var salary: String? = null
     var user: String? = null
+    var userDni: String? = null
+    var userType: String? = null
     var role: String? = null
 }

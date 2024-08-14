@@ -136,6 +136,8 @@ class CertificateServiceImpl(
         certificates.forEach {
             val my = users.firstOrNull { u -> u.uuid == it.uuidUser }
             it.user = my?.name + " " + my?.lastname
+            it.userDni = my?.dni
+            it.userType = my?.documentType
             it.role = when (my?.role) {
                 "admin" -> "Administrador"
                 "teacher" -> "Docente"
