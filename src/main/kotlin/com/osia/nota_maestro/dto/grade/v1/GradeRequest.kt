@@ -18,4 +18,5 @@ class GradeRequest {
     var recess: Int? = null
     var attendanceType: String? = null
     var noteType: String? = null
+    var preInfoType: String? = null
 }

@@ -132,6 +132,7 @@ class NoteServiceImpl(
                             this.uuid = g.uuid
                             this.name = g.name
                             this.noteType = g.noteType
+                            this.preInfoType = g.preInfoType
                             this.classrooms = classrooms.filter { c -> c.uuidGrade == g.uuid }.map { c ->
                                 ResourceClassroomDto().apply {
                                     this.uuid = c.uuid

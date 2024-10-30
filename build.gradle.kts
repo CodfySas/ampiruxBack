@@ -76,6 +76,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0")
     implementation("org.hibernate:hibernate-envers")
+    implementation("org.latencyutils:LatencyUtils:2.0.3")
     implementation("io.jsonwebtoken:jjwt:0.9.1")
 
 }
