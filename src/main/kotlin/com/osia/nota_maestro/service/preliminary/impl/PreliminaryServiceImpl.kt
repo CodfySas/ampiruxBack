@@ -10,6 +10,7 @@ import com.osia.nota_maestro.model.Preliminary
 import com.osia.nota_maestro.repository.classroom.ClassroomRepository
 import com.osia.nota_maestro.repository.classroomStudent.ClassroomStudentRepository
 import com.osia.nota_maestro.repository.classroomSubject.ClassroomSubjectRepository
+import com.osia.nota_maestro.repository.grade.GradeRepository
 import com.osia.nota_maestro.repository.preliminary.PreliminaryRepository
 import com.osia.nota_maestro.repository.subject.SubjectRepository
 import com.osia.nota_maestro.repository.user.UserRepository
@@ -35,7 +36,9 @@ class PreliminaryServiceImpl(
     private val userRepository: UserRepository,
     private val subjectRepository: SubjectRepository,
     private val classroomSubjectRepository: ClassroomSubjectRepository,
-    private val classroomStudentRepository: ClassroomStudentRepository
+    private val classroomStudentRepository: ClassroomStudentRepository,
+    private val gradeRepository: GradeRepository,
+    private val classroomRepository: ClassroomRepository
 ) : PreliminaryService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -203,5 +206,20 @@ class PreliminaryServiceImpl(
         saveMultiple(toSave)
         updateMultiple(toUpdate)
         return req
+    }
+
+    override fun repair() {
+        val gradesGrouped = gradeRepository.findAll().filter { it.preInfoType == "grouped" }
+        val classrooms = classroomRepository.findAllByUuidGradeIn(gradesGrouped.mapNotNull { it.uuid })
+
+        classrooms.forEach { c->
+            val allPreliminariesToRepair = preliminaryRepository.findAllByUuidClassroomAndPeriod(c.uuid!!, 3)
+            allPreliminariesToRepair.forEach { p->
+                if(p.target?.startsWith("[") == false){
+                    p.target = "[{\"target\":\"${p.target}\",\"success\":${p.success}}]"
+                }
+            }
+            preliminaryRepository.saveAll(allPreliminariesToRepair)
+        }
     }
 }

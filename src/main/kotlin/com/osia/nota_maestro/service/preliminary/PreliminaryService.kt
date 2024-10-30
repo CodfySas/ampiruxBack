@@ -29,4 +29,5 @@ interface PreliminaryService {
 
     fun getByClassroom(preliminaryReq: PreliminaryAllRequest, user: UUID): List<PreliminaryAllDto>
     fun submit(req: List<PreliminaryAllDto>, period: Int, classroom: UUID): List<PreliminaryAllDto>
+    fun repair()
 }

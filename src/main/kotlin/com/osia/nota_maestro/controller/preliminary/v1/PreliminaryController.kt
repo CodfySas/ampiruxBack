@@ -68,6 +68,11 @@ class PreliminaryController(
         return ResponseEntity.ok().body(preliminaryService.submit(preliminaryReq, period, classroom))
     }
 
+    @PostMapping("/repair")
+    fun repair(): ResponseEntity<Any> {
+        return ResponseEntity.ok(preliminaryService.repair());
+    }
+
     // Create
     @PostMapping
     fun save(
