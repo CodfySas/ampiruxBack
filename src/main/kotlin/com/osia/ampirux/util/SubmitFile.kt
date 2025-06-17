@@ -1,4 +1,4 @@
-package com.osia.template.util
+package com.osia.ampirux.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory

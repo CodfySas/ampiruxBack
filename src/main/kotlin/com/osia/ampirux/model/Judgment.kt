@@ -1,7 +1,7 @@
-package com.osia.template.model
+package com.osia.ampirux.model
 
-import com.osia.template.model.abstracts.BaseModel
-import com.osia.template.model.listener.judgment.JudgmentListener
+import com.osia.ampirux.model.abstracts.BaseModel
+import com.osia.ampirux.model.listener.judgment.JudgmentListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
 import java.util.UUID

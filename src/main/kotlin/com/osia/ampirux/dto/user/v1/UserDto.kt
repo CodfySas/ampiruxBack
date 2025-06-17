@@ -1,6 +1,7 @@
-package com.osia.template.dto.user.v1
+package com.osia.ampirux.dto.user.v1
 
-import com.osia.template.dto.BaseDto
+import com.osia.ampirux.dto.BaseDto
+import java.util.UUID
 
 class UserDto : BaseDto() {
     var username: String? = null
@@ -12,4 +13,5 @@ class UserDto : BaseDto() {
     var email: String? = null
     var image: String? = null
     var token: String? = null
+    var barbershopUuid: UUID? = null
 }

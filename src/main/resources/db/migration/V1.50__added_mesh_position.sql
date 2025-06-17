@@ -1,1 +1,0 @@
-ALTER TABLE public.meshs ADD if not exists position int8 NULL DEFAULT 0;

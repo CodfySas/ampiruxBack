@@ -1,0 +1,10 @@
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE barbers ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE discount ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE product_category ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE sale ADD COLUMN IF NOT EXISTS discount_uuid UUID;
+ALTER TABLE sale ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS barbershop_uuid UUID;

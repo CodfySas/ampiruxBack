@@ -1,7 +1,7 @@
-package com.osia.template
+package com.osia.ampirux
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
-class TemplateApplicationTests { @Test fun contextLoads() {} }
+class AmpiruxApplicationTests { @Test fun contextLoads() {} }

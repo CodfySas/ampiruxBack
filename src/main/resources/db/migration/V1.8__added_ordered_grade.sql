@@ -1,1 +1,0 @@
-ALTER TABLE public.grades ADD if not exists ordered int8 NULL;

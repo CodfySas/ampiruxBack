@@ -1,4 +1,4 @@
-package com.osia.template.repository
+package com.osia.ampirux.repository
 
 interface BaseRepository {
     fun count(): Long

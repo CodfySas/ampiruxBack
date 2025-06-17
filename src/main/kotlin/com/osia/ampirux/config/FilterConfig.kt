@@ -1,6 +1,6 @@
-package com.osia.template.config
+package com.osia.ampirux.config
 
-import com.osia.template.filter.JwtFilter
+import com.osia.ampirux.filter.JwtFilter
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

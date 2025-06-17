@@ -1,1 +1,0 @@
-ALTER TABLE public.meshs ADD if not exists user_review uuid NULL;

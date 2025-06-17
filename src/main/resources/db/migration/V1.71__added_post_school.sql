@@ -1,1 +1,0 @@
-ALTER TABLE public.posts ADD if not exists uuid_school uuid null;

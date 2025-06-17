@@ -1,8 +1,8 @@
-package com.osia.template.controller.auth.v1
+package com.osia.ampirux.controller.auth.v1
 
-import com.osia.template.dto.user.v1.UserDto
-import com.osia.template.dto.user.v1.UserRequest
-import com.osia.template.service.auth.AuthUseCase
+import com.osia.ampirux.dto.user.v1.UserDto
+import com.osia.ampirux.dto.user.v1.UserRequest
+import com.osia.ampirux.service.auth.AuthUseCase
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated

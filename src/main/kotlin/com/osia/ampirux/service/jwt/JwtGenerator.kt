@@ -1,6 +1,6 @@
-package com.osia.template.service.jwt
+package com.osia.ampirux.service.jwt
 
-import com.osia.template.dto.user.v1.UserDto
+import com.osia.ampirux.dto.user.v1.UserDto
 
 interface JwtGenerator {
     fun generateToken(user: UserDto): String

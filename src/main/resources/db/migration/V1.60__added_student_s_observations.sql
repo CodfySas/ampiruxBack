@@ -1,1 +1,0 @@
-ALTER TABLE public.student_subjects ADD if not exists observation varchar null DEFAULT '';

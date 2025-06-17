@@ -1,4 +1,4 @@
-package com.osia.template.dto.request
+package com.osia.ampirux.dto.request
 
 interface OnCreate
 

@@ -1,7 +1,7 @@
-package com.osia.template.dto.user.v1
+package com.osia.ampirux.dto.user.v1
 
-import com.osia.template.dto.BaseMapper
-import com.osia.template.model.User
+import com.osia.ampirux.dto.BaseMapper
+import com.osia.ampirux.model.User
 import org.mapstruct.Mapper
 import org.mapstruct.MappingTarget
 import org.mapstruct.Mappings

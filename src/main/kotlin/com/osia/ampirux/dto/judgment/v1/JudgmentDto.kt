@@ -1,6 +1,6 @@
-package com.osia.template.dto.judgment.v1
+package com.osia.ampirux.dto.judgment.v1
 
-import com.osia.template.dto.BaseDto
+import com.osia.ampirux.dto.BaseDto
 import java.util.UUID
 
 class JudgmentDto : BaseDto() {

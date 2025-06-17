@@ -1,10 +1,10 @@
-package com.osia.template.controller.user.v1
+package com.osia.ampirux.controller.user.v1
 
-import com.osia.template.dto.OnCreate
-import com.osia.template.dto.user.v1.UserDto
-import com.osia.template.dto.user.v1.UserMapper
-import com.osia.template.dto.user.v1.UserRequest
-import com.osia.template.service.user.UserService
+import com.osia.ampirux.dto.OnCreate
+import com.osia.ampirux.dto.user.v1.UserDto
+import com.osia.ampirux.dto.user.v1.UserMapper
+import com.osia.ampirux.dto.user.v1.UserRequest
+import com.osia.ampirux.service.user.UserService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -31,7 +30,7 @@ import java.util.UUID
 class UserController(
     private val service: UserService,
     private val mapper: UserMapper
-)  {
+) {
     @GetMapping
     fun findAll(pageable: Pageable): Page<UserDto> {
         return service.findAll(pageable)

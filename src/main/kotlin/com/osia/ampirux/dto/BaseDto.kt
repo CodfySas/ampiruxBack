@@ -1,4 +1,4 @@
-package com.osia.template.dto
+package com.osia.ampirux.dto
 
 import java.time.LocalDateTime
 import java.util.UUID

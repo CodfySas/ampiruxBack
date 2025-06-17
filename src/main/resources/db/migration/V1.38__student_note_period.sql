@@ -1,1 +1,0 @@
-ALTER TABLE public.student_notes ADD if not exists period int8 NULL ;

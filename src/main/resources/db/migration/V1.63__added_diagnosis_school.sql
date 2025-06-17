@@ -1,1 +1,0 @@
-ALTER TABLE public.diagnoses ADD if not exists uuid_school uuid null;

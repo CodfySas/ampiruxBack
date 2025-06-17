@@ -1,7 +1,7 @@
-package com.osia.template.dto.judgment.v1
+package com.osia.ampirux.dto.judgment.v1
 
-import com.osia.template.dto.BaseMapper
-import com.osia.template.model.Judgment
+import com.osia.ampirux.dto.BaseMapper
+import com.osia.ampirux.model.Judgment
 import org.mapstruct.Mapper
 import org.mapstruct.MappingTarget
 import org.mapstruct.Mappings

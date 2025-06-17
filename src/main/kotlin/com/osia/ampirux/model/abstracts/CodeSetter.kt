@@ -1,6 +1,6 @@
-package com.osia.template.model.abstracts
+package com.osia.ampirux.model.abstracts
 
-import com.osia.template.repository.BaseRepository
+import com.osia.ampirux.repository.BaseRepository
 
 abstract class CodeSetter {
     fun setCode(repository: BaseRepository, baseModel: BaseModel) {

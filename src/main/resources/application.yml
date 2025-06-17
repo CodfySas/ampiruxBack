@@ -18,7 +18,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${FAMILY_POSTGRES_HOST:localhost}:5432/${MS_NAME:nota_maestro}
+    url: jdbc:postgresql://${FAMILY_POSTGRES_HOST:localhost}:5432/${MS_NAME:ampirux}
     username: ${MS_NAME:postgres}
     password: ${FAMILY_POSTGRES_PASSWORD:admin}
   jpa:

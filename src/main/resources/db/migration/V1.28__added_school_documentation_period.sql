@@ -1,1 +1,0 @@
-ALTER TABLE public.schools ADD if not exists period_available varchar(255) NOT NULL DEFAULT 'none';

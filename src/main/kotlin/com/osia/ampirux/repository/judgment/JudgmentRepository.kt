@@ -1,7 +1,7 @@
-package com.osia.template.repository.judgment
+package com.osia.ampirux.repository.judgment
 
-import com.osia.template.model.Judgment
-import com.osia.template.repository.CommonRepository
+import com.osia.ampirux.model.Judgment
+import com.osia.ampirux.repository.CommonRepository
 import org.springframework.stereotype.Repository
 
 @Repository("judgment.crud_repository")

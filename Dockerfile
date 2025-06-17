@@ -1,4 +1,4 @@
-FROM notamaestro/openjdk:17
+FROM ampirux/openjdk:17
 
 COPY ./.docker/entrypoint.sh /entrypoint.sh
 COPY build/libs/*.jar app.jar

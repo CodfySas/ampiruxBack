@@ -1,4 +1,4 @@
-package com.osia.template
+package com.osia.ampirux
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -9,6 +9,6 @@ import org.springframework.retry.annotation.EnableRetry
 @EnableFeignClients
 @EnableRetry
 
-class TemplateApplication
+class AmpiruxApplication
 
-fun main(args: Array<String>) { runApplication<com.osia.template.TemplateApplication>(*args) }
+fun main(args: Array<String>) { runApplication<com.osia.ampirux.AmpiruxApplication>(*args) }

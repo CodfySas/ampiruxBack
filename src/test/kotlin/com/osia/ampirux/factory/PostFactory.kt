@@ -1,9 +1,9 @@
-package com.osia.template.factory
+package com.osia.ampirux.factory
 
 import com.github.javafaker.Faker
-import com.osia.template.dto.post.v1.PostDto
-import com.osia.template.dto.post.v1.PostRequest
-import com.osia.template.service.post.PostService
+import com.osia.ampirux.dto.post.v1.PostDto
+import com.osia.ampirux.dto.post.v1.PostRequest
+import com.osia.ampirux.service.post.PostService
 import org.springframework.stereotype.Component
 
 @Component

@@ -1,4 +1,4 @@
-package com.osia.template.dto.judgment.v1
+package com.osia.ampirux.dto.judgment.v1
 
 import java.util.UUID
 

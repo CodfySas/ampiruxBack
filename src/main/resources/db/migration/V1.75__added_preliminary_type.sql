@@ -1,1 +1,0 @@
-ALTER TABLE public.grades ADD if not exists  pre_info_type varchar null default 'normal';

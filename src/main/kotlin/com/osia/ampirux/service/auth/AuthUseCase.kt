@@ -1,7 +1,7 @@
-package com.osia.template.service.auth
+package com.osia.ampirux.service.auth
 
-import com.osia.template.dto.user.v1.UserDto
-import com.osia.template.dto.user.v1.UserRequest
+import com.osia.ampirux.dto.user.v1.UserDto
+import com.osia.ampirux.dto.user.v1.UserRequest
 
 interface AuthUseCase {
     fun login(userRequest: UserRequest): UserDto

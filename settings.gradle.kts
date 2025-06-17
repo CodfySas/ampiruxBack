@@ -1,1 +1,1 @@
-rootProject.name = "nota_maestro"
+rootProject.name = "ampirux"

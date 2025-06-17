@@ -1,10 +1,10 @@
-package com.osia.template.controller.judgment.v1
+package com.osia.ampirux.controller.judgment.v1
 
-import com.osia.template.dto.OnCreate
-import com.osia.template.dto.judgment.v1.JudgmentDto
-import com.osia.template.dto.judgment.v1.JudgmentMapper
-import com.osia.template.dto.judgment.v1.JudgmentRequest
-import com.osia.template.service.judgment.JudgmentService
+import com.osia.ampirux.dto.OnCreate
+import com.osia.ampirux.dto.judgment.v1.JudgmentDto
+import com.osia.ampirux.dto.judgment.v1.JudgmentMapper
+import com.osia.ampirux.dto.judgment.v1.JudgmentRequest
+import com.osia.ampirux.service.judgment.JudgmentService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -28,7 +28,7 @@ import java.util.UUID
 class JudgmentController(
     private val service: JudgmentService,
     private val mapper: JudgmentMapper
-)  {
+) {
     @GetMapping
     fun findAll(pageable: Pageable): Page<JudgmentDto> {
         return service.findAll(pageable)

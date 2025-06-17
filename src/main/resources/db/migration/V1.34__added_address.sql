@@ -1,1 +1,0 @@
-ALTER TABLE public.users ADD if not exists address varchar NULL ;

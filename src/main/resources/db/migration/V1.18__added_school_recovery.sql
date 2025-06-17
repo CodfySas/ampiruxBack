@@ -1,1 +1,0 @@
-ALTER TABLE public.schools ADD if not exists recovery_type varchar(255) NOT NULL DEFAULT 'at_last';

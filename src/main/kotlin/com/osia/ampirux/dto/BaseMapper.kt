@@ -1,4 +1,4 @@
-package com.osia.template.dto
+package com.osia.ampirux.dto
 
 interface BaseMapper<R, M, D> {
     fun toModel(r: R): M

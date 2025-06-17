@@ -1,4 +1,4 @@
-package com.osia.template.config
+package com.osia.ampirux.config
 import org.springframework.context.annotation.Configuration
 
 @Configuration

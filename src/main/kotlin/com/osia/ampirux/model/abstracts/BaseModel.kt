@@ -1,4 +1,4 @@
-package com.osia.template.model.abstracts
+package com.osia.ampirux.model.abstracts
 
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate

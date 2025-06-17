@@ -1,14 +1,14 @@
-package com.osia.template.service.auth.impl
+package com.osia.ampirux.service.auth.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.osia.template.dto.user.v1.UserDto
-import com.osia.template.dto.user.v1.UserMapper
-import com.osia.template.dto.user.v1.UserRequest
-import com.osia.template.repository.user.UserRepository
-import com.osia.template.service.auth.AuthUseCase
-import com.osia.template.service.jwt.JwtGenerator
-import com.osia.template.service.user.UserService
-import com.osia.template.util.Md5Hash
+import com.osia.ampirux.dto.user.v1.UserDto
+import com.osia.ampirux.dto.user.v1.UserMapper
+import com.osia.ampirux.dto.user.v1.UserRequest
+import com.osia.ampirux.repository.user.UserRepository
+import com.osia.ampirux.service.auth.AuthUseCase
+import com.osia.ampirux.service.jwt.JwtGenerator
+import com.osia.ampirux.service.user.UserService
+import com.osia.ampirux.util.Md5Hash
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -39,7 +39,7 @@ class AuthServiceImpl(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid credentials")
         }
 
-        if(userFound.password != pass){
+        if (userFound.password != pass) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid credentials")
         }
 
@@ -56,13 +56,15 @@ class AuthServiceImpl(
         log.trace("auth login -> userRequest: ${objectMapper.writeValueAsString(userRequest)}")
         val userFound = userRepository.getFirstByUsernameIgnoreCaseOrEmailIgnoreCase(userRequest.username!!, userRequest.username!!)
 
-        if(userFound.isPresent){
+        if (userFound.isPresent) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Username or Password already exist")
         }
         val pass = Md5Hash().createMd5(userRequest.password!!)
-        val savedUser = this.userService.save(userRequest.apply {
-            this.password = pass
-        });
+        val savedUser = this.userService.save(
+            userRequest.apply {
+                this.password = pass
+            }
+        )
         return savedUser.apply {
             this.token = jwtGenerator.generateToken(savedUser)
         }
