@@ -28,5 +28,7 @@ data class Product(
     var stock: Double? = null,
     var unit: String? = null,
     var categoryUuid: UUID? = null,
-    var barbershopUuid: UUID? = null
+    var barbershopUuid: UUID? = null,
+    var sizePerUnit: Int? = null,
+    var remainUnit: Int? = null
 ) : BaseModel()

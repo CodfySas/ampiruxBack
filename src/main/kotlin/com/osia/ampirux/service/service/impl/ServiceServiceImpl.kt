@@ -2,10 +2,16 @@ package com.osia.ampirux.service.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.ampirux.dto.BaseMapper
+import com.osia.ampirux.dto.product.v1.ProductMapper
 import com.osia.ampirux.dto.service.v1.ServiceDto
 import com.osia.ampirux.dto.service.v1.ServiceRequest
+import com.osia.ampirux.dto.servicedefaultproduct.v1.ServiceDefaultProductMapper
+import com.osia.ampirux.dto.servicedefaultproduct.v1.ServiceDefaultProductRequest
+import com.osia.ampirux.repository.product.ProductRepository
 import com.osia.ampirux.repository.service.ServiceRepository
+import com.osia.ampirux.repository.servicedefaultproduct.ServiceDefaultProductRepository
 import com.osia.ampirux.service.service.ServiceService
+import com.osia.ampirux.service.servicedefaultproduct.ServiceDefaultProductService
 import com.osia.ampirux.util.CreateSpec
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -25,6 +31,11 @@ import java.util.UUID
 class ServiceServiceImpl(
     private val repository: ServiceRepository,
     private val mapper: BaseMapper<ServiceRequest, com.osia.ampirux.model.Service, ServiceDto>,
+    private val serviceDefaultProductService: ServiceDefaultProductService,
+    private val serviceDefaultProductRepository: ServiceDefaultProductRepository,
+    private val serviceDefaultProductMapper: ServiceDefaultProductMapper,
+    private val productRepository: ProductRepository,
+    private val productMapper: ProductMapper,
     private val objectMapper: ObjectMapper
 ) : ServiceService {
 
@@ -56,16 +67,39 @@ class ServiceServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<ServiceDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<ServiceDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
-        return repository.findAll(Specification.where(CreateSpec<com.osia.ampirux.model.Service>().createSpec(where)), pageable).map(mapper::toDto)
+        val services = repository.findAll(Specification.where(CreateSpec<com.osia.ampirux.model.Service>().createSpec(where, barberShopUuid, listOf("code", "name", "description"))), pageable).map(mapper::toDto)
+        val products = serviceDefaultProductRepository.getAllByServiceUuidIn(services.mapNotNull { it.uuid }.distinct()).map(serviceDefaultProductMapper::toDto)
+        val pr = productRepository.findAllById(products.mapNotNull { it.productUuid }.distinct())
+        products.forEach { p->
+            p.product = pr.firstOrNull{ it.uuid == p.productUuid }?.let { productMapper.toDto(it) }
+        }
+        services.forEach { s->
+            s.defaultProducts = products.filter { p-> p.serviceUuid == s.uuid }
+        }
+        return services
     }
 
     @Transactional
     override fun save(request: ServiceRequest, replace: Boolean): ServiceDto {
         log.trace("save -> request: $request")
         val entity = mapper.toModel(request)
-        return mapper.toDto(repository.save(entity))
+        val saved = mapper.toDto(repository.save(entity))
+        val products = if(request.defaultProducts?.isNotEmpty() == true){
+            serviceDefaultProductService.saveMultiple(request.defaultProducts!!.map{ df->
+                ServiceDefaultProductRequest().apply {
+                    this.productUuid = df.productUuid
+                    this.serviceUuid = saved.uuid
+                    this.costType = df.costType
+                    this.quantity = df.quantity
+                    this.unit = df.unit
+                }
+            })
+        } else {
+            mutableListOf()
+        }
+        return saved.apply { this.defaultProducts = products }
     }
 
     @Transactional
@@ -84,7 +118,21 @@ class ServiceServiceImpl(
             repository.getByUuid(id).get()
         }
         mapper.update(request, entity)
-        return mapper.toDto(repository.save(entity))
+        val saved = mapper.toDto(repository.save(entity))
+        val products = if(request.defaultProducts?.isNotEmpty() == true){
+            serviceDefaultProductService.saveMultiple(request.defaultProducts!!.map{ df->
+                ServiceDefaultProductRequest().apply {
+                    this.productUuid = df.productUuid
+                    this.serviceUuid = saved.uuid
+                    this.costType = df.costType
+                    this.quantity = df.quantity
+                    this.unit = df.unit
+                }
+            })
+        } else {
+            mutableListOf()
+        }
+        return saved.apply { this.defaultProducts = products }
     }
 
     @Transactional

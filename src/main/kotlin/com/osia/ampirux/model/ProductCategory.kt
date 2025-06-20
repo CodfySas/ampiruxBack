@@ -10,7 +10,7 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "product_categories",
+    name = "product_category",
 )
 @Entity
 @DynamicUpdate

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -34,8 +35,9 @@ class AppointmentController(
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page< AppointmentDto> {
-        return service.findAllByFilter(pageable, where)
+    fun findAllByFilter(pageable: Pageable, @PathVariable where: String,
+        @RequestHeader("barbershop_uuid") barbershopUuid: UUID): Page< AppointmentDto> {
+        return service.findAllByFilter(pageable, where, barbershopUuid)
     }
 
     @GetMapping("/count/{increment}")
@@ -54,12 +56,13 @@ class AppointmentController(
     }
 
     @PostMapping
-    fun save(@Validated(OnCreate::class) request: AppointmentRequest): ResponseEntity<AppointmentDto > {
+    fun save(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody request: AppointmentRequest): ResponseEntity<AppointmentDto > {
+        request.barbershopUuid = barbershopUuid;
         return ResponseEntity(service.save(request), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
-    fun saveMultiple(@Validated(OnCreate::class) requestList: List< AppointmentRequest>): ResponseEntity<List<AppointmentDto > > {
+    fun saveMultiple(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody requestList: List< AppointmentRequest>): ResponseEntity<List<AppointmentDto > > {
         return ResponseEntity(service.saveMultiple(requestList), HttpStatus.CREATED)
     }
 

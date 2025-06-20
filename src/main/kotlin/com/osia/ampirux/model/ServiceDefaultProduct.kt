@@ -4,13 +4,14 @@ import com.osia.ampirux.model.abstracts.BaseModel
 import com.osia.ampirux.model.listener.servicedefaultproduct.ServiceDefaultProductListener
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Where
+import java.math.BigDecimal
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "service_default_products",
+    name = "service_default_product",
 )
 @Entity
 @DynamicUpdate
@@ -26,4 +27,5 @@ data class ServiceDefaultProduct(
     var quantity: Double? = null,
     var unit: String? = null, // "ml", "g", "units", etc.
     var costType: String? = null, // "client", "courtesy", "barber"
+    var price: BigDecimal? = null,
 ) : BaseModel()

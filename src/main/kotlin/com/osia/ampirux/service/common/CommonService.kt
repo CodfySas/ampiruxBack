@@ -10,7 +10,7 @@ interface CommonService<T, DTO, REQ> {
     fun getById(id: UUID): T
     fun findByMultiple(idList: List<UUID>): List<DTO>
     fun findAll(pageable: Pageable): Page<DTO>
-    fun findAllByFilter(pageable: Pageable, where: String): Page<DTO>
+    fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<DTO>
 
     // Create
     fun save(request: REQ, replace: Boolean = false): DTO

@@ -73,7 +73,7 @@ class ConversationServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<ConversationDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<ConversationDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
         return repository.findAll(Specification.where(CreateSpec<Conversation>().createSpec(where)), pageable).map(mapper::toDto)
     }

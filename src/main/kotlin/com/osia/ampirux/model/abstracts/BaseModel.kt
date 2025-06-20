@@ -49,6 +49,6 @@ abstract class BaseModel {
         } else {
             prefix
         }
-        return newPrefix + "-" + String.format(String.format("%%0%dd", 15), counter)
+        return newPrefix + "-" + String.format(String.format("%%0%dd", 6), counter)
     }
 }

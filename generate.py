@@ -37,7 +37,8 @@ private val mapper:{{Name}}Mapper
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page< {{Name}}Dto> {
+    fun findAllByFilter(pageable: Pageable, @PathVariable where: String,
+        @RequestHeader("barbershop_uuid") barbershopUuid: String): Page< {{Name}}Dto> {
         return service.findAllByFilter(pageable, where)
     }
 
@@ -57,12 +58,13 @@ private val mapper:{{Name}}Mapper
     }
 
     @PostMapping
-    fun save(@Validated(OnCreate::class) request: {{Name}}Request): ResponseEntity<{{Name}}Dto > {
+    fun save(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody request: {{Name}}Request): ResponseEntity<{{Name}}Dto > {
+        request.barbershopUuid = barbershopUuid;
         return ResponseEntity(service.save(request), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
-    fun saveMultiple(@Validated(OnCreate::class) requestList: List< {{Name}}Request>): ResponseEntity<List<{{Name}}Dto > > {
+    fun saveMultiple(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody requestList: List< {{Name}}Request>): ResponseEntity<List<{{Name}}Dto > > {
         return ResponseEntity(service.saveMultiple(requestList), HttpStatus.CREATED)
     }
 

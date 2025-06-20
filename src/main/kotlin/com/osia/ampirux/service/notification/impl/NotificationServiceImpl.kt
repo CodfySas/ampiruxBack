@@ -67,7 +67,7 @@ class NotificationServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<NotificationDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<NotificationDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
         return repository.findAll(Specification.where(CreateSpec<Notification>().createSpec(where)), pageable).map(mapper::toDto)
     }

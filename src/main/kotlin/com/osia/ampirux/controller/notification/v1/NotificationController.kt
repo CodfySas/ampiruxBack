@@ -37,8 +37,9 @@ class NotificationController(
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page<NotificationDto> {
-        return service.findAllByFilter(pageable, where)
+    fun findAllByFilter(pageable: Pageable, @PathVariable where: String,
+        @RequestHeader("barbershop_uuid") barbershopUuid: UUID): Page<NotificationDto> {
+        return service.findAllByFilter(pageable, where, barbershopUuid)
     }
 
     @GetMapping("/count/{increment}")
@@ -57,13 +58,13 @@ class NotificationController(
     }
 
     @PostMapping
-    fun save(@Validated(OnCreate::class) @RequestBody request: NotificationRequest, @RequestHeader user: UUID): ResponseEntity<NotificationDto> {
+    fun save(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody request: NotificationRequest, @RequestHeader user: UUID): ResponseEntity<NotificationDto> {
         request.userUuid = user
         return ResponseEntity(service.save(request), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
-    fun saveMultiple(@Validated(OnCreate::class) requestList: List<NotificationRequest>): ResponseEntity<List<NotificationDto>> {
+    fun saveMultiple(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody requestList: List<NotificationRequest>): ResponseEntity<List<NotificationDto>> {
         return ResponseEntity(service.saveMultiple(requestList), HttpStatus.CREATED)
     }
 

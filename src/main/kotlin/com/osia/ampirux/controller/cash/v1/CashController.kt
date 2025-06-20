@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -34,8 +35,9 @@ class CashController(
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page< CashDto> {
-        return service.findAllByFilter(pageable, where)
+    fun findAllByFilter(pageable: Pageable, @PathVariable where: String,
+        @RequestHeader("barbershop_uuid") barbershopUuid: UUID): Page< CashDto> {
+        return service.findAllByFilter(pageable, where, barbershopUuid)
     }
 
     @GetMapping("/count/{increment}")
@@ -54,12 +56,13 @@ class CashController(
     }
 
     @PostMapping
-    fun save(@Validated(OnCreate::class) request: CashRequest): ResponseEntity<CashDto > {
+    fun save(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody request: CashRequest): ResponseEntity<CashDto > {
+        request.barbershopUuid = barbershopUuid;
         return ResponseEntity(service.save(request), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
-    fun saveMultiple(@Validated(OnCreate::class) requestList: List< CashRequest>): ResponseEntity<List<CashDto > > {
+    fun saveMultiple(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody requestList: List< CashRequest>): ResponseEntity<List<CashDto > > {
         return ResponseEntity(service.saveMultiple(requestList), HttpStatus.CREATED)
     }
 

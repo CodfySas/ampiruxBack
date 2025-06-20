@@ -37,8 +37,9 @@ class UserController(
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page<UserDto> {
-        return service.findAllByFilter(pageable, where)
+    fun findAllByFilter(pageable: Pageable, @PathVariable where: String,
+        @RequestHeader("barbershop_uuid") barbershopUuid: UUID): Page<UserDto> {
+        return service.findAllByFilter(pageable, where, barbershopUuid)
     }
 
     @GetMapping("/count/{increment}")
@@ -57,12 +58,13 @@ class UserController(
     }
 
     @PostMapping
-    fun save(@Validated(OnCreate::class) request: UserRequest): ResponseEntity<UserDto> {
+    fun save(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody request: UserRequest): ResponseEntity<UserDto> {
+        request.barbershopUuid = barbershopUuid;
         return ResponseEntity(service.save(request), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
-    fun saveMultiple(@Validated(OnCreate::class) requestList: List<UserRequest>): ResponseEntity<List<UserDto>> {
+    fun saveMultiple(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody requestList: List<UserRequest>): ResponseEntity<List<UserDto>> {
         return ResponseEntity(service.saveMultiple(requestList), HttpStatus.CREATED)
     }
 

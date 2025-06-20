@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.ampirux.dto.BaseMapper
 import com.osia.ampirux.dto.product.v1.ProductDto
 import com.osia.ampirux.dto.product.v1.ProductRequest
+import com.osia.ampirux.dto.productcategory.v1.ProductCategoryDto
+import com.osia.ampirux.dto.productcategory.v1.ProductCategoryRequest
 import com.osia.ampirux.model.Product
+import com.osia.ampirux.model.ProductCategory
 import com.osia.ampirux.repository.product.ProductRepository
+import com.osia.ampirux.repository.productcategory.ProductCategoryRepository
 import com.osia.ampirux.service.product.ProductService
 import com.osia.ampirux.util.CreateSpec
 import org.slf4j.Logger
@@ -25,7 +29,9 @@ import java.util.UUID
 @Service
 class ProductServiceImpl(
     private val repository: ProductRepository,
+    private val productCategoryRepository: ProductCategoryRepository,
     private val mapper: BaseMapper<ProductRequest, Product, ProductDto>,
+    private val categoryMapper: BaseMapper<ProductCategoryRequest, ProductCategory, ProductCategoryDto>,
     private val objectMapper: ObjectMapper
 ) : ProductService {
 
@@ -53,13 +59,25 @@ class ProductServiceImpl(
     @Transactional(readOnly = true)
     override fun findAll(pageable: Pageable): Page<ProductDto> {
         log.trace("findAll -> pageable: $pageable")
-        return repository.findAll(Specification.where(CreateSpec<Product>().createSpec("")), pageable).map(mapper::toDto)
+        val products = repository.findAll(Specification.where(CreateSpec<Product>().createSpec("")), pageable).map(mapper::toDto)
+        val productCategories = productCategoryRepository.findAllById(products.mapNotNull { it.categoryUuid }.distinct())
+        products.forEach { p->
+            p.category = p.categoryUuid?.let { productCategories.firstOrNull { pc-> pc.uuid == p.categoryUuid }
+                ?.let { it1 -> categoryMapper.toDto(it1) } }
+        }
+        return products;
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<ProductDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<ProductDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
-        return repository.findAll(Specification.where(CreateSpec<Product>().createSpec(where)), pageable).map(mapper::toDto)
+        val products = repository.findAll(Specification.where(CreateSpec<Product>().createSpec(where, barberShopUuid, listOf("code", "name", "description", "unit"))), pageable).map(mapper::toDto)
+        val productCategories = productCategoryRepository.findAllById(products.mapNotNull { it.categoryUuid }.distinct())
+        products.forEach { p->
+            p.category = p.categoryUuid?.let { productCategories.firstOrNull { pc-> pc.uuid == p.categoryUuid }
+                ?.let { it1 -> categoryMapper.toDto(it1) } }
+        }
+        return products
     }
 
     @Transactional

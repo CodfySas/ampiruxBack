@@ -1,4 +1,5 @@
 package com.osia.ampirux.controller.product.v1
+
 import com.osia.ampirux.dto.OnCreate
 import com.osia.ampirux.dto.product.v1.ProductDto
 import com.osia.ampirux.dto.product.v1.ProductMapper
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -29,13 +31,17 @@ class ProductController(
     private val mapper: ProductMapper
 ) {
     @GetMapping
-    fun findAll(pageable: Pageable): Page< ProductDto> {
+    fun findAll(pageable: Pageable): Page<ProductDto> {
         return service.findAll(pageable)
     }
 
     @GetMapping("/filter/{where}")
-    fun findAllByFilter(pageable: Pageable, @PathVariable where: String): Page< ProductDto> {
-        return service.findAllByFilter(pageable, where)
+    fun findAllByFilter(
+        pageable: Pageable,
+        @PathVariable where: String,
+        @RequestHeader("barbershop_uuid") barbershopUuid: UUID,
+    ): Page<ProductDto> {
+        return service.findAllByFilter(pageable, where, barbershopUuid)
     }
 
     @GetMapping("/count/{increment}")
@@ -44,32 +50,33 @@ class ProductController(
     }
 
     @GetMapping("/{uuid}")
-    fun getById(@PathVariable uuid: UUID): ResponseEntity< ProductDto> {
+    fun getById(@PathVariable uuid: UUID): ResponseEntity<ProductDto> {
         return ResponseEntity.ok(mapper.toDto(service.getById(uuid)))
     }
 
     @GetMapping("/multiple")
-    fun getByMultipleId(@RequestBody uuidList: List<UUID>): ResponseEntity<List< ProductDto>> {
+    fun getByMultipleId(@RequestBody uuidList: List<UUID>): ResponseEntity<List<ProductDto>> {
         return ResponseEntity.ok(service.findByMultiple(uuidList))
     }
 
     @PostMapping
-    fun save(@Validated(OnCreate::class) request: ProductRequest): ResponseEntity<ProductDto > {
+    fun save(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody request: ProductRequest): ResponseEntity<ProductDto> {
+        request.barbershopUuid = barbershopUuid
         return ResponseEntity(service.save(request), HttpStatus.CREATED)
     }
 
     @PostMapping("/multiple")
-    fun saveMultiple(@Validated(OnCreate::class) requestList: List< ProductRequest>): ResponseEntity<List<ProductDto > > {
+    fun saveMultiple(@RequestHeader("barbershop_uuid") barbershopUuid: UUID, @Validated(OnCreate::class) @RequestBody requestList: List<ProductRequest>): ResponseEntity<List<ProductDto>> {
         return ResponseEntity(service.saveMultiple(requestList), HttpStatus.CREATED)
     }
 
     @PatchMapping("/{uuid}")
-    fun update(@PathVariable uuid: UUID, @RequestBody request: ProductRequest): ResponseEntity<ProductDto > {
+    fun update(@PathVariable uuid: UUID, @RequestBody request: ProductRequest): ResponseEntity<ProductDto> {
         return ResponseEntity.ok(service.update(uuid, request))
     }
 
     @PatchMapping("/multiple")
-    fun updateMultiple(@RequestBody dtoList: List< ProductDto>): ResponseEntity<List<ProductDto > > {
+    fun updateMultiple(@RequestBody dtoList: List<ProductDto>): ResponseEntity<List<ProductDto>> {
         return ResponseEntity.ok(service.updateMultiple(dtoList))
     }
 

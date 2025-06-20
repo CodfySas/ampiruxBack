@@ -20,7 +20,7 @@ class JwtFilter : GenericFilterBean() {
         val servletResponse = response as HttpServletResponse
         try {
             val authHeader = servletRequest.getHeader("authorization")
-            val user = servletRequest.getHeader("user")
+            val user = servletRequest.getHeader("barbershop_uuid")
             if ("OPTIONS" == servletRequest.method) {
                 servletResponse.status = HttpServletResponse.SC_OK
                 chain?.doFilter(servletRequest, servletResponse)

@@ -24,10 +24,10 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
 
         // Permite cualquier origen. Puedes ajustar según tu necesidad
         // Cambiá esto de "*"
-        configuration.allowedOrigins = listOf("http://localhost:4200")
+        configuration.allowedOrigins = listOf("http://localhost:4200", "http://localhost:4300")
 
         // Métodos HTTP permitidos
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        configuration.allowedMethods = listOf("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")
 
         // Permite cualquier header
         configuration.allowedHeaders = listOf("*")

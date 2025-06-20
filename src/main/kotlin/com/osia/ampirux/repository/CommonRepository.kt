@@ -13,7 +13,7 @@ interface CommonRepository <T> :
     JpaSpecificationExecutor<T>,
     BaseRepository {
 
-    @Query("SELECT COUNT(*) FROM #{#entityName}", nativeQuery = true)
+    @Query("SELECT COUNT(*) FROM #{#entityName}s", nativeQuery = true)
     override fun count(): Long
 
     @Query("SELECT * FROM #{#entityName} WHERE uuid = ?1", nativeQuery = true)

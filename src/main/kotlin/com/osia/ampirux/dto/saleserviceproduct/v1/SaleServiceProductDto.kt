@@ -1,6 +1,7 @@
 package com.osia.ampirux.dto.saleserviceproduct.v1
 
 import com.osia.ampirux.dto.BaseDto
+import java.math.BigDecimal
 import java.util.UUID
 
 class SaleServiceProductDto : BaseDto() {
@@ -9,4 +10,5 @@ class SaleServiceProductDto : BaseDto() {
     var quantity: Double? = null
     var unit: String? = null
     var costType: String? = null
+    var price: BigDecimal? = null
 }

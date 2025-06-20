@@ -1,5 +1,6 @@
 package com.osia.ampirux.dto.saleserviceproduct.v1
 
+import java.math.BigDecimal
 import java.util.UUID
 
 class SaleServiceProductRequest {
@@ -8,4 +9,5 @@ class SaleServiceProductRequest {
     var quantity: Double? = null
     var unit: String? = null
     var costType: String? = null
+    var price: BigDecimal? = null
 }

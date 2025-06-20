@@ -1,5 +1,6 @@
 package com.osia.ampirux.dto.servicedefaultproduct.v1
 
+import java.math.BigDecimal
 import java.util.UUID
 
 class ServiceDefaultProductRequest {
@@ -8,4 +9,5 @@ class ServiceDefaultProductRequest {
     var quantity: Double? = null
     var unit: String? = null // "ml", "g", "units", etc.
     var costType: String? = null // "client", "courtesy", "barber"
+    var price: BigDecimal? = null
 }

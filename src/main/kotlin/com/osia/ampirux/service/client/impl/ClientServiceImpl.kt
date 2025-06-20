@@ -57,9 +57,9 @@ class ClientServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findAllByFilter(pageable: Pageable, where: String): Page<ClientDto> {
+    override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<ClientDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
-        return repository.findAll(Specification.where(CreateSpec<Client>().createSpec(where)), pageable).map(mapper::toDto)
+        return repository.findAll(Specification.where(CreateSpec<Client>().createSpec(where, barberShopUuid, listOf("code", "name", "dni", "phone", "email", "notes"))), pageable).map(mapper::toDto)
     }
 
     @Transactional
