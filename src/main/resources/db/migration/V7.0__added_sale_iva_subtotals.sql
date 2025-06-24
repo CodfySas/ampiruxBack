@@ -1,0 +1,3 @@
+ALTER TABLE sale ADD COLUMN IF NOT EXISTS subtotal_services_iva NUMERIC(15, 2) NULL;
+ALTER TABLE sale ADD COLUMN IF NOT EXISTS subtotal_products_iva NUMERIC(15, 2) NULL;
+ALTER TABLE sale ADD COLUMN IF NOT EXISTS subtotal_service_products_iva NUMERIC(15, 2) NULL;

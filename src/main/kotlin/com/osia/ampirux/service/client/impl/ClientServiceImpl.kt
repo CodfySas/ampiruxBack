@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.UUID
@@ -59,7 +60,20 @@ class ClientServiceImpl(
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<ClientDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
-        return repository.findAll(Specification.where(CreateSpec<Client>().createSpec(where, barberShopUuid, listOf("code", "name", "dni", "phone", "email", "notes"))), pageable).map(mapper::toDto)
+        val clients = repository.findAll(Specification.where(CreateSpec<Client>().createSpec(where, barberShopUuid, listOf("code", "name", "dni", "phone", "email", "notes"))), pageable).map(mapper::toDto)
+        val statsRaw = repository.findClientVisitStats(clients.mapNotNull { it.uuid })
+        val stats = statsRaw.associateBy { it[0] as String }
+        clients.forEach { c ->
+            stats[c.uuid.toString()]?.let {
+                if(it[1] != null){
+                    c.lastVisit = it[1].toString()
+                }
+                c.visitCount = (it[2] as? Number)?.toInt() ?: 0
+                c.totalPay = it[3] as? BigDecimal
+                c.lastPay = it[4] as? BigDecimal
+            }
+        }
+        return clients
     }
 
     @Transactional

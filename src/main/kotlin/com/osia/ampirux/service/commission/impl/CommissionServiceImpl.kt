@@ -4,9 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.osia.ampirux.dto.BaseMapper
 import com.osia.ampirux.dto.commission.v1.CommissionDto
 import com.osia.ampirux.dto.commission.v1.CommissionRequest
+import com.osia.ampirux.dto.sale.v1.SaleMapper
 import com.osia.ampirux.model.Commission
 import com.osia.ampirux.repository.commission.CommissionRepository
+import com.osia.ampirux.repository.sale.SaleRepository
 import com.osia.ampirux.service.commission.CommissionService
+import com.osia.ampirux.service.sale.SaleService
+import com.osia.ampirux.service.saleservice.SaleServiceService
+import com.osia.ampirux.service.service.ServiceService
 import com.osia.ampirux.util.CreateSpec
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,7 +31,11 @@ import java.util.UUID
 class CommissionServiceImpl(
     private val repository: CommissionRepository,
     private val mapper: BaseMapper<CommissionRequest, Commission, CommissionDto>,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val saleServiceService: SaleServiceService,
+    private val saleRepository: SaleRepository,
+    private val serviceService: ServiceService,
+    private val saleMapper: SaleMapper,
 ) : CommissionService {
 
     protected val log: Logger = LoggerFactory.getLogger(javaClass)
@@ -118,5 +127,29 @@ class CommissionServiceImpl(
             it.deletedAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
         }
         repository.saveAll(entities)
+    }
+
+    override fun paidBarber(barber: UUID): List<CommissionDto> {
+        val commissions = repository.findAllByBarberUuidInAndStatus(listOf(barber), "PENDING")
+        commissions.forEach {
+            it.status = "PAID"
+            it.paidAt = LocalDateTime.now(ZoneId.of("America/Bogota"))
+        }
+        return repository.saveAll(commissions).map(mapper::toDto)
+    }
+
+    override fun getHistoryByBarber(pageable: Pageable, barber: UUID): Page<CommissionDto> {
+        val commissions = this.repository.findAllByBarberUuid(pageable, barber).map(mapper::toDto)
+        val saleServiceServices = this.saleServiceService.findByMultiple(commissions.mapNotNull { it.saleServiceUuid })
+        val sales = this.saleRepository.findAllById(saleServiceServices.mapNotNull { it.saleUuid }.distinct()).map(saleMapper::toDto)
+        val services = this.serviceService.findByMultiple(saleServiceServices.mapNotNull { it.serviceUuid }.distinct())
+        commissions.forEach { c->
+            val saleServiceFound = saleServiceServices.firstOrNull { ss-> ss.uuid == c.saleServiceUuid }
+            if(saleServiceFound != null){
+                c.service = services.firstOrNull { s-> s.uuid == saleServiceFound.serviceUuid }
+                c.sale = sales.firstOrNull { s-> s.uuid == saleServiceFound.saleUuid }
+            }
+        }
+        return commissions
     }
 }

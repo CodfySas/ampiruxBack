@@ -19,4 +19,7 @@ class BarberDto : BaseDto() {
     var commissionRate: Double? = null
     var status: String? = null
     var schedule: List<BarberScheduleDto>? = null
+
+    var monthSales: BigDecimal? = null
+    var pendingCommissions: BigDecimal? = null
 }

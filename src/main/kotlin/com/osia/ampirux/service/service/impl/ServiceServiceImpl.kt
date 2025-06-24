@@ -5,6 +5,7 @@ import com.osia.ampirux.dto.BaseMapper
 import com.osia.ampirux.dto.product.v1.ProductMapper
 import com.osia.ampirux.dto.service.v1.ServiceDto
 import com.osia.ampirux.dto.service.v1.ServiceRequest
+import com.osia.ampirux.dto.servicedefaultproduct.v1.ServiceDefaultProductDto
 import com.osia.ampirux.dto.servicedefaultproduct.v1.ServiceDefaultProductMapper
 import com.osia.ampirux.dto.servicedefaultproduct.v1.ServiceDefaultProductRequest
 import com.osia.ampirux.repository.product.ProductRepository
@@ -63,20 +64,32 @@ class ServiceServiceImpl(
     @Transactional(readOnly = true)
     override fun findAll(pageable: Pageable): Page<ServiceDto> {
         log.trace("findAll -> pageable: $pageable")
-        return repository.findAll(Specification.where(CreateSpec<com.osia.ampirux.model.Service>().createSpec("")), pageable).map(mapper::toDto)
+        return repository.findAll(
+            Specification.where(CreateSpec<com.osia.ampirux.model.Service>().createSpec("")),
+            pageable
+        ).map(mapper::toDto)
     }
 
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<ServiceDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
-        val services = repository.findAll(Specification.where(CreateSpec<com.osia.ampirux.model.Service>().createSpec(where, barberShopUuid, listOf("code", "name", "description"))), pageable).map(mapper::toDto)
-        val products = serviceDefaultProductRepository.getAllByServiceUuidIn(services.mapNotNull { it.uuid }.distinct()).map(serviceDefaultProductMapper::toDto)
+        val services = repository.findAll(
+            Specification.where(
+                CreateSpec<com.osia.ampirux.model.Service>().createSpec(
+                    where,
+                    barberShopUuid,
+                    listOf("code", "name", "description")
+                )
+            ), pageable
+        ).map(mapper::toDto)
+        val products = serviceDefaultProductRepository.getAllByServiceUuidIn(services.mapNotNull { it.uuid }.distinct())
+            .map(serviceDefaultProductMapper::toDto)
         val pr = productRepository.findAllById(products.mapNotNull { it.productUuid }.distinct())
-        products.forEach { p->
-            p.product = pr.firstOrNull{ it.uuid == p.productUuid }?.let { productMapper.toDto(it) }
+        products.forEach { p ->
+            p.product = pr.firstOrNull { it.uuid == p.productUuid }?.let { productMapper.toDto(it) }
         }
-        services.forEach { s->
-            s.defaultProducts = products.filter { p-> p.serviceUuid == s.uuid }
+        services.forEach { s ->
+            s.defaultProducts = products.filter { p -> p.serviceUuid == s.uuid }
         }
         return services
     }
@@ -84,23 +97,53 @@ class ServiceServiceImpl(
     @Transactional
     override fun save(request: ServiceRequest, replace: Boolean): ServiceDto {
         log.trace("save -> request: $request")
+
         val entity = mapper.toModel(request)
         val saved = mapper.toDto(repository.save(entity))
-        val products = if(request.defaultProducts?.isNotEmpty() == true){
-            serviceDefaultProductService.saveMultiple(request.defaultProducts!!.map{ df->
-                ServiceDefaultProductRequest().apply {
-                    this.productUuid = df.productUuid
-                    this.serviceUuid = saved.uuid
-                    this.costType = df.costType
-                    this.quantity = df.quantity
-                    this.unit = df.unit
-                }
-            })
-        } else {
-            mutableListOf()
+
+        val newProducts = request.defaultProducts ?: listOf()
+
+        val existingProducts = serviceDefaultProductRepository.findAllByServiceUuid(saved.uuid!!).mapNotNull { it.uuid }
+
+        val toCreate = mutableListOf<ServiceDefaultProductRequest>()
+        val toUpdate = mutableListOf<ServiceDefaultProductDto>()
+
+        for (new in newProducts) {
+            if(existingProducts.contains(new.uuid)) {
+                toUpdate.add(
+                    ServiceDefaultProductDto().apply {
+                        this.uuid = new.uuid
+                        this.productUuid = new.productUuid
+                        this.serviceUuid = saved.uuid
+                        this.costType = new.costType
+                        this.quantity = new.quantity
+                        this.unit = new.unit
+                    }
+                )
+            } else {
+                toCreate.add(
+                    ServiceDefaultProductRequest().apply {
+                        this.productUuid = new.productUuid
+                        this.serviceUuid = saved.uuid
+                        this.costType = new.costType
+                        this.quantity = new.quantity
+                        this.unit = new.unit
+                    }
+                )
+            }
         }
-        return saved.apply { this.defaultProducts = products }
+
+        val toDelete = existingProducts.filterNot { e-> newProducts.mapNotNull { it.uuid }.contains(e) }
+
+        val created = serviceDefaultProductService.saveMultiple(toCreate)
+        val updated = serviceDefaultProductService.updateMultiple(toUpdate)
+        serviceDefaultProductService.deleteMultiple(toDelete)
+
+        return saved.apply {
+            this.defaultProducts = created + updated
+        }
     }
+
 
     @Transactional
     override fun saveMultiple(requestList: List<ServiceRequest>): List<ServiceDto> {
@@ -117,22 +160,51 @@ class ServiceServiceImpl(
         } else {
             repository.getByUuid(id).get()
         }
+
         mapper.update(request, entity)
         val saved = mapper.toDto(repository.save(entity))
-        val products = if(request.defaultProducts?.isNotEmpty() == true){
-            serviceDefaultProductService.saveMultiple(request.defaultProducts!!.map{ df->
-                ServiceDefaultProductRequest().apply {
-                    this.productUuid = df.productUuid
-                    this.serviceUuid = saved.uuid
-                    this.costType = df.costType
-                    this.quantity = df.quantity
-                    this.unit = df.unit
-                }
-            })
-        } else {
-            mutableListOf()
+
+        val newProducts = request.defaultProducts ?: listOf()
+
+        val existingProducts = serviceDefaultProductRepository.findAllByServiceUuid(saved.uuid!!).mapNotNull { it.uuid }
+
+        val toCreate = mutableListOf<ServiceDefaultProductRequest>()
+        val toUpdate = mutableListOf<ServiceDefaultProductDto>()
+
+        for (new in newProducts) {
+            if(existingProducts.contains(new.uuid)) {
+                toUpdate.add(
+                    ServiceDefaultProductDto().apply {
+                        this.uuid = new.uuid
+                        this.productUuid = new.productUuid
+                        this.serviceUuid = saved.uuid
+                        this.costType = new.costType
+                        this.quantity = new.quantity
+                        this.unit = new.unit
+                    }
+                )
+            } else {
+                toCreate.add(
+                    ServiceDefaultProductRequest().apply {
+                        this.productUuid = new.productUuid
+                        this.serviceUuid = saved.uuid
+                        this.costType = new.costType
+                        this.quantity = new.quantity
+                        this.unit = new.unit
+                    }
+                )
+            }
         }
-        return saved.apply { this.defaultProducts = products }
+
+        val toDelete = existingProducts.filterNot { e-> newProducts.mapNotNull { it.uuid }.contains(e) }
+
+        val created = serviceDefaultProductService.saveMultiple(toCreate)
+        val updated = serviceDefaultProductService.updateMultiple(toUpdate)
+        serviceDefaultProductService.deleteMultiple(toDelete)
+
+        return saved.apply {
+            this.defaultProducts = created + updated
+        }
     }
 
     @Transactional

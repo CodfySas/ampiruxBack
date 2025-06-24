@@ -3,6 +3,7 @@ import com.osia.ampirux.dto.OnCreate
 import com.osia.ampirux.dto.appointment.v1.AppointmentDto
 import com.osia.ampirux.dto.appointment.v1.AppointmentMapper
 import com.osia.ampirux.dto.appointment.v1.AppointmentRequest
+import com.osia.ampirux.dto.appointment.v1.CalendarDto
 import com.osia.ampirux.service.appointment.AppointmentService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -86,5 +87,20 @@ class AppointmentController(
     fun deleteMultiple(@RequestBody uuidList: List<UUID>): ResponseEntity<HttpStatus> {
         service.deleteMultiple(uuidList)
         return ResponseEntity(HttpStatus.OK)
+    }
+
+    @GetMapping("/month/{month}/{year}")
+    fun getByMonth(@PathVariable month: Int, @PathVariable year: Int, @RequestHeader("barbershop_uuid") barbershopUuid: UUID): ResponseEntity<List<List<CalendarDto>>> {
+        return ResponseEntity(service.getCalendarMonth(year, month, barbershopUuid), HttpStatus.OK)
+    }
+
+    @GetMapping("/day/{day}/{month}/{year}")
+    fun getByDay(
+        @PathVariable day: Int,
+        @PathVariable month: Int,
+        @PathVariable year: Int,
+        @RequestHeader("barbershop_uuid") barbershopUuid: UUID
+    ): ResponseEntity<CalendarDto> {
+        return ResponseEntity(service.getCalendarDay(year, month, day, barbershopUuid), HttpStatus.OK)
     }
 }

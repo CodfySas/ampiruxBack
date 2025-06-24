@@ -6,6 +6,7 @@ import com.osia.ampirux.dto.user.v1.UserMapper
 import com.osia.ampirux.dto.user.v1.UserRequest
 import com.osia.ampirux.repository.user.UserRepository
 import com.osia.ampirux.service.auth.AuthUseCase
+import com.osia.ampirux.service.barbershop.BarberShopService
 import com.osia.ampirux.service.jwt.JwtGenerator
 import com.osia.ampirux.service.user.UserService
 import com.osia.ampirux.util.Md5Hash
@@ -21,6 +22,7 @@ class AuthServiceImpl(
     private val jwtGenerator: JwtGenerator,
     private val userMapper: UserMapper,
     private val userService: UserService,
+    private val barberShopService: BarberShopService,
 ) : AuthUseCase {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -47,8 +49,11 @@ class AuthServiceImpl(
             throw ResponseStatusException(HttpStatus.LOCKED, "Invalid credentials")
         }
 
+        val barber = userFound.barbershopUuid?.let { barberShopService.getById(it) }
+
         return userMapper.toDto(userFound).apply {
             this.token = jwtGenerator.generateToken(userMapper.toDto(userFound))
+            this.barbershopCode = barber?.code
         }
     }
 

@@ -4,4 +4,6 @@ import com.osia.ampirux.repository.CommonRepository
 import org.springframework.stereotype.Repository
 
 @Repository("barber.crud_repository")
-interface BarberRepository : CommonRepository<Barber>
+interface BarberRepository : CommonRepository<Barber> {
+
+}

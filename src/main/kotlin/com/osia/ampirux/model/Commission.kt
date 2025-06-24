@@ -12,7 +12,7 @@ import javax.persistence.EntityListeners
 import javax.persistence.Table
 
 @Table(
-    name = "commissions",
+    name = "commission",
 )
 @Entity
 @DynamicUpdate

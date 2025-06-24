@@ -31,5 +31,22 @@ data class Sale(
     var isCourtesy: Boolean? = null,
     var total: BigDecimal? = null,
     var discountUuid: UUID? = null,
-    var barbershopUuid: UUID? = null
+    var barbershopUuid: UUID? = null,
+
+    var subtotalServices: BigDecimal? = null,
+    var commissions: BigDecimal? = null,
+    var commissionDiscount: BigDecimal? = null,
+    var subtotalServiceProducts: BigDecimal? = null,
+    var subtotalProducts: BigDecimal? = null,
+    var discountPercent: BigDecimal? = null,
+    var subtotalDiscount: BigDecimal? = null,
+
+    var hasIva: Boolean? = null,
+    var ivaService: Boolean? = null,
+    var ivaProduct: Boolean? = null,
+    var iva: BigDecimal? = null,
+
+    var subtotalServicesIva: BigDecimal? = null,
+    var subtotalProductsIva: BigDecimal? = null,
+    var subtotalServiceProductsIva: BigDecimal? = null,
 ) : BaseModel()

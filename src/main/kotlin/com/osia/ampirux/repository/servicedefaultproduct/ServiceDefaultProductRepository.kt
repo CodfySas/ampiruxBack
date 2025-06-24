@@ -11,4 +11,6 @@ interface ServiceDefaultProductRepository : CommonRepository<ServiceDefaultProdu
 
     @Query("SELECT COUNT(*) FROM service_default_product", nativeQuery = true)
     override fun count(): Long
+
+    fun findAllByServiceUuid(uuids: UUID): List<ServiceDefaultProduct>
 }

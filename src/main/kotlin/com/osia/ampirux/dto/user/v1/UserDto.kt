@@ -14,4 +14,5 @@ class UserDto : BaseDto() {
     var image: String? = null
     var token: String? = null
     var barbershopUuid: UUID? = null
+    var barbershopCode: String? = null
 }

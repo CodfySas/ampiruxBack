@@ -86,4 +86,14 @@ class CommissionController(
         service.deleteMultiple(uuidList)
         return ResponseEntity(HttpStatus.OK)
     }
+
+    @GetMapping("/history/{uuid}")
+    fun getByBarberUuid(@PathVariable uuid: UUID, pageable: Pageable): ResponseEntity<Page<CommissionDto>> {
+        return ResponseEntity.ok(service.getHistoryByBarber(pageable, uuid))
+    }
+
+    @PostMapping("/paid/{uuid}")
+    fun paidBarber(@PathVariable uuid: UUID): ResponseEntity<List<CommissionDto>> {
+        return ResponseEntity.ok(service.paidBarber(uuid))
+    }
 }

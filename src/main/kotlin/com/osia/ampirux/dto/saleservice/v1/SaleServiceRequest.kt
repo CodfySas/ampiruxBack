@@ -5,6 +5,7 @@ import java.math.BigDecimal
 import java.util.UUID
 
 class SaleServiceRequest {
+    var uuid: UUID? = null
     var saleUuid: UUID? = null
     var serviceUuid: UUID? = null
     var price: BigDecimal? = null

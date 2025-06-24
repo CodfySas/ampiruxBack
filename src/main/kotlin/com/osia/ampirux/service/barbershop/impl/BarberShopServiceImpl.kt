@@ -119,5 +119,11 @@ class BarberShopServiceImpl(
         }
         repository.saveAll(entities)
     }
+
+    override fun getByCode(code: String): BarberShopDto {
+        return mapper.toDto(repository.getFirstByCode(code).orElseThrow {
+            ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Entity $code not found")
+        })
+    }
 }
 

@@ -29,4 +29,6 @@ data class Appointment(
     var status: String? = null, // "pending", "confirmed", "completed", "cancelled"
     var notes: String? = null,
     var barbershopUuid: UUID? = null,
+    var googleCalendarEventId: String? = null
+
 ) : BaseModel()

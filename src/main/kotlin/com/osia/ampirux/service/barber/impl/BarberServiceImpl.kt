@@ -6,6 +6,8 @@ import com.osia.ampirux.dto.barber.v1.BarberDto
 import com.osia.ampirux.dto.barber.v1.BarberRequest
 import com.osia.ampirux.model.Barber
 import com.osia.ampirux.repository.barber.BarberRepository
+import com.osia.ampirux.repository.commission.CommissionRepository
+import com.osia.ampirux.repository.sale.SaleRepository
 import com.osia.ampirux.service.barber.BarberService
 import com.osia.ampirux.util.CreateSpec
 import org.slf4j.Logger
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.UUID
@@ -26,6 +29,8 @@ import java.util.UUID
 class BarberServiceImpl(
     private val repository: BarberRepository,
     private val mapper: BaseMapper<BarberRequest, Barber, BarberDto>,
+    private val saleRepository: SaleRepository,
+    private val commissionRepository: CommissionRepository,
     private val objectMapper: ObjectMapper
 ) : BarberService {
 
@@ -59,7 +64,22 @@ class BarberServiceImpl(
     @Transactional(readOnly = true)
     override fun findAllByFilter(pageable: Pageable, where: String, barberShopUuid: UUID): Page<BarberDto> {
         log.trace("findAllByFilter -> pageable: $pageable, where: $where")
-        return repository.findAll(Specification.where(CreateSpec<Barber>().createSpec(where, barberShopUuid, listOf("code", "name", "dni", "phone", "email"))), pageable).map(mapper::toDto)
+        val barbers = repository.findAll(Specification.where(CreateSpec<Barber>().createSpec(where, barberShopUuid, listOf("code", "name", "dni", "phone", "email"))), pageable).map(mapper::toDto)
+        val zone = ZoneId.of("America/Bogota")
+        val now = LocalDateTime.now(zone)
+        val startOfMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay()
+        val monthSales = saleRepository.findAllByCreatedAtBetweenAndBarberUuidIn(
+            startOfMonth,
+            now,
+            barbers.mapNotNull { it.uuid }.distinct()
+        )
+        val commissions = commissionRepository.findAllByBarberUuidInAndStatus(barbers.mapNotNull { it.uuid }.distinct(),"PENDING")
+
+        barbers.forEach {  b->
+            b.monthSales = monthSales.filter { m-> m.barberUuid == b.uuid }.sumOf { it.subtotalServices ?: BigDecimal.ZERO }
+            b.pendingCommissions = commissions.filter { c-> c.barberUuid == b.uuid }.sumOf { it.amount ?: BigDecimal.ZERO }
+        }
+        return barbers;
     }
 
     @Transactional

@@ -4,6 +4,7 @@ import java.math.BigDecimal
 import java.util.UUID
 
 class ServiceDefaultProductRequest {
+    var uuid: UUID? = null
     var serviceUuid: UUID? = null
     var productUuid: UUID? = null
     var quantity: Double? = null
